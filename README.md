@@ -1,3 +1,1 @@
-# DegionV2
-
-[Edit in StackBlitz next generation editor ⚡️](https://stackblitz.com/~/github.com/Sadpepedev/DegionV2)
+Work in progress

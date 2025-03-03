@@ -1,0 +1,308 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Font */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+/* Base styles */
+body {
+  font-family: 'Inter', sans-serif;
+  background: #09131b;
+  overflow-x: hidden;
+  color: #cfd0d1;
+}
+
+h1, h2, h3, h4, h5, h6, .font-orbitron {
+  font-family: 'Orbitron', sans-serif;
+}
+
+/* Logo styles */
+.logo-container {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin: 0 auto 2rem;
+  perspective: 1500px;
+}
+
+.degion, .legion-hover {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 100%;
+  height: auto;
+  backface-visibility: hidden;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 0 15px rgba(0, 255, 238, 0.3));
+}
+
+.degion {
+  transform: translateX(-50%) rotateY(0);
+}
+
+.legion-hover {
+  transform: translateX(-50%) rotateY(180deg);
+}
+
+.logo-container:hover .degion {
+  transform: translateX(-50%) rotateY(-180deg);
+}
+
+.logo-container:hover .legion-hover {
+  transform: translateX(-50%) rotateY(0);
+}
+
+/* Token card styles */
+.grid-item {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 238, 0.1);
+  overflow: hidden;
+}
+
+.grid-item::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(45deg, rgba(0,255,238,0), rgba(0,255,238,0.3), rgba(0,255,238,0));
+  border-radius: 0.5rem;
+  z-index: -1;
+  transition: all 0.4s ease;
+  opacity: 0;
+}
+
+.grid-item:hover {
+  transform: translateY(-5px);
+  border-color: rgba(0, 255, 238, 0.3);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 
+              0 0 15px rgba(0, 255, 238, 0.2);
+}
+
+.grid-item:hover::before {
+  opacity: 1;
+  animation: borderGlow 2s linear infinite;
+}
+
+@keyframes borderGlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Token logo animation */
+.token-logo {
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 238, 0.2);
+}
+
+.grid-item:hover .token-logo {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(0, 255, 238, 0.4);
+}
+
+/* Investment value colors */
+.investment-negative {
+  color: #ef4444;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+.investment-positive {
+  color: #22c55e;
+  text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+}
+
+/* Status badges */
+.badge {
+  @apply px-2 py-1 rounded-full text-xs font-semibold;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.badge:hover::before {
+  left: 100%;
+}
+
+.badge-live {
+  @apply bg-green-500/20 text-green-400 border border-green-500/30;
+  animation: pulse 2s infinite;
+}
+
+.badge-pending-tge {
+  @apply bg-yellow-500/20 text-yellow-400 border border-yellow-500/30;
+}
+
+.badge-ico-soon {
+  @apply bg-blue-500/20 text-blue-400 border border-blue-500/30;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.2); }
+  70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* Glass panel effect */
+.glass-panel {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 238, 0.1);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.glass-panel:hover {
+  border-color: rgba(0, 255, 238, 0.2);
+  box-shadow: 0 0 20px rgba(0, 255, 238, 0.1);
+}
+
+/* Vesting badge styles */
+.vesting-badge {
+  @apply bg-purple-500/20 text-purple-400 border border-purple-500/30 px-2 py-1 rounded-full text-xs font-semibold;
+  position: relative;
+  overflow: hidden;
+}
+
+.no-vesting-badge {
+  @apply bg-gray-500/20 text-gray-400 border border-gray-500/30 px-2 py-1 rounded-full text-xs font-semibold;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Token price animation */
+.price-update {
+  animation: priceUpdate 0.5s ease-out;
+}
+
+@keyframes priceUpdate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Animation utilities */
+.animate-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.scale-in-center {
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { 
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Title glow effect */
+.title-glow {
+  text-shadow: 0 0 10px rgba(0, 255, 238, 0.5);
+}
+
+/* Button styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-[#00ffee] to-[#37fffc] text-black font-medium 
+         px-4 py-2 rounded-lg transition-all duration-300 
+         hover:shadow-[0_0_20px_rgba(0,255,238,0.3)] active:scale-95;
+}
+
+.btn-outline {
+  @apply border border-[#00ffee] text-[#00ffee] px-4 py-2 rounded-lg
+         transition-all duration-300 hover:bg-[#00ffee]/10
+         hover:shadow-[0_0_20px_rgba(0,255,238,0.2)];
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 238, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 238, 0.5);
+}
+
+/* Card hover effects */
+.hover-card {
+  transition: all 0.3s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 
+              0 0 15px rgba(0, 255, 238, 0.2);
+}
+
+/* Data display styles */
+.data-row {
+  @apply flex justify-between items-center py-2 border-b border-[#00ffee]/10 last:border-0;
+}
+
+.data-label {
+  @apply text-gray-400 text-sm;
+}
+
+.data-value {
+  @apply font-medium;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .logo-container {
+    width: 150px;
+    height: 150px;
+    margin-bottom: 1.5rem;
+  }
+}

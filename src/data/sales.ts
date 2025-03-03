@@ -61,9 +61,9 @@ export const salesData: TokenSale[] = [
     name: 'Nil',
     address: '0x2c0637a66a5031acc0e4cc1cbcd5a4fb9335bf60',
     network: 'ethereum',
-    fundsRaisedUSDC: 205117,
-    participants: 34,
-    transactions: 34
+    fundsRaisedUSDC: 	633808,
+    participants: 138,
+    transactions: 138
   },
   {
     name: 'Electron',

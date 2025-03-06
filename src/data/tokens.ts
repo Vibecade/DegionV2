@@ -195,5 +195,20 @@ export const tokens: Token[] = [
       website: 'https://www.skatechain.org/',
       twitter: 'https://x.com/skate_chain'
     }
-  }
+  },
+    {
+    id: 'resolv',
+    name: 'Resolv',
+    status: 'ICO Soon',
+    launchDate: 'TBD',
+    seedPrice: 'TBD',
+    currentPrice: '--',
+    roi: '--',
+    investment: '--',
+    description: 'Resolv is developing scalable crypto-native yield generation and distribution architecture.',
+    links: {
+      website: 'https://resolv.xyz/',
+      twitter: 'https://x.com/ResolvLabs'
+    }
+  },
 ];

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Token } from '../types';
 import { useEffect, useState } from 'react';
 import { getFuelPrice, getSilencioPrice } from '../services/tokenPrices';
+import { getTokenInfo } from '../services/tokenInfo';
 import { ArrowUpRight, Users, Wallet } from 'lucide-react';
 import { salesData } from '../data/sales';
 import { formatUSDC, formatNumber } from '../utils/formatters';
@@ -28,9 +29,31 @@ export const TokenCard = ({ token }: TokenCardProps) => {
   const [investment, setInvestment] = useState(initialInvestment);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(status);
+  const [currentLaunchDate, setCurrentLaunchDate] = useState(launchDate);
+  const [currentVestingEnd, setCurrentVestingEnd] = useState(vestingEnd);
 
   const saleData = salesData.find(sale => sale.name.toLowerCase() === name.toLowerCase());
 
+  // Update token data from Legion API
+  useEffect(() => {
+    const fetchTokenInfo = async () => {
+      try {
+        const tokenInfo = await getTokenInfo(id);
+        if (tokenInfo) {
+          if (tokenInfo.status) setCurrentStatus(tokenInfo.status);
+          if (tokenInfo.launchDate) setCurrentLaunchDate(tokenInfo.launchDate);
+          if (tokenInfo.vestingEnd) setCurrentVestingEnd(tokenInfo.vestingEnd);
+        }
+      } catch (error) {
+        console.error(`Error fetching ${id} info:`, error);
+      }
+    };
+
+    fetchTokenInfo();
+  }, [id]);
+
+  // Get live price data for tokens that are trading
   useEffect(() => {
     if (id.toLowerCase() === 'fuel' || id.toLowerCase() === 'silencio') {
       const fetchPrice = async () => {
@@ -91,8 +114,8 @@ export const TokenCard = ({ token }: TokenCardProps) => {
           <span className="text-lg sm:text-xl font-semibold text-[#cfd0d1] block truncate font-orbitron">
             {name} ({id.toUpperCase()})
           </span>
-          <span className={`badge badge-${status.toLowerCase().replace(' ', '-')} mt-1 inline-block text-xs sm:text-sm`}>
-            {status}
+          <span className={`badge badge-${currentStatus.toLowerCase().replace(' ', '-')} mt-1 inline-block text-xs sm:text-sm`}>
+            {currentStatus}
           </span>
         </div>
         <ArrowUpRight className="w-5 h-5 text-[#00ffee] opacity-0 transform translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" />
@@ -144,12 +167,12 @@ export const TokenCard = ({ token }: TokenCardProps) => {
         </div>
       )}
 
-      {vestingEnd && (
+      {currentVestingEnd && (
         <div className="mt-4 w-full">
           <div className="flex justify-between items-center text-sm sm:text-base">
             <span className="text-gray-400">Vesting:</span>
-            <span className={vestingEnd.toLowerCase() === "tbd" ? "vesting-badge" : "no-vesting-badge"}>
-              {vestingEnd}
+            <span className={currentVestingEnd.toLowerCase() === "tbd" ? "vesting-badge" : "no-vesting-badge"}>
+              {currentVestingEnd}
             </span>
           </div>
         </div>

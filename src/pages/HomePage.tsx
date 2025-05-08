@@ -1,15 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TokenCard } from '../components/TokenCard';
 import { tokens } from '../data/tokens';
 import { SupportModal } from '../components/SupportModal';
 import { Footer } from '../components/Footer';
-import { Heart, Search, Filter } from 'lucide-react';
+import { Heart, Search, Filter, RefreshCw } from 'lucide-react';
+import { getLastUpdateTime } from '../services/tokenInfo';
 
 export const HomePage = () => {
   const [view] = useState<'grid' | 'table'>('grid');
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLastUpdate = async () => {
+      const time = await getLastUpdateTime();
+      setLastUpdate(time);
+    };
+
+    fetchLastUpdate();
+  }, []);
 
   const filteredTokens = tokens.filter(token => {
     const matchesSearch = token.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -66,6 +77,13 @@ export const HomePage = () => {
                 </div>
               </div>
             </div>
+
+            {lastUpdate && (
+              <div className="flex items-center justify-center mb-4 text-sm text-gray-400">
+                <RefreshCw className="w-3 h-3 mr-2" />
+                Last updated: {lastUpdate}
+              </div>
+            )}
 
             {filteredTokens.length === 0 ? (
               <div className="text-center py-12 bg-black/20 rounded-lg border border-[rgba(0,255,238,0.1)]">

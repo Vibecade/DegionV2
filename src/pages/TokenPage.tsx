@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { TokenSentiment } from '../types';
 import { getTokenSentiment, submitVote } from '../services/sentiment';
 import { getFuelPrice, getSilencioPrice } from '../services/tokenPrices';
+import { getTokenInfo } from '../services/tokenInfo';
 import { MessageSquare, ArrowLeft, ExternalLink, Wallet, Users, ArrowUpRight, ChevronRight } from 'lucide-react';
 import TradingViewWidget from '../components/TradingViewWidget';
 import { Footer } from '../components/Footer';
@@ -22,6 +23,10 @@ export const TokenPage = () => {
   const [investment, setInvestment] = useState(token?.investment || '--');
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(token?.status || '');
+  const [currentLaunchDate, setCurrentLaunchDate] = useState(token?.launchDate || '');
+  const [currentDescription, setCurrentDescription] = useState(token?.description || '');
+  const [currentVestingEnd, setCurrentVestingEnd] = useState(token?.vestingEnd || '');
   
   const saleData = salesData.find(sale => sale.name.toLowerCase() === token?.name.toLowerCase());
 
@@ -30,6 +35,27 @@ export const TokenPage = () => {
       loadSentiment();
     }
   }, [tokenId]);
+
+  // Update token data from Legion API
+  useEffect(() => {
+    if (!token || !tokenId) return;
+
+    const fetchTokenInfo = async () => {
+      try {
+        const tokenInfo = await getTokenInfo(tokenId);
+        if (tokenInfo) {
+          if (tokenInfo.status) setCurrentStatus(tokenInfo.status);
+          if (tokenInfo.launchDate) setCurrentLaunchDate(tokenInfo.launchDate);
+          if (tokenInfo.description) setCurrentDescription(tokenInfo.description);
+          if (tokenInfo.vestingEnd) setCurrentVestingEnd(tokenInfo.vestingEnd);
+        }
+      } catch (error) {
+        console.error(`Error fetching ${tokenId} info:`, error);
+      }
+    };
+
+    fetchTokenInfo();
+  }, [tokenId, token]);
 
   // Fetch live price data
   useEffect(() => {
@@ -120,10 +146,7 @@ export const TokenPage = () => {
 
   const {
     name,
-    status,
-    launchDate,
     seedPrice,
-    description,
     links
   } = token;
 
@@ -172,17 +195,17 @@ export const TokenPage = () => {
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-bold text-[#00ffee] title-glow mb-2 font-orbitron">{name}</h1>
                   <div className="flex flex-wrap items-center gap-4">
-                    <span className={`badge badge-${status.toLowerCase().replace(' ', '-')}`}>
-                      {status}
+                    <span className={`badge badge-${currentStatus.toLowerCase().replace(' ', '-')}`}>
+                      {currentStatus}
                     </span>
-                    <span className="text-gray-400">{launchDate}</span>
+                    <span className="text-gray-400">{currentLaunchDate}</span>
                   </div>
                 </div>
               </div>
 
-              {description && (
+              {currentDescription && (
                 <p className="text-gray-300 bg-black/20 p-4 rounded-lg border border-[rgba(0,255,238,0.1)] leading-relaxed">
-                  {description}
+                  {currentDescription}
                 </p>
               )}
             </div>
@@ -367,6 +390,16 @@ export const TokenPage = () => {
                 </div>
               </div>
             </div>
+
+            {currentVestingEnd && (
+              <div className="glass-panel p-6 rounded-lg">
+                <h2 className="text-xl font-bold text-[#00ffee] mb-4 font-orbitron">Vesting</h2>
+                <div className="hover-card bg-black/20 p-4 rounded-lg border border-[rgba(0,255,238,0.1)]">
+                  <div className="text-gray-400 text-sm mb-1">Vesting Period</div>
+                  <div className="text-xl font-semibold">{currentVestingEnd}</div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

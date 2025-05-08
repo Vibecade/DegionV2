@@ -1,10 +1,35 @@
 import { TokenPrice } from '../types';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Validate that we have the required environment variables
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Missing Supabase environment variables. Please check your .env file.');
+}
+
+// Create Supabase client with error handling
+let supabase;
+try {
+  supabase = createClient(
+    supabaseUrl,
+    supabaseKey
+  );
+} catch (error) {
+  console.error('Failed to initialize Supabase client:', error);
+  // Create a dummy client that will gracefully fail
+  supabase = {
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: async () => ({ data: null, error: new Error('Supabase client not initialized') })
+        })
+      }),
+      upsert: async () => ({ error: new Error('Supabase client not initialized') })
+    })
+  };
+}
 
 const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
 let lastRequestTime = 0;
@@ -21,6 +46,11 @@ async function rateLimit() {
 
 async function getStoredPrice(tokenId: string): Promise<TokenPrice | null> {
   try {
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn('Supabase environment variables not configured. Skipping cache lookup.');
+      return null;
+    }
+
     const { data, error } = await supabase
       .from('token_prices')
       .select('price, roi_value, updated_at')
@@ -56,6 +86,11 @@ async function getStoredPrice(tokenId: string): Promise<TokenPrice | null> {
 
 async function storePrice(tokenId: string, price: number, roiValue: number) {
   try {
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn('Supabase environment variables not configured. Skipping price storage.');
+      return;
+    }
+
     const { error } = await supabase
       .from('token_prices')
       .upsert(

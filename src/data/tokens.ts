@@ -78,7 +78,39 @@ export const tokens: Token[] = [
     description: 'A new class of secure computation.',
     links: {
       website: 'https://www.enclave.gg/',
-      twitter: 'https://x.com/EnclaveE3'
+      twitter: 'https://x.com/EnclaveE3' 
+    }
+  },
+  {
+    id: 'enclavemoney',
+    name: 'Enclave Money',
+    status: 'Pending TGE',
+    launchDate: 'TBD',
+    seedPrice: 'TBD',
+    currentPrice: '--',
+    roi: '--',
+    investment: '--',
+    vestingEnd: '12-month lockup, then 36-month monthly linear unlock',
+    description: 'Enclave Money is building the future of decentralized finance.',
+    links: {
+      website: 'https://enclave.money/',
+      twitter: 'https://x.com/EnclaveMoney'
+    }
+  },
+  {
+    id: 'fragmetric',
+    name: 'Fragmetric',
+    status: 'Pending TGE',
+    launchDate: 'TBD',
+    seedPrice: 'TBD',
+    currentPrice: '--',
+    roi: '--',
+    investment: '--',
+    vestingEnd: '10% at TGE, 12-month lockup, then 24-month linear unlock',
+    description: 'Fragmetric is revolutionizing on-chain data analytics.',
+    links: {
+      website: 'https://fragmetric.io/',
+      twitter: 'https://x.com/fragmetric'
     }
   },
   {
@@ -205,9 +237,25 @@ export const tokens: Token[] = [
     links: {
       website: 'https://www.skatechain.org/',
       twitter: 'https://x.com/skate_chain'
+    } 
+  },
+  {
+    id: 'session',
+    name: 'Session',
+    status: 'Pending TGE',
+    launchDate: 'TBD',
+    seedPrice: 'TBD',
+    currentPrice: '--',
+    roi: '--',
+    investment: '--',
+    vestingEnd: '12-month lockup, then 12-month monthly linear unlock',
+    description: 'Session is building secure, private, decentralized messaging infrastructure.',
+    links: {
+      website: 'https://session.org/',
+      twitter: 'https://x.com/session_app'
     }
   },
-    {
+  {
     id: 'resolv',
     name: 'Resolv',
     status: 'ICO Soon',

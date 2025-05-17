@@ -15,8 +15,9 @@ export const HomePage = () => {
 
   // Sort tokens to prioritize live projects
   const sortedTokens = [...tokens].sort((a, b) => {
-    if (a.status === 'Live' && b.status !== 'Live') return -1;
-    if (a.status !== 'Live' && b.status === 'Live') return 1;
+    if (a.status === 'Live' && b.status !== 'Live' && b.status !== 'Live (Vested)') return -1;
+    if (a.status === 'Live (Vested)' && b.status !== 'Live') return -1;
+    if ((a.status !== 'Live' && a.status !== 'Live (Vested)') && (b.status === 'Live' || b.status === 'Live (Vested)')) return 1;
     return 0;
   });
 

@@ -157,7 +157,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
 }
 
 .badge-live-vested {
-  @apply bg-purple-500/20 text-purple-400 border border-purple-500/30;
+  @apply bg-orange-500/20 text-orange-400 border border-orange-500/30;
   animation: pulse 2s infinite;
 }
 

@@ -1,4 +1,4 @@
-import { DuneClient } from '@dune/client';
+import { DuneClient } from '@duneanalytics/client';
 import { TokenSale, DuneQueryResult } from '../types';
 import { supabase } from './supabaseClient';
 

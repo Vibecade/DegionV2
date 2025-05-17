@@ -176,12 +176,13 @@ export async function getSilencioPrice(): Promise<TokenPrice> {
 export async function getCornPrice(): Promise<TokenPrice> {
   return fetchWithCache(
     'https://api.coingecko.com/api/v3/simple/price?ids=corn-3&vs_currencies=usd',
-    0.07, // Initial seed price
+    0.07,
     'corn'
   );
 }
 
 function calculateRoi(currentPrice: number, seedPrice: number): number {
   const investment = 1000; // Base investment of $1000
-  return investment * (1 + ((currentPrice - seedPrice) / seedPrice));
+  const tokens = investment / seedPrice; // Number of tokens bought with $1000
+  return tokens * currentPrice; // Current value of those tokens
 }

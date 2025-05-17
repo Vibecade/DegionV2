@@ -7,7 +7,7 @@ import { DiscussionPage } from './pages/DiscussionPage';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-[#09131b] text-[#cfd0d1] font-['Orbitron'] relative overflow-x-hidden">
+      <div className="min-h-screen bg-cyber-bg text-cyber-text font-['Orbitron'] relative overflow-x-hidden">
         <TronGrid />
         <div className="relative z-10">
           <Routes>

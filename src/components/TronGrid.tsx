@@ -30,19 +30,19 @@ export const TronGrid = () => {
       constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 1.2 + 0.3;
+        this.size = Math.random() * 0.8 + 0.2;
         this.speedX = (Math.random() - 0.5) * 0.3;
         this.speedY = (Math.random() - 0.5) * 0.3;
         this.opacity = Math.random() * 0.5 + 0.2;
         this.color = this.getRandomColor();
-        this.connection = 120; // Connection radius
+        this.connection = 180; // Increased connection radius for more web-like effect
       }
 
       getRandomColor() {
         const colors = [
-          'rgba(0, 255, 238, alpha)', // Cyan
-          'rgba(10, 252, 78, alpha)',  // Green
-          'rgba(64, 134, 214, alpha)', // Blue
+          'rgba(255, 0, 240, alpha)', // Neon Pink
+          'rgba(255, 0, 240, alpha)', // Duplicate to increase chance of pink
+          'rgba(0, 255, 255, alpha)',  // Cyan
         ];
         return colors[Math.floor(Math.random() * colors.length)];
       }
@@ -72,7 +72,7 @@ export const TronGrid = () => {
     }
 
     const particles: Particle[] = [];
-    const particleCount = Math.min(40, (canvas.width * canvas.height) / 60000);
+    const particleCount = Math.min(60, (canvas.width * canvas.height) / 40000);
     
     for (let i = 0; i < particleCount; i++) {
       particles.push(new Particle());
@@ -84,15 +84,32 @@ export const TronGrid = () => {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
           const distance = Math.sqrt(dx * dx + dy * dy);
+          const maxDistance = particles[i].connection;
 
-          if (distance < particles[i].connection) {
-            const opacity = (1 - distance / particles[i].connection) * 0.15;
+          if (distance < maxDistance) {
+            const opacity = (1 - distance / maxDistance) * 0.2;
             ctx.beginPath();
             ctx.strokeStyle = particles[i].color.replace('alpha', opacity.toString());
-            ctx.lineWidth = 0.5;
+            ctx.lineWidth = 0.3;
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
             ctx.stroke();
+
+            // Add additional connection points for web effect
+            if (distance < maxDistance * 0.5 && Math.random() > 0.8) {
+              const midX = (particles[i].x + particles[j].x) / 2;
+              const midY = (particles[i].y + particles[j].y) / 2;
+              const offset = 20;
+              const controlX = midX + (Math.random() - 0.5) * offset;
+              const controlY = midY + (Math.random() - 0.5) * offset;
+              
+              ctx.beginPath();
+              ctx.strokeStyle = particles[i].color.replace('alpha', (opacity * 0.5).toString());
+              ctx.lineWidth = 0.2;
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.quadraticCurveTo(controlX, controlY, particles[j].x, particles[j].y);
+              ctx.stroke();
+            }
           }
         }
       }
@@ -104,8 +121,8 @@ export const TronGrid = () => {
       
       // Create gradient background
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, '#09131b');
-      gradient.addColorStop(1, '#0a1f2d');
+      gradient.addColorStop(0, '#121212');
+      gradient.addColorStop(1, '#1a1a1a');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -135,13 +152,13 @@ export const TronGrid = () => {
         const distance = Math.sqrt(dx * dx + dy * dy);
         
         if (distance < 150) {
-          particle.opacity = 0.8;
-          particle.size = 1.5;
-          particle.connection = 180;
+          particle.opacity = 0.9;
+          particle.size = 1.2;
+          particle.connection = 220;
         } else {
           particle.opacity = Math.random() * 0.5 + 0.2;
-          particle.size = Math.random() * 1.2 + 0.3;
-          particle.connection = 120;
+          particle.size = Math.random() * 0.8 + 0.2;
+          particle.connection = 180;
         }
       });
     };

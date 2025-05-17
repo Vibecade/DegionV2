@@ -45,3 +45,25 @@ export interface TokenSale {
   participants: number;
   transactions: number;
 }
+
+export interface DuneQueryResult {
+  execution_id: string;
+  state: string;
+  submitted_at: string;
+  expires_at: string;
+  execution_started_at: string;
+  execution_ended_at: string;
+  result: {
+    rows: any[];
+    metadata: {
+      column_names: string[];
+      column_types: string[];
+    };
+  };
+}
+
+export interface TokenMetrics {
+  holdersCount: number;
+  volume24h: number;
+  priceChange24h: number;
+}

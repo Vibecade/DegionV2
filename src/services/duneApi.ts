@@ -1,106 +1,93 @@
-import { createClient } from '@supabase/supabase-js';
-import { TokenSale } from '../types';
+import { DuneClient } from '@dune/client';
+import { TokenSale, DuneQueryResult } from '../types';
+import { supabase } from './supabaseClient';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+const DUNE_API_KEY = import.meta.env.VITE_DUNE_API_KEY;
+const CACHE_DURATION = 3 * 60 * 60 * 1000; // 3 hours
 
-// Cache duration in milliseconds (3 days)
-const CACHE_DURATION = 3 * 24 * 60 * 60 * 1000;
+const dune = new DuneClient(DUNE_API_KEY);
 
-interface DuneDataRow {
-  project_name: string;
-  contract_address: string;
-  network: string;
-  funds_raised_usdc: string;
-  participants: string;
+// Query IDs for different metrics
+const QUERIES = {
+  SALES_DATA: '4684680',
+  TOKEN_HOLDERS: '4684681',
+  TRADING_VOLUME: '4684682'
+};
+
+interface CachedData {
+  data: any;
+  timestamp: number;
+}
+
+const cache = new Map<string, CachedData>();
+
+async function fetchWithCache(queryId: string): Promise<any> {
+  const cached = cache.get(queryId);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+
+  try {
+    const result = await dune.refresh(queryId);
+    const data = await dune.getResult(result.execution_id);
+
+    cache.set(queryId, { data, timestamp: Date.now() });
+    return data;
+  } catch (error) {
+    console.error(`Error fetching Dune query ${queryId}:`, error);
+    throw error;
+  }
 }
 
 export async function fetchDuneSalesData(): Promise<TokenSale[]> {
   try {
-    // First, try to get cached data from Supabase
-    const cachedData = await getCachedSalesData();
-    if (cachedData && cachedData.length > 0) {
-      return cachedData;
-    }
-
-    // If no cached data or API key is missing, use fallback data
-    if (!import.meta.env.VITE_DUNE_API_KEY) {
-      console.log('No Dune API key found, using fallback data');
-      return await getFallbackSalesData();
-    }
-
-    // If we have an API key, fetch from Dune API
-    const response = await fetch('https://api.dune.com/api/v1/query/4684680/results/csv?limit=1000', {
-      headers: {
-        'X-Dune-API-Key': import.meta.env.VITE_DUNE_API_KEY
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch Dune data: ${response.status} ${response.statusText}`);
-    }
-
-    const csvText = await response.text();
-    const salesData = parseCsvData(csvText);
-    
-    // Cache the data in Supabase
+    const result = await fetchWithCache(QUERIES.SALES_DATA);
+    const salesData = transformSalesData(result);
     await cacheSalesData(salesData);
-    
     return salesData;
   } catch (error) {
-    console.error('Error fetching Dune data:', error);
-    // Fallback to static data if API call fails
-    return await getFallbackSalesData();
+    console.error('Error fetching sales data:', error);
+    return getFallbackSalesData();
   }
 }
 
-function parseCsvData(csvText: string): TokenSale[] {
-  // Skip header row and split by lines
-  const rows = csvText.split('\n').slice(1).filter(row => row.trim() !== '');
-  
-  return rows.map(row => {
-    const columns = row.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
-    
-    // Map CSV columns to our data structure
-    const [project_name, contract_address, network, funds_raised_usdc, participants] = columns;
-    
+export async function fetchTokenHolders(tokenAddress: string): Promise<number> {
+  try {
+    const result = await fetchWithCache(QUERIES.TOKEN_HOLDERS);
+    return result.data.find((row: any) => 
+      row.token_address.toLowerCase() === tokenAddress.toLowerCase()
+    )?.holders_count || 0;
+  } catch (error) {
+    console.error('Error fetching token holders:', error);
+    return 0;
+  }
+}
+
+export async function fetchTradingVolume(tokenAddress: string): Promise<number> {
+  try {
+    const result = await fetchWithCache(QUERIES.TRADING_VOLUME);
+    return result.data.find((row: any) =>
+      row.token_address.toLowerCase() === tokenAddress.toLowerCase()
+    )?.volume_24h || 0;
+  } catch (error) {
+    console.error('Error fetching trading volume:', error);
+    return 0;
+  }
+}
+
+function transformSalesData(result: DuneQueryResult): TokenSale[] {
+  if (!result?.data) return [];
+
+  return result.data.map((row: any) => {
     return {
-      name: project_name,
-      address: contract_address,
-      network: network.toLowerCase() as 'ethereum' | 'arbitrum',
-      fundsRaisedUSDC: parseInt(funds_raised_usdc, 10) || 0,
-      participants: parseInt(participants, 10) || 0,
-      transactions: parseInt(participants, 10) || 0 // Using participants as transactions for now
+      name: row.project_name,
+      address: row.contract_address,
+      network: row.network.toLowerCase(),
+      fundsRaisedUSDC: parseFloat(row.funds_raised_usdc),
+      participants: parseInt(row.participants),
+      transactions: parseInt(row.transactions)
     };
   });
-}
-
-async function getCachedSalesData(): Promise<TokenSale[] | null> {
-  try {
-    const { data, error } = await supabase
-      .from('dune_sales_data')
-      .select('data, updated_at')
-      .eq('id', 1)
-      .maybeSingle();
-
-    if (error || !data) {
-      return null;
-    }
-
-    // Check if cache is still valid
-    const updatedAt = new Date(data.updated_at);
-    const now = new Date();
-    if (now.getTime() - updatedAt.getTime() > CACHE_DURATION) {
-      return null; // Cache expired
-    }
-
-    return data.data as TokenSale[];
-  } catch (error) {
-    console.error('Error getting cached sales data:', error);
-    return null;
-  }
 }
 
 async function cacheSalesData(salesData: TokenSale[]): Promise<void> {

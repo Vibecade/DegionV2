@@ -216,7 +216,7 @@ export const tokens: Token[] = [
     currentPrice: '--',
     roi: '--',
     investment: '--',
-    vestingEnd: '100% after 12-month lockup',
+    vestingEnd: '100% after 12-month lockup\n100% linearly over 12 months\n100% at TGE',
     description: 'Lit Protocol is the first decentralized key management and private compute network, powering autonomous agents and protocols.',
     links: {
       website: 'https://www.litprotocol.com/',

@@ -1,11 +1,7 @@
-// import { DuneClient } from '@dune/client'; // Dune API not yet set up
 import { TokenSale, DuneQueryResult } from '../types';
 import { supabase } from './supabaseClient';
 
-// const DUNE_API_KEY = import.meta.env.VITE_DUNE_API_KEY;
 const CACHE_DURATION = 3 * 60 * 60 * 1000; // 3 hours
-
-// const dune = new DuneClient(DUNE_API_KEY);
 
 // Query IDs for different metrics
 const QUERIES = {

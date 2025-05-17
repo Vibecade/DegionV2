@@ -175,15 +175,17 @@ export async function getSilencioPrice(): Promise<TokenPrice> {
 
 export async function getCornPrice(): Promise<TokenPrice> {
   return fetchWithCache(
-    'https://api.coingecko.com/api/v3/simple/price?ids=corn-3&vs_currencies=usd',
+    'https://api.coingecko.com/api/v3/simple/price?ids=corn&vs_currencies=usd',
     0.07,
     'corn'
   );
 }
 
 function calculateRoi(currentPrice: number, seedPrice: number): number {
-  // Calculate ROI percentage
+  if (currentPrice <= 0 || seedPrice <= 0) {
+    return 1000; // Return initial investment if prices are invalid
+  }
   const roiPercentage = ((currentPrice - seedPrice) / seedPrice);
-  // Return what $1000 would be worth with this ROI
-  return 1000 * (1 + roiPercentage);
+  const investmentValue = 1000 * (1 + roiPercentage);
+  return Math.round(investmentValue * 100) / 100; // Round to 2 decimal places
 }

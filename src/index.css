@@ -21,9 +21,9 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
 /* Logo styles */
 .logo-container {
   position: relative;
-  width: 150px;
-  height: 150px;
-  margin: 0 auto 1rem;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 0.5rem;
   perspective: 1500px;
 }
 
@@ -301,8 +301,8 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
 /* Mobile optimizations */
 @media (max-width: 640px) {
   .logo-container {
-    width: 120px;
-    height: 120px;
-    margin-bottom: 0.75rem;
+    width: 100px;
+    height: 100px;
+    margin-bottom: 0.5rem;
   }
 }

@@ -1,11 +1,11 @@
-import { DuneClient } from '@dune/client';
+// import { DuneClient } from '@dune/client'; // Dune API not yet set up
 import { TokenSale, DuneQueryResult } from '../types';
 import { supabase } from './supabaseClient';
 
-const DUNE_API_KEY = import.meta.env.VITE_DUNE_API_KEY;
+// const DUNE_API_KEY = import.meta.env.VITE_DUNE_API_KEY;
 const CACHE_DURATION = 3 * 60 * 60 * 1000; // 3 hours
 
-const dune = new DuneClient(DUNE_API_KEY);
+// const dune = new DuneClient(DUNE_API_KEY);
 
 // Query IDs for different metrics
 const QUERIES = {
@@ -21,30 +21,15 @@ interface CachedData {
 
 const cache = new Map<string, CachedData>();
 
+// Temporarily disabled until Dune API is set up
 async function fetchWithCache(queryId: string): Promise<any> {
-  const cached = cache.get(queryId);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data;
-  }
-
-  try {
-    const result = await dune.refresh(queryId);
-    const data = await dune.getResult(result.execution_id);
-
-    cache.set(queryId, { data, timestamp: Date.now() });
-    return data;
-  } catch (error) {
-    console.error(`Error fetching Dune query ${queryId}:`, error);
-    throw error;
-  }
+  return null;
 }
 
 export async function fetchDuneSalesData(): Promise<TokenSale[]> {
   try {
-    const result = await fetchWithCache(QUERIES.SALES_DATA);
-    const salesData = transformSalesData(result);
-    await cacheSalesData(salesData);
-    return salesData;
+    // Temporarily return fallback data until Dune API is set up
+    return getFallbackSalesData();
   } catch (error) {
     console.error('Error fetching sales data:', error);
     return getFallbackSalesData();
@@ -53,10 +38,8 @@ export async function fetchDuneSalesData(): Promise<TokenSale[]> {
 
 export async function fetchTokenHolders(tokenAddress: string): Promise<number> {
   try {
-    const result = await fetchWithCache(QUERIES.TOKEN_HOLDERS);
-    return result.data.find((row: any) => 
-      row.token_address.toLowerCase() === tokenAddress.toLowerCase()
-    )?.holders_count || 0;
+    // Temporarily return 0 until Dune API is set up
+    return 0;
   } catch (error) {
     console.error('Error fetching token holders:', error);
     return 0;
@@ -65,10 +48,8 @@ export async function fetchTokenHolders(tokenAddress: string): Promise<number> {
 
 export async function fetchTradingVolume(tokenAddress: string): Promise<number> {
   try {
-    const result = await fetchWithCache(QUERIES.TRADING_VOLUME);
-    return result.data.find((row: any) =>
-      row.token_address.toLowerCase() === tokenAddress.toLowerCase()
-    )?.volume_24h || 0;
+    // Temporarily return 0 until Dune API is set up
+    return 0;
   } catch (error) {
     console.error('Error fetching trading volume:', error);
     return 0;

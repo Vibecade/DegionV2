@@ -175,7 +175,7 @@ export async function getSilencioPrice(): Promise<TokenPrice> {
 
 export async function getCornPrice(): Promise<TokenPrice> {
   return fetchWithCache(
-    'https://api.coingecko.com/api/v3/simple/price?ids=corn&vs_currencies=usd',
+    'https://api.coingecko.com/api/v3/simple/price?ids=corn-3&vs_currencies=usd',
     0.07,
     'corn'
   );

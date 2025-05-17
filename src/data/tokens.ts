@@ -177,6 +177,36 @@ export const tokens: Token[] = [
     }
   },
   {
+    id: 'intuition',
+    name: 'Intuition',
+    status: 'ICO Soon',
+    launchDate: 'TBD',
+    seedPrice: 'TBD',
+    currentPrice: '--',
+    roi: '--',
+    investment: '--',
+    description: 'Technologically-mediated intuition designed to help people and machines navigate our complex world.',
+    links: {
+      website: 'https://intuition.systems/',
+      twitter: 'https://x.com/intuitionsys'
+    }
+  },
+  {
+    id: 'inferencelabs',
+    name: 'Inference Labs',
+    status: 'ICO Soon',
+    launchDate: 'TBD',
+    seedPrice: 'TBD',
+    currentPrice: '--',
+    roi: '--',
+    investment: '--',
+    description: 'Proof of Inference - Trustless AI verification',
+    links: {
+      website: 'https://inference.xyz/',
+      twitter: 'https://x.com/inferencelabs'
+    }
+  },
+  {
     id: 'hyperlane',
     name: 'Hyperlane',
     status: 'Cancelled',

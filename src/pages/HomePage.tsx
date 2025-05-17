@@ -13,11 +13,16 @@ export const HomePage = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
 
-  // Sort tokens to prioritize live projects
+  // Sort tokens by status priority
   const sortedTokens = [...tokens].sort((a, b) => {
-    if (a.status === 'Live' && b.status !== 'Live' && b.status !== 'Live (Vested)') return -1;
-    if (a.status === 'Live (Vested)' && b.status !== 'Live') return -1;
-    if ((a.status !== 'Live' && a.status !== 'Live (Vested)') && (b.status === 'Live' || b.status === 'Live (Vested)')) return 1;
+    const statusPriority = {
+      'Live': 0,
+      'Live (Vested)': 1,
+      'Pending TGE': 2,
+      'ICO Soon': 3,
+      'Cancelled': 4
+    };
+    return (statusPriority[a.status] ?? 999) - (statusPriority[b.status] ?? 999);
     return 0;
   });
 

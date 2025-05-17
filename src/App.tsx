@@ -7,6 +7,9 @@ import { DiscussionPage } from './pages/DiscussionPage';
 function App() {
   return (
     <Router>
+      <div id="app-loading" className="fixed inset-0 flex items-center justify-center bg-cyber-bg text-cyber-text z-50">
+        Loading...
+      </div>
       <div className="min-h-screen bg-cyber-bg text-cyber-text font-['Orbitron'] relative overflow-x-hidden">
         <TronGrid />
         <div className="relative z-10">

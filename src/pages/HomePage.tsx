@@ -100,17 +100,22 @@ export const HomePage = () => {
 
           <div className="flex justify-center mt-8 mb-8">
             <button
-              className="group relative px-8 py-4 bg-gradient-to-r from-[#00ffee]/20 to-[#37fffc]/20 rounded-full 
-                         hover:from-[#00ffee] hover:to-[#37fffc] transition-all duration-300
-                         border border-[#00ffee]/30 hover:border-[#00ffee] backdrop-blur-sm
-                         hover:shadow-[0_0_30px_rgba(0,255,238,0.3)]"
+              className="group relative px-8 py-4 bg-black/30 rounded-lg overflow-hidden
+                         border border-cyber-primary/30 hover:border-cyber-primary
+                         transition-all duration-500 backdrop-blur-sm"
               onClick={() => setIsSupportModalOpen(true)}
             >
-              <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <Heart className="w-5 h-5 text-black animate-pulse" />
-              </span>
-              <span className="flex items-center gap-2 group-hover:text-black transition-colors duration-300">
-                <Heart className="w-5 h-5 group-hover:opacity-0 transition-opacity duration-300" />
+              {/* Animated background gradient */}
+              <span className="absolute inset-0 bg-gradient-to-r from-cyber-primary/0 via-cyber-primary/20 to-cyber-primary/0
+                               translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+              
+              {/* Glow effect */}
+              <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                               bg-cyber-primary/20 blur-xl" />
+              
+              <span className="relative flex items-center gap-2 text-cyber-primary group-hover:text-white
+                               transition-colors duration-300 font-orbitron tracking-wider">
+                <Heart className="w-5 h-5 animate-pulse" />
                 Support Degion.xyz
               </span>
             </button>

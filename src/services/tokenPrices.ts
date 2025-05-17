@@ -182,7 +182,8 @@ export async function getCornPrice(): Promise<TokenPrice> {
 }
 
 function calculateRoi(currentPrice: number, seedPrice: number): number {
-  const investment = 1000; // Base investment of $1000
-  const tokens = investment / seedPrice; // Number of tokens bought with $1000
-  return tokens * currentPrice; // Current value of those tokens
+  // Calculate ROI percentage
+  const roiPercentage = ((currentPrice - seedPrice) / seedPrice);
+  // Return what $1000 would be worth with this ROI
+  return 1000 * (1 + roiPercentage);
 }

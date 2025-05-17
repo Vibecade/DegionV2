@@ -33,12 +33,15 @@ try {
 
 const CACHE_DURATION = 30 * 1000; // 30 seconds in milliseconds
 let lastRequestTime = 0;
-const RATE_LIMIT_DELAY = 30 * 1000; // 30 seconds between requests
+const RATE_LIMIT_DELAY = 60 * 1000; // Increased to 60 seconds between requests
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 5000; // 5 seconds
 
 async function rateLimit() {
   const now = Date.now();
   const timeToWait = Math.max(0, lastRequestTime + RATE_LIMIT_DELAY - now);
   if (timeToWait > 0) {
+    console.log(`Rate limiting: waiting ${timeToWait/1000} seconds before next request`);
     await new Promise(resolve => setTimeout(resolve, timeToWait));
   }
   lastRequestTime = Date.now();
@@ -117,6 +120,30 @@ async function storePrice(tokenId: string, price: number, roiValue: number) {
   }
 }
 
+async function fetchWithRetry(url: string, retryCount = 0): Promise<Response> {
+  try {
+    await rateLimit();
+    const response = await fetch(url);
+    
+    if (response.status === 429 && retryCount < MAX_RETRIES) {
+      const retryDelay = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
+      console.log(`Rate limit hit, retrying in ${retryDelay/1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+      return fetchWithRetry(url, retryCount + 1);
+    }
+    
+    return response;
+  } catch (error) {
+    if (retryCount < MAX_RETRIES) {
+      const retryDelay = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
+      console.log(`Network error, retrying in ${retryDelay/1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+      return fetchWithRetry(url, retryCount + 1);
+    }
+    throw error;
+  }
+}
+
 async function fetchWithCache(url: string, seedPrice: number, tokenId: string): Promise<TokenPrice> {
   try {
     // Try to get cached price from Supabase
@@ -125,9 +152,7 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
       return cachedPrice;
     }
 
-    await rateLimit();
-
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -160,6 +185,12 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
     return result;
   } catch (error) {
     console.error(`Error fetching ${tokenId} price:`, error);
+    // Return cached price if available, even if stale
+    const staleCachedPrice = await getStoredPrice(tokenId);
+    if (staleCachedPrice) {
+      console.log('Using stale cached price due to error:', staleCachedPrice);
+      return staleCachedPrice;
+    }
     return { current_price: 0, roi_value: 0 };
   }
 }

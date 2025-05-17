@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom';
 import { Token } from '../types';
 import { useEffect, useState } from 'react';
 import { getFuelPrice, getSilencioPrice } from '../services/tokenPrices';
+import { fetchTokenHolders, fetchTradingVolume } from '../services/duneApi';
 import { getTokenInfo } from '../services/tokenInfo';
-import { ArrowUpRight, Users, Wallet } from 'lucide-react';
+import { ArrowUpRight, Users, Wallet, LineChart, TrendingUp } from 'lucide-react';
 import { salesData } from '../data/sales';
 import { formatUSDC, formatNumber } from '../utils/formatters';
 
@@ -32,6 +33,8 @@ export const TokenCard = ({ token }: TokenCardProps) => {
   const [currentStatus, setCurrentStatus] = useState(status);
   const [currentLaunchDate, setCurrentLaunchDate] = useState(launchDate);
   const [currentVestingEnd, setCurrentVestingEnd] = useState(vestingEnd);
+  const [holders, setHolders] = useState<number>(0);
+  const [volume24h, setVolume24h] = useState<number>(0);
 
   const saleData = salesData.find(sale => sale.name.toLowerCase() === name.toLowerCase());
 
@@ -52,6 +55,25 @@ export const TokenCard = ({ token }: TokenCardProps) => {
 
     fetchTokenInfo();
   }, [id]);
+
+  // Fetch Dune Analytics data
+  useEffect(() => {
+    if (saleData?.address) {
+      const fetchDuneData = async () => {
+        try {
+          const [holdersCount, tradingVolume] = await Promise.all([
+            fetchTokenHolders(saleData.address),
+            fetchTradingVolume(saleData.address)
+          ]);
+          setHolders(holdersCount);
+          setVolume24h(tradingVolume);
+        } catch (error) {
+          console.error(`Error fetching Dune data for ${id}:`, error);
+        }
+      };
+      fetchDuneData();
+    }
+  }, [id, saleData]);
 
   // Get live price data for tokens that are trading
   useEffect(() => {
@@ -151,14 +173,14 @@ export const TokenCard = ({ token }: TokenCardProps) => {
           <div className="grid grid-cols-1 gap-2">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#00ffee]" />
+                <TrendingUp className="w-4 h-4 text-cyber-primary" />
                 <span className="text-gray-400">Investors:</span>
               </div>
               <span>{formatNumber(saleData.participants)}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
-                <Wallet className="w-4 h-4 text-[#00ffee]" />
+                <Wallet className="w-4 h-4 text-cyber-primary" />
                 <span className="text-gray-400">Invested:</span>
               </div>
               <span>{formatUSDC(saleData.fundsRaisedUSDC)}</span>

@@ -179,7 +179,7 @@ export const tokens: Token[] = [
   {
     id: 'hyperlane',
     name: 'Hyperlane',
-    status: 'ICO Soon',
+    status: 'Cancelled',
     launchDate: 'TBD',
     seedPrice: 'TBD',
     currentPrice: '--',

@@ -31,9 +31,9 @@ try {
   };
 }
 
-const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+const CACHE_DURATION = 30 * 1000; // 30 seconds in milliseconds
 let lastRequestTime = 0;
-const RATE_LIMIT_DELAY = 120 * 1000; // 120 seconds between requests
+const RATE_LIMIT_DELAY = 30 * 1000; // 30 seconds between requests
 
 async function rateLimit() {
   const now = Date.now();
@@ -63,6 +63,7 @@ async function getStoredPrice(tokenId: string): Promise<TokenPrice | null> {
     }
 
     if (!data) {
+      console.log('No cached price data found');
       return null;
     }
 
@@ -71,9 +72,11 @@ async function getStoredPrice(tokenId: string): Promise<TokenPrice | null> {
     const age = now.getTime() - updated.getTime();
 
     if (age > CACHE_DURATION) {
+      console.log('Cached price data is stale:', age, 'ms old');
       return null;
     }
 
+    console.log('Using cached price data:', data);
     return {
       current_price: Number(data.price),
       roi_value: Number(data.roi_value)
@@ -132,10 +135,13 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
     const data = await response.json();
     
     let price = 0;
+    console.log('CoinGecko response:', data);
+    
     if (data && typeof data === 'object') {
       const firstKey = Object.keys(data)[0];
       if (firstKey && data[firstKey] && typeof data[firstKey].usd === 'number') {
         price = data[firstKey].usd;
+        console.log('Extracted price:', price);
       }
     }
     
@@ -147,6 +153,7 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
 
     // Store in Supabase if we got a valid price
     if (price > 0) {
+      console.log('Storing new price in Supabase:', result);
       await storePrice(tokenId, price, roiValue);
     }
 

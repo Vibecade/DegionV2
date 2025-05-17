@@ -110,4 +110,17 @@ function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
   );
 }
 
+const getTradingViewSymbol = (id: string) => {
+  switch (id.toLowerCase()) {
+    case 'fuel':
+      return 'KUCOIN:FUELUSDT';
+    case 'silencio':
+      return 'KUCOIN:SLCUSDT';
+    case 'corn':
+      return 'KUCOIN:CORNUSDT';
+    default:
+      return '';
+  }
+};
+
 export default memo(TradingViewWidget);

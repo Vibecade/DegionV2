@@ -33,7 +33,7 @@ try {
 
 const CACHE_DURATION = 30 * 1000; // 30 seconds in milliseconds
 let lastRequestTime = 0;
-const RATE_LIMIT_DELAY = 60 * 1000; // Increased to 60 seconds between requests
+const RATE_LIMIT_DELAY = 30 * 60 * 1000; // 30 minutes between requests
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY = 5000; // 5 seconds
 
@@ -41,7 +41,7 @@ async function rateLimit() {
   const now = Date.now();
   const timeToWait = Math.max(0, lastRequestTime + RATE_LIMIT_DELAY - now);
   if (timeToWait > 0) {
-    console.log(`Rate limiting: waiting ${timeToWait/1000} seconds before next request`);
+    console.log(`Rate limiting: waiting ${Math.round(timeToWait/60000)} minutes before next request`);
     await new Promise(resolve => setTimeout(resolve, timeToWait));
   }
   lastRequestTime = Date.now();
@@ -75,8 +75,11 @@ async function getStoredPrice(tokenId: string): Promise<TokenPrice | null> {
     const age = now.getTime() - updated.getTime();
 
     if (age > CACHE_DURATION) {
-      console.log('Cached price data is stale:', age, 'ms old');
-      return null;
+      console.log('Using stale cache while waiting for rate limit');
+      return {
+        current_price: Number(data.price),
+        roi_value: Number(data.roi_value)
+      };
     }
 
     console.log('Using cached price data:', data);

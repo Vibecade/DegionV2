@@ -101,14 +101,13 @@ export async function getLastUpdateTime(): Promise<string | null> {
       .from('token_info')
       .select('updated_at')
       .order('updated_at', { ascending: false })
-      .limit(1)
-      .single();
+      .limit(1);
 
-    if (error || !data) {
+    if (error || !data || data.length === 0) {
       return null;
     }
 
-    return new Date(data.updated_at).toLocaleString();
+    return new Date(data[0].updated_at).toLocaleString();
   } catch (error) {
     console.error('Error getting last update time:', error);
     return null;

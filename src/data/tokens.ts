@@ -210,7 +210,7 @@ export const tokens: Token[] = [
   {
     id: 'litprotocol',
     name: 'Lit Protocol',
-    status: 'ICO Soon',
+    status: 'Pending TGE',
     launchDate: 'TBD',
     seedPrice: 'TBD',
     currentPrice: '--',
@@ -226,7 +226,7 @@ export const tokens: Token[] = [
   {
     id: 'skate',
     name: 'Skate',
-    status: 'ICO Soon',
+    status: 'Pending TGE',
     launchDate: 'TBD',
     seedPrice: 'TBD',
     currentPrice: '--',
@@ -258,7 +258,7 @@ export const tokens: Token[] = [
   {
     id: 'resolv',
     name: 'Resolv',
-    status: 'ICO Soon',
+    status: 'Pending TGE',
     launchDate: 'TBD',
     seedPrice: 'TBD',
     currentPrice: '--',

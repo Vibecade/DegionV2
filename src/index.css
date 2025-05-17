@@ -9,9 +9,9 @@
 /* Base styles */
 body {
   font-family: 'Inter', sans-serif;
-  background: #09131b;
+  background: #121212;
   overflow-x: hidden;
-  color: #cfd0d1;
+  color: #F0F0F0;
 }
 
 h1, h2, h3, h4, h5, h6, .font-orbitron {
@@ -35,7 +35,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
   height: auto;
   backface-visibility: hidden;
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  filter: drop-shadow(0 0 15px rgba(0, 255, 238, 0.3));
+  filter: drop-shadow(0 0 15px rgba(255, 0, 240, 0.3));
 }
 
 .degion {
@@ -59,7 +59,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 255, 238, 0.1);
+  border: 1px solid rgba(255, 0, 240, 0.1);
   overflow: hidden;
 }
 
@@ -67,7 +67,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
   content: '';
   position: absolute;
   inset: -1px;
-  background: linear-gradient(45deg, rgba(0,255,238,0), rgba(0,255,238,0.3), rgba(0,255,238,0));
+  background: linear-gradient(45deg, rgba(255,0,240,0), rgba(255,0,240,0.3), rgba(255,0,240,0));
   border-radius: 0.5rem;
   z-index: -1;
   transition: all 0.4s ease;
@@ -76,9 +76,9 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
 
 .grid-item:hover {
   transform: translateY(-5px);
-  border-color: rgba(0, 255, 238, 0.3);
+  border-color: rgba(255, 0, 240, 0.3);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 
-              0 0 15px rgba(0, 255, 238, 0.2);
+              0 0 15px rgba(255, 0, 240, 0.2);
 }
 
 .grid-item:hover::before {
@@ -95,12 +95,12 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
 /* Token logo animation */
 .token-logo {
   transition: all 0.3s ease;
-  box-shadow: 0 0 10px rgba(0, 255, 238, 0.2);
+  box-shadow: 0 0 10px rgba(255, 0, 240, 0.2);
 }
 
 .grid-item:hover .token-logo {
   transform: scale(1.1);
-  box-shadow: 0 0 15px rgba(0, 255, 238, 0.4);
+  box-shadow: 0 0 15px rgba(255, 0, 240, 0.4);
 }
 
 /* Investment value colors */

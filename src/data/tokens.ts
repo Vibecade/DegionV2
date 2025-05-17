@@ -10,6 +10,7 @@ export const tokens: Token[] = [
     currentPrice: '$0.05',
     roi: '150.00%',
     investment: '$5000.00',
+    vestingEnd: '100% at TGE',
     description: 'Fuel Ignition is a high-performance Ethereum L2, powered by the FuelVM and verifiable at home.',
     links: {
       website: 'https://fuel.network',
@@ -25,6 +26,7 @@ export const tokens: Token[] = [
     currentPrice: '--',
     roi: '--',
     investment: '--',
+    vestingEnd: '100% at TGE',
     description: 'Silencio is a DePIN that uses Web3 technology to create the world\'s most comprehensive noise data network.',
     links: {
       website: 'https://www.silencio.network/',
@@ -40,6 +42,7 @@ export const tokens: Token[] = [
     currentPrice: '--',
     roi: '--',
     investment: '--',
+    vestingEnd: '30% at TGE, 70% linearly over 24 months incl. 6-month cliff',
     description: 'Almanak is an agent-centric platform that allows users to build, train, and manage financial strategies using AI agents.',
     links: {
       website: 'https://almanak.co',
@@ -55,6 +58,7 @@ export const tokens: Token[] = [
     currentPrice: '--',
     roi: '--',
     investment: '--',
+    vestingEnd: '100% linearly over 24 months incl. 12-month cliff',
     description: 'A new class of secure computation.',
     links: {
       website: 'https://pulse.tech',
@@ -70,6 +74,7 @@ export const tokens: Token[] = [
     currentPrice: '--',
     roi: '--',
     investment: '--',
+    vestingEnd: '100% linearly over 24 months',
     description: 'A new class of secure computation.',
     links: {
       website: 'https://www.enclave.gg/',
@@ -85,6 +90,7 @@ export const tokens: Token[] = [
     currentPrice: '--',
     roi: '--',
     investment: '--',
+    vestingEnd: '0% at TGE, 1 year lockup, then 12-month linear vest',
     description: 'Imagine if your Bitcoin earns real yield while powering an entire DeFi ecosystem - that\'s Corn, the first Babylon Bitcoin secured network that uses Bitcoin as gas and rewards everyone who participates',
     links: {
       website: 'https://usecorn.com/',
@@ -100,6 +106,7 @@ export const tokens: Token[] = [
     currentPrice: '--',
     roi: '--',
     investment: '--',
+    vestingEnd: '20% at TGE, 80% linearly over 24 months',
     description: 'Web3 Agents Stack 𓂀',
     links: {
       website: 'https://gizatech.xyz/',
@@ -115,6 +122,7 @@ export const tokens: Token[] = [
     currentPrice: '--',
     roi: '--',
     investment: '--',
+    vestingEnd: '0% at TGE, 1 year lockup, then 24-month linear vest',
     description: 'Zero-knowledge proof systems for everyone.',
     links: {
       website: 'https://nil.foundation/',
@@ -160,6 +168,7 @@ export const tokens: Token[] = [
     currentPrice: '--',
     roi: '--',
     investment: '--',
+    vestingEnd: '50% at TGE, 50% linearly over 12 months',
     description: 'Reducing TEE and ZK verification costs by 95%.',
     links: {
       website: 'https://electron.dev/',
@@ -175,6 +184,7 @@ export const tokens: Token[] = [
     currentPrice: '--',
     roi: '--',
     investment: '--',
+    vestingEnd: '100% after 12-month lockup',
     description: 'Lit Protocol is the first decentralized key management and private compute network, powering autonomous agents and protocols.',
     links: {
       website: 'https://www.litprotocol.com/',
@@ -190,6 +200,7 @@ export const tokens: Token[] = [
     currentPrice: '--',
     roi: '--',
     investment: '--',
+    vestingEnd: '40% at TGE, 60% linearly over 3 months',
     description: 'Skate enables users to interact with applications from any VM while staying on their favorite chain.',
     links: {
       website: 'https://www.skatechain.org/',
@@ -205,6 +216,7 @@ export const tokens: Token[] = [
     currentPrice: '--',
     roi: '--',
     investment: '--',
+    vestingEnd: '12-month lockup, then 24-month monthly linear unlock',
     description: 'Resolv is developing scalable crypto-native yield generation and distribution architecture.',
     links: {
       website: 'https://resolv.xyz/',

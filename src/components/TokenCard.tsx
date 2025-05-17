@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { getFuelPrice, getSilencioPrice, getCornPrice } from '../services/tokenPrices';
 import { fetchTokenHolders, fetchTradingVolume } from '../services/duneApi';
 import { getTokenInfo } from '../services/tokenInfo';
-import { ArrowUpRight, Users, Wallet, LineChart, TrendingUp } from 'lucide-react';
+import { ArrowUpRight, Users, Wallet, LineChart, TrendingUp, Info } from 'lucide-react';
 import { salesData } from '../data/sales';
 import { formatUSDC, formatNumber } from '../utils/formatters';
 
@@ -35,6 +35,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
   const [currentVestingEnd, setCurrentVestingEnd] = useState(vestingEnd);
   const [holders, setHolders] = useState<number>(0);
   const [volume24h, setVolume24h] = useState<number>(0);
+  const [showVestingTooltip, setShowVestingTooltip] = useState(false);
 
   const saleData = salesData.find(sale => sale.name.toLowerCase() === name.toLowerCase());
 
@@ -197,9 +198,23 @@ export const TokenCard = ({ token }: TokenCardProps) => {
       {currentVestingEnd && (
         <div className="mt-4 w-full">
           <div className="flex justify-between items-center text-sm sm:text-base">
-            <span className="text-gray-400">Vesting:</span>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400">Vesting:</span>
+              <button
+                className="relative"
+                onMouseEnter={() => setShowVestingTooltip(true)}
+                onMouseLeave={() => setShowVestingTooltip(false)}
+              >
+                <Info className="w-4 h-4 text-[#00ffee] opacity-60 hover:opacity-100 transition-opacity" />
+                {showVestingTooltip && (
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-xs text-white rounded-lg border border-[#00ffee]/20 shadow-lg z-50">
+                    {currentVestingEnd}
+                  </div>
+                )}
+              </button>
+            </div>
             <span className={currentVestingEnd.toLowerCase() === "tbd" ? "vesting-badge" : "no-vesting-badge"}>
-              {currentVestingEnd}
+              {currentVestingEnd.split(',')[0]}
             </span>
           </div>
         </div>

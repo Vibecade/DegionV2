@@ -13,6 +13,13 @@ export const HomePage = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
 
+  // Sort tokens to prioritize live projects
+  const sortedTokens = [...tokens].sort((a, b) => {
+    if (a.status === 'Live' && b.status !== 'Live') return -1;
+    if (a.status !== 'Live' && b.status === 'Live') return 1;
+    return 0;
+  });
+
   useEffect(() => {
     const fetchLastUpdate = async () => {
       const time = await getLastUpdateTime();
@@ -22,7 +29,7 @@ export const HomePage = () => {
     fetchLastUpdate();
   }, []);
 
-  const filteredTokens = tokens.filter(token => {
+  const filteredTokens = sortedTokens.filter(token => {
     const matchesSearch = token.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          token.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || token.status.toLowerCase() === statusFilter.toLowerCase();

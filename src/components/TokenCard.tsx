@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Token } from '../types';
 import { useEffect, useState } from 'react';
-import { getFuelPrice, getSilencioPrice } from '../services/tokenPrices';
+import { getFuelPrice, getSilencioPrice, getCornPrice } from '../services/tokenPrices';
 import { fetchTokenHolders, fetchTradingVolume } from '../services/duneApi';
 import { getTokenInfo } from '../services/tokenInfo';
 import { ArrowUpRight, Users, Wallet, LineChart, TrendingUp } from 'lucide-react';
@@ -77,13 +77,18 @@ export const TokenCard = ({ token }: TokenCardProps) => {
 
   // Get live price data for tokens that are trading
   useEffect(() => {
-    if (id.toLowerCase() === 'fuel' || id.toLowerCase() === 'silencio') {
+    if (id.toLowerCase() === 'fuel' || id.toLowerCase() === 'silencio' || id.toLowerCase() === 'corn') {
       const fetchPrice = async () => {
         setIsLoading(true);
         try {
-          const data = id.toLowerCase() === 'fuel' 
-            ? await getFuelPrice()
-            : await getSilencioPrice();
+          const data = await (async () => {
+            switch (id.toLowerCase()) {
+              case 'fuel': return await getFuelPrice();
+              case 'silencio': return await getSilencioPrice();
+              case 'corn': return await getCornPrice();
+              default: throw new Error('Unsupported token');
+            }
+          })();
           
           setIsUpdating(true);
           setCurrentPrice(`$${data.current_price.toFixed(6)}`);

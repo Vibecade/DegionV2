@@ -79,8 +79,8 @@ export const tokens: Token[] = [
   {
     id: 'corn',
     name: 'Corn',
-    status: 'Pending TGE',
-    launchDate: 'Q1 2025',
+    status: 'Live',
+    launchDate: '2025-03-15',
     seedPrice: 'TBD',
     currentPrice: '--',
     roi: '--',

@@ -3,7 +3,7 @@ import { tokens } from '../data/tokens';
 import { useEffect, useState } from 'react';
 import { TokenSentiment } from '../types';
 import { getTokenSentiment, submitVote } from '../services/sentiment';
-import { getFuelPrice, getSilencioPrice } from '../services/tokenPrices';
+import { getFuelPrice, getSilencioPrice, getCornPrice } from '../services/tokenPrices';
 import { getTokenInfo } from '../services/tokenInfo';
 import { MessageSquare, ArrowLeft, ExternalLink, Wallet, Users, ArrowUpRight, ChevronRight } from 'lucide-react';
 import TradingViewWidget from '../components/TradingViewWidget';
@@ -61,13 +61,18 @@ export const TokenPage = () => {
   useEffect(() => {
     if (!token || !tokenId) return;
 
-    if (tokenId.toLowerCase() === 'fuel' || tokenId.toLowerCase() === 'silencio') {
+    if (tokenId.toLowerCase() === 'fuel' || tokenId.toLowerCase() === 'silencio' || tokenId.toLowerCase() === 'corn') {
       const fetchPrice = async () => {
         setIsLoading(true);
         try {
-          const data = tokenId.toLowerCase() === 'fuel' 
-            ? await getFuelPrice()
-            : await getSilencioPrice();
+          const data = await (async () => {
+            switch (tokenId.toLowerCase()) {
+              case 'fuel': return await getFuelPrice();
+              case 'silencio': return await getSilencioPrice();
+              case 'corn': return await getCornPrice();
+              default: throw new Error('Unsupported token');
+            }
+          })();
           
           setIsUpdating(true);
           setCurrentPrice(`$${data.current_price.toFixed(6)}`);

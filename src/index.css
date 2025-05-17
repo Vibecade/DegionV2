@@ -157,7 +157,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
 }
 
 .badge-live-vested {
-  @apply bg-[#f97316]/20 text-[#fb923c] border border-[#f97316]/30;
+  @apply bg-orange-500/20 text-orange-400 border border-orange-500/30;
   animation: pulse 2s infinite;
 }
 
@@ -167,7 +167,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
 }
 
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.2); }
+  0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); }
   70% { box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
   100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
 }

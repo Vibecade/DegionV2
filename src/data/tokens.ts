@@ -94,7 +94,7 @@ export const tokens: Token[] = [
     description: 'Enclave Money is building the future of decentralized finance.',
     links: {
       website: 'https://enclave.money/',
-      twitter: 'https://x.com/EnclaveMoney'
+      twitter: 'https://x.com/useenclave'
     }
   },
   {
@@ -109,7 +109,7 @@ export const tokens: Token[] = [
     vestingEnd: '10% at TGE, 12-month lockup, then 24-month linear unlock',
     description: 'Fragmetric is revolutionizing on-chain data analytics.',
     links: {
-      website: 'https://fragmetric.io/',
+      website: 'https://fragmetric.xyz/',
       twitter: 'https://x.com/fragmetric'
     }
   },
@@ -188,7 +188,7 @@ export const tokens: Token[] = [
     description: 'Technologically-mediated intuition designed to help people and machines navigate our complex world.',
     links: {
       website: 'https://intuition.systems/',
-      twitter: 'https://x.com/intuitionsys'
+      twitter: 'https://x.com/0xIntuition'
     }
   },
   {
@@ -202,8 +202,8 @@ export const tokens: Token[] = [
     investment: '--',
     description: 'Proof of Inference - Trustless AI verification',
     links: {
-      website: 'https://inference.xyz/',
-      twitter: 'https://x.com/inferencelabs'
+      website: 'https://inferencelabs.com/',
+      twitter: 'https://x.com/inference_labs'
     }
   },
   {

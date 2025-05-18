@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Token } from '../types';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { getFuelPrice, getSilencioPrice, getCornPrice } from '../services/tokenPrices';
 import { fetchTokenHolders, fetchTradingVolume } from '../services/duneApi';
 import { getTokenInfo } from '../services/tokenInfo';
@@ -36,7 +36,11 @@ export const TokenCard = ({ token }: TokenCardProps) => {
   const [holders, setHolders] = useState<number>(0);
   const [volume24h, setVolume24h] = useState<number>(0);
 
-  const saleData = salesData.find(sale => sale.name.toLowerCase() === name.toLowerCase());
+  
+  const saleData = useMemo(() => 
+    salesData.find(sale => sale.name.toLowerCase() === name.toLowerCase()),
+    [name]
+  );
 
   // Update token data from Legion API
   useEffect(() => {
@@ -76,39 +80,41 @@ export const TokenCard = ({ token }: TokenCardProps) => {
   }, [id, saleData]);
 
   // Get live price data for tokens that are trading
-  useEffect(() => {
-    if (id.toLowerCase() === 'fuel' || id.toLowerCase() === 'silencio' || id.toLowerCase() === 'corn') {
-      const fetchPrice = async () => {
-        setIsLoading(true);
-        try {
-          const data = await (async () => {
-            switch (id.toLowerCase()) {
-              case 'fuel': return await getFuelPrice();
-              case 'silencio': return await getSilencioPrice();
-              case 'corn': return await getCornPrice();
-              default: throw new Error('Unsupported token');
-            }
-          })();
-          
-          setIsUpdating(true);
-          setCurrentPrice(`$${data.current_price.toFixed(6)}`);
-          const seedPriceNum = parseFloat(seedPrice.replace('$', ''));
-          const roiValue = ((data.current_price - seedPriceNum) / seedPriceNum) * 100;
-          setRoi(`${roiValue.toFixed(2)}%`);
-          setInvestment(`$${data.roi_value.toFixed(2)}`);
-          setTimeout(() => setIsUpdating(false), 500);
-        } catch (error) {
-          console.error(`Error fetching ${id} price:`, error);
-        } finally {
-          setIsLoading(false);
+  const fetchPrice = useCallback(async () => {
+    if (!['fuel', 'silencio', 'corn'].includes(id.toLowerCase())) return;
+    
+    setIsLoading(true);
+    try {
+      const data = await (async () => {
+        switch (id.toLowerCase()) {
+          case 'fuel': return await getFuelPrice();
+          case 'silencio': return await getSilencioPrice();
+          case 'corn': return await getCornPrice();
+          default: throw new Error('Unsupported token');
         }
-      };
+      })();
+      
+      setIsUpdating(true);
+      setCurrentPrice(`$${data.current_price.toFixed(6)}`);
+      const seedPriceNum = parseFloat(seedPrice.replace('$', ''));
+      const roiValue = ((data.current_price - seedPriceNum) / seedPriceNum) * 100;
+      setRoi(`${roiValue.toFixed(2)}%`);
+      setInvestment(`$${data.roi_value.toFixed(2)}`);
+      setTimeout(() => setIsUpdating(false), 500);
+    } catch (error) {
+      console.error(`Error fetching ${id} price:`, error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id, seedPrice]);
 
+  useEffect(() => {
+    if (['fuel', 'silencio', 'corn'].includes(id.toLowerCase())) {
       fetchPrice();
       const interval = setInterval(fetchPrice, 30000);
       return () => clearInterval(interval);
     }
-  }, [id, seedPrice]);
+  }, [id, fetchPrice]);
 
   const roiNum = parseFloat(roi);
   const roiColorClass = !isNaN(roiNum) 

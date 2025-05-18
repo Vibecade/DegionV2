@@ -255,13 +255,15 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
 .btn-primary {
   @apply bg-gradient-to-r from-[#00ffee] to-[#37fffc] text-black font-medium 
          px-4 py-2 rounded-lg transition-all duration-300 
-         hover:shadow-[0_0_20px_rgba(0,255,238,0.3)] active:scale-95;
+         hover:shadow-[0_0_20px_rgba(0,255,238,0.3)] active:scale-95
+         focus:outline-none focus:ring-2 focus:ring-[#00ffee] focus:ring-offset-2 focus:ring-offset-cyber-bg;
 }
 
 .btn-outline {
   @apply border border-[#00ffee] text-[#00ffee] px-4 py-2 rounded-lg
          transition-all duration-300 hover:bg-[#00ffee]/10
-         hover:shadow-[0_0_20px_rgba(0,255,238,0.2)];
+         hover:shadow-[0_0_20px_rgba(0,255,238,0.2)]
+         focus:outline-none focus:ring-2 focus:ring-[#00ffee] focus:ring-offset-2 focus:ring-offset-cyber-bg;
 }
 
 /* Scrollbar styling */

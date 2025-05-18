@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.48.1",
     "chart.js": "^4.4.1",
+    "react-error-boundary": "^4.0.13",
     "react-chartjs-2": "^5.2.0",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",

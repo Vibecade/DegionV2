@@ -192,17 +192,34 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
   box-shadow: 0 0 20px rgba(0, 255, 238, 0.1);
 }
 
-/* Vesting badge styles */
-.vesting-badge {
-  @apply bg-purple-500/20 text-purple-400 border border-purple-500/30 px-2 py-1 rounded-full text-xs font-semibold;
+/* Modern vesting styles */
+.vesting-badge, .no-vesting-badge {
+  @apply px-3 py-2 rounded-lg text-xs font-medium backdrop-blur-sm;
   position: relative;
-  overflow: hidden;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05));
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  transition: all 0.3s ease;
+}
+
+.vesting-badge {
+  color: #c4b5fd;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.1);
+}
+
+.vesting-badge:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.1));
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
 }
 
 .no-vesting-badge {
-  @apply bg-gray-500/20 text-gray-400 border border-gray-500/30 px-2 py-1 rounded-full text-xs font-semibold;
-  position: relative;
-  overflow: hidden;
+  background: linear-gradient(135deg, rgba(156, 163, 175, 0.1), rgba(156, 163, 175, 0.05));
+  border: 1px solid rgba(156, 163, 175, 0.2);
+  color: #9ca3af;
+}
+
+.no-vesting-badge:hover {
+  background: linear-gradient(135deg, rgba(156, 163, 175, 0.15), rgba(156, 163, 175, 0.1));
+  box-shadow: 0 0 20px rgba(156, 163, 175, 0.1);
 }
 
 /* Token price animation */

@@ -1,34 +1,36 @@
 import React from 'react';
 import { ExternalLink, TrendingUp, LineChart } from 'lucide-react';
 import { salesData } from '../data/sales';
-import { formatUSDC } from '../utils/formatters';
+import { formatUSDC, formatNumber } from '../utils/formatters';
 
 export const Footer = () => {
   const totalInvestment = salesData.reduce((acc, sale) => acc + sale.fundsRaisedUSDC, 0);
   const totalInvestors = salesData.reduce((acc, sale) => acc + sale.participants, 0);
-  const formattedInvestment = formatUSDC(totalInvestment);
-  const [dollars, cents] = formattedInvestment.split('.');
 
   return (
     <footer className="mt-12 text-center space-y-4 pb-8">
       <div className="max-w-2xl mx-auto px-4 py-4 mb-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-gradient-to-br from-black/40 to-black/20 rounded-lg border border-[rgba(0,255,238,0.2)] p-6 hover:border-[rgba(0,255,238,0.4)] transition-all duration-300 group hover:shadow-[0_0_30px_rgba(0,255,238,0.15)]">
-            <div className="flex items-center justify-center gap-2 mb-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="relative overflow-hidden bg-gradient-to-br from-black/40 via-black/30 to-black/20 rounded-xl border border-[rgba(0,255,238,0.2)] p-8 hover:border-[rgba(0,255,238,0.4)] transition-all duration-500 group hover:shadow-[0_0_50px_rgba(0,255,238,0.2)]">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#00ffee]/5 via-transparent to-[#37fffc]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative flex items-center justify-center gap-3 mb-4">
               <TrendingUp className="w-5 h-5" />
-              <span className="font-orbitron text-[#00ffee]">Total Investment</span>
+              <span className="font-orbitron text-[#00ffee] text-lg">Total Investment</span>
             </div>
-            <p className="text-3xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] to-[#37fffc] bg-clip-text text-transparent animate-pulse">
-              {formattedInvestment}
+            <p className="relative text-4xl sm:text-5xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] via-[#37fffc] to-[#00ffee] bg-clip-text text-transparent group-hover:animate-pulse">
+              {formatUSDC(totalInvestment)}
+              <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatUSDC(totalInvestment)}</span>
             </p>
           </div>
-          <div className="bg-gradient-to-br from-black/40 to-black/20 rounded-lg border border-[rgba(0,255,238,0.2)] p-6 hover:border-[rgba(0,255,238,0.4)] transition-all duration-300 group hover:shadow-[0_0_30px_rgba(0,255,238,0.15)]">
-            <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="relative overflow-hidden bg-gradient-to-br from-black/40 via-black/30 to-black/20 rounded-xl border border-[rgba(0,255,238,0.2)] p-8 hover:border-[rgba(0,255,238,0.4)] transition-all duration-500 group hover:shadow-[0_0_50px_rgba(0,255,238,0.2)]">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#00ffee]/5 via-transparent to-[#37fffc]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative flex items-center justify-center gap-3 mb-4">
               <LineChart className="w-5 h-5" />
-              <span className="font-orbitron text-[#00ffee]">Total Investors</span>
+              <span className="font-orbitron text-[#00ffee] text-lg">Total Investors</span>
             </div>
-            <p className="text-3xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] to-[#37fffc] bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-300">
-              {totalInvestors.toLocaleString()}
+            <p className="relative text-4xl sm:text-5xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] via-[#37fffc] to-[#00ffee] bg-clip-text text-transparent transform group-hover:scale-110 transition-transform duration-500">
+              {formatNumber(totalInvestors)}
+              <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatNumber(totalInvestors)}</span>
             </p>
           </div>
         </div>

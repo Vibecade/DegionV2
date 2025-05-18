@@ -1,5 +1,16 @@
-import { TokenPrice } from '../types';
+import { TokenPriceResponse } from '../types';
 import { createClient } from '@supabase/supabase-js';
+
+export interface TokenPriceResponse {
+  current_price: number;
+  roi_value: number;
+  error?: string;
+}
+
+export type TokenPriceError = {
+  message: string;
+  code: string;
+};
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -47,7 +58,7 @@ async function rateLimit() {
   lastRequestTime = Date.now();
 }
 
-async function getStoredPrice(tokenId: string): Promise<TokenPrice | null> {
+async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | null> {
   try {
     if (!supabaseUrl || !supabaseKey) {
       console.warn('Supabase environment variables not configured. Skipping cache lookup.');
@@ -147,7 +158,7 @@ async function fetchWithRetry(url: string, retryCount = 0): Promise<Response> {
   }
 }
 
-async function fetchWithCache(url: string, seedPrice: number, tokenId: string): Promise<TokenPrice> {
+async function fetchWithCache(url: string, seedPrice: number, tokenId: string): Promise<TokenPriceResponse> {
   try {
     // Try to get cached price from Supabase
     const cachedPrice = await getStoredPrice(tokenId);
@@ -194,7 +205,11 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
       console.log('Using stale cached price due to error:', staleCachedPrice);
       return staleCachedPrice;
     }
-    return { current_price: 0, roi_value: 0 };
+    return { 
+      current_price: 0, 
+      roi_value: 0, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    };
   }
 }
 

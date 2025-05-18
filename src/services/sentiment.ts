@@ -58,11 +58,6 @@ export async function submitVote(tokenId: string, sentiment: 'rocket' | 'poop'):
       throw new Error('Rate limit exceeded. Please try again later.');
     }
 
-    // Get client IP using a service
-    const ipResponse = await fetch('https://api.ipify.org?format=json');
-    const { ip } = await ipResponse.json();
-    const ipHash = hashIP(ip);
-
     const { error } = await supabase
       .from('token_sentiment')
       .insert({

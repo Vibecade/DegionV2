@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Token } from '../types';
+import { logError } from '../utils/errorLogger';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { getFuelPrice, getSilencioPrice, getCornPrice } from '../services/tokenPrices';
 import { fetchTokenHolders, fetchTradingVolume } from '../services/duneApi';
@@ -25,10 +26,18 @@ export const TokenCard = ({ token }: TokenCardProps) => {
     vestingEnd
   } = token;
 
+  // Add proper error handling
+  const handleError = (error: Error, context: string) => {
+    logError(error, `TokenCard:${context}`);
+    // Show user-friendly error message
+    setError('Failed to load token data');
+  };
+
   const [currentPrice, setCurrentPrice] = useState(initialPrice);
   const [roi, setRoi] = useState(initialRoi);
   const [investment, setInvestment] = useState(initialInvestment);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(status);
   const [currentLaunchDate, setCurrentLaunchDate] = useState(launchDate);
@@ -53,7 +62,9 @@ export const TokenCard = ({ token }: TokenCardProps) => {
           if (tokenInfo.vestingEnd) setCurrentVestingEnd(tokenInfo.vestingEnd);
         }
       } catch (error) {
-        console.error(`Error fetching ${id} info:`, error);
+        handleError(error as Error, 'loadData');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -72,7 +83,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
           setHolders(holdersCount);
           setVolume24h(tradingVolume);
         } catch (error) {
-          console.error(`Error fetching Dune data for ${id}:`, error);
+          handleError(error as Error, 'loadData');
         }
       };
       fetchDuneData();
@@ -102,7 +113,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
       setInvestment(`$${data.roi_value.toFixed(2)}`);
       setTimeout(() => setIsUpdating(false), 500);
     } catch (error) {
-      console.error(`Error fetching ${id} price:`, error);
+      handleError(error as Error, 'loadData');
     } finally {
       setIsLoading(false);
     }
@@ -126,9 +137,18 @@ export const TokenCard = ({ token }: TokenCardProps) => {
     ? investNum < 1000 ? "investment-negative" : "investment-positive"
     : "";
 
+  if (error) {
+    return (
+      <div className="grid-item flex flex-col items-center p-4 sm:p-6 bg-black/30 rounded-lg">
+        <p className="text-red-400">{error}</p>
+      </div>
+    );
+  }
+
   return (
     <Link 
       to={`/${id}`}
+      aria-label={`View details for ${name}`}
       className="grid-item flex flex-col items-center p-4 sm:p-6 bg-black/30 rounded-lg group"
     >
       <div className="flex items-center mb-4 relative w-full">

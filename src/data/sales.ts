@@ -5,9 +5,9 @@ export const salesData: TokenSale[] = [
     name: 'Silencio',
     address: '0x448537DB42ee64146b67A71E3f9cE835E2d08f30',
     network: 'ethereum',
-    fundsRaisedUSDC: 438151,
-    participants: 134,
-    transactions: 134
+    fundsRaisedUSDC: 1407729,
+    participants: 387,
+    transactions: 387
   },
   {
     name: 'Pulse',
@@ -53,15 +53,15 @@ export const salesData: TokenSale[] = [
     name: 'Giza',
     address: '0x771895523D41840B3AF6d0ea36be79128F080D52',
     network: 'ethereum',
-    fundsRaisedUSDC: 1561298,
-    participants: 691,
-    transactions: 691
+    fundsRaisedUSDC: 1581798,
+    participants: 695,
+    transactions: 695
   },
   {
     name: 'Nil',
     address: '0x2c0637a66a5031acc0e4cc1cbcd5a4fb9335bf60',
     network: 'ethereum',
-    fundsRaisedUSDC: 	633808,
+    fundsRaisedUSDC: 633808,
     participants: 138,
     transactions: 138
   },
@@ -72,5 +72,21 @@ export const salesData: TokenSale[] = [
     fundsRaisedUSDC: 430070,
     participants: 143,
     transactions: 143
+  },
+  {
+    name: 'Lit Protocol',
+    address: '0x0',
+    network: 'arbitrum',
+    fundsRaisedUSDC: 502187.6,
+    participants: 269,
+    transactions: 269
+  },
+  {
+    name: 'Resolv',
+    address: '0x0',
+    network: 'ethereum',
+    fundsRaisedUSDC: 583551.2,
+    participants: 78,
+    transactions: 78
   }
 ];

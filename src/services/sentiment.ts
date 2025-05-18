@@ -1,10 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import { TokenSentiment } from '../types';
+import { RateLimiter } from '../utils/rateLimiter';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
+
+// Create rate limiters
+const voteRateLimiter = new RateLimiter(5, 60 * 1000); // 5 votes per minute
 
 // Simple hash function for IP addresses
 function hashIP(ip: string): string {
@@ -44,6 +48,16 @@ export async function getTokenSentiment(tokenId: string): Promise<TokenSentiment
 
 export async function submitVote(tokenId: string, sentiment: 'rocket' | 'poop'): Promise<boolean> {
   try {
+    // Get client IP using a service
+    const ipResponse = await fetch('https://api.ipify.org?format=json');
+    const { ip } = await ipResponse.json();
+    const ipHash = hashIP(ip);
+
+    // Check rate limit
+    if (!voteRateLimiter.tryRequest(ipHash)) {
+      throw new Error('Rate limit exceeded. Please try again later.');
+    }
+
     // Get client IP using a service
     const ipResponse = await fetch('https://api.ipify.org?format=json');
     const { ip } = await ipResponse.json();

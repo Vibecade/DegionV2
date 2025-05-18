@@ -1,9 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
+import { RateLimiter } from '../utils/rateLimiter';
+import DOMPurify from 'isomorphic-dompurify';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
+
+// Create rate limiters
+const discussionRateLimiter = new RateLimiter(3, 5 * 60 * 1000); // 3 discussions per 5 minutes
+const commentRateLimiter = new RateLimiter(5, 60 * 1000); // 5 comments per minute
 
 // Get client IP and hash it
 async function getAuthorHash(): Promise<string> {
@@ -44,13 +50,26 @@ export async function getDiscussions(tokenId: string) {
 
 export async function createDiscussion(tokenId: string, title: string, content: string) {
   const authorIp = await getAuthorHash();
+  
+  // Check rate limit
+  if (!discussionRateLimiter.tryRequest(authorIp)) {
+    throw new Error('Rate limit exceeded. Please try again later.');
+  }
+
+  // Sanitize inputs
+  const sanitizedTitle = DOMPurify.sanitize(title).trim();
+  const sanitizedContent = DOMPurify.sanitize(content).trim();
+
+  if (!sanitizedTitle || !sanitizedContent) {
+    throw new Error('Title and content are required');
+  }
 
   const { data, error } = await supabase
     .from('discussions')
     .insert({
       token_id: tokenId,
-      title,
-      content,
+      title: sanitizedTitle,
+      content: sanitizedContent,
       author_ip: authorIp
     })
     .select()
@@ -66,12 +85,24 @@ export async function createDiscussion(tokenId: string, title: string, content: 
 
 export async function addComment(discussionId: string, content: string) {
   const authorIp = await getAuthorHash();
+  
+  // Check rate limit
+  if (!commentRateLimiter.tryRequest(authorIp)) {
+    throw new Error('Rate limit exceeded. Please try again later.');
+  }
+
+  // Sanitize input
+  const sanitizedContent = DOMPurify.sanitize(content).trim();
+
+  if (!sanitizedContent) {
+    throw new Error('Comment content is required');
+  }
 
   const { data, error } = await supabase
     .from('comments')
     .insert({
       discussion_id: discussionId,
-      content,
+      content: sanitizedContent,
       author_ip: authorIp
     })
     .select()

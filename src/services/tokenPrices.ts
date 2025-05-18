@@ -43,6 +43,51 @@ try {
 }
 
 const CACHE_DURATION = 30 * 1000; // 30 seconds in milliseconds
+const CACHE_KEY_PREFIX = 'token_price_';
+
+interface CacheItem {
+  data: TokenPriceResponse;
+  timestamp: number;
+}
+
+function getCacheKey(tokenId: string): string {
+  return `${CACHE_KEY_PREFIX}${tokenId}`;
+}
+
+function getFromCache(tokenId: string): TokenPriceResponse | null {
+  try {
+    const cacheKey = getCacheKey(tokenId);
+    const cached = localStorage.getItem(cacheKey);
+    
+    if (!cached) return null;
+    
+    const { data, timestamp }: CacheItem = JSON.parse(cached);
+    const now = Date.now();
+    
+    if (now - timestamp > CACHE_DURATION) {
+      localStorage.removeItem(cacheKey);
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Cache error:', error);
+    return null;
+  }
+}
+
+function setCache(tokenId: string, data: TokenPriceResponse): void {
+  try {
+    const cacheKey = getCacheKey(tokenId);
+    const cacheItem: CacheItem = {
+      data,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(cacheKey, JSON.stringify(cacheItem));
+  } catch (error) {
+    console.error('Cache error:', error);
+  }
+}
 let lastRequestTime = 0;
 const RATE_LIMIT_DELAY = 30 * 60 * 1000; // 30 minutes between requests
 const MAX_RETRIES = 3;
@@ -160,9 +205,17 @@ async function fetchWithRetry(url: string, retryCount = 0): Promise<Response> {
 
 async function fetchWithCache(url: string, seedPrice: number, tokenId: string): Promise<TokenPriceResponse> {
   try {
+    // Check client-side cache first
+    const cachedData = getFromCache(tokenId);
+    if (cachedData) {
+      console.log('Using client-side cache for', tokenId);
+      return cachedData;
+    }
+
     // Try to get cached price from Supabase
     const cachedPrice = await getStoredPrice(tokenId);
     if (cachedPrice) {
+      setCache(tokenId, cachedPrice);
       return cachedPrice;
     }
 
@@ -194,6 +247,7 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
     if (price > 0) {
       console.log('Storing new price in Supabase:', result);
       await storePrice(tokenId, price, roiValue);
+      setCache(tokenId, result);
     }
 
     return result;

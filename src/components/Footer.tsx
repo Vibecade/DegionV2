@@ -15,9 +15,18 @@ export const Footer = () => {
             href="https://x.com/dustybeerbong" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-[#00ffee] hover:text-[#37fffc] transition-colors group"
+            className="flex items-center gap-2 text-[#00ffee] hover:text-[#37fffc] transition-colors group mr-4"
           >
             <span>Built by Sadpepe.exe</span>
+            <ExternalLink className="w-4 h-4 transform group-hover:translate-x-0.5 transition-transform" />
+          </a>
+          <a 
+            href="https://x.com/Kroneastus" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-[#00ffee] hover:text-[#37fffc] transition-colors group"
+          >
+            <span>& Kroneastus</span>
             <ExternalLink className="w-4 h-4 transform group-hover:translate-x-0.5 transition-transform" />
           </a>
         </div>

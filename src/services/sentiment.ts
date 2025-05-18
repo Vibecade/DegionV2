@@ -48,13 +48,10 @@ export async function getTokenSentiment(tokenId: string): Promise<TokenSentiment
 
 export async function submitVote(tokenId: string, sentiment: 'rocket' | 'poop'): Promise<boolean> {
   try {
-    // Get client IP using a service
-    const ipResponse = await fetch('https://api.ipify.org?format=json');
-    const { ip } = await ipResponse.json();
-    const ipHash = hashIP(ip);
+    const authorHash = await getAuthorHash();
 
     // Check rate limit
-    if (!voteRateLimiter.tryRequest(ipHash)) {
+    if (!voteRateLimiter.tryRequest(authorHash)) {
       throw new Error('Rate limit exceeded. Please try again later.');
     }
 
@@ -63,7 +60,7 @@ export async function submitVote(tokenId: string, sentiment: 'rocket' | 'poop'):
       .insert({
         token_id: tokenId,
         sentiment,
-        ip_hash: ipHash
+        ip_hash: authorHash
       });
 
     if (error) {

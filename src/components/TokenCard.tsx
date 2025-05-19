@@ -46,7 +46,6 @@ export const TokenCard = ({ token }: TokenCardProps) => {
   const [holders, setHolders] = useState<number>(0);
   const [volume24h, setVolume24h] = useState<number>(0);
   const [isLaunchingSoon, setIsLaunchingSoon] = useState(false);
-  const [isLaunchingSoon, setIsLaunchingSoon] = useState(false);
 
   const saleData = useMemo(() => 
     salesData.find(sale => sale.name.toLowerCase() === name.toLowerCase()),

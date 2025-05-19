@@ -172,7 +172,7 @@ export const HomePage = () => {
             )}
           </div>
 
-          <div className="flex justify-center mt-8 mb-8">
+          <div className="flex items-center justify-center mt-8 mb-8 text-center">
             <button
               className="group relative px-8 py-4 bg-black/30 rounded-lg overflow-hidden
                          border border-cyber-primary/30 hover:border-cyber-primary

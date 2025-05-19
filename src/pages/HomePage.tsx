@@ -92,7 +92,7 @@ export const HomePage = () => {
                   {formatUSDC(totalInvestment)}
                   <span className="text-[#00ffee]">*</span>
                   <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatUSDC(totalInvestment)}</span>
-                  <span className="invisible group-hover/tooltip:visible absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-sm py-2 px-4 rounded-lg whitespace-nowrap border border-[#00ffee]/20">
+                  <span className="invisible group-hover/tooltip:visible absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-sm py-2 px-4 rounded-lg whitespace-nowrap border border-[#00ffee]/20">
                     Solana sales data currently not shown
                   </span>
                 </p>
@@ -112,7 +112,7 @@ export const HomePage = () => {
                   {formatNumber(totalInvestors)}
                   <span className="text-[#00ffee]">*</span>
                   <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatNumber(totalInvestors)}</span>
-                  <span className="invisible group-hover/tooltip:visible absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-sm py-2 px-4 rounded-lg whitespace-nowrap border border-[#00ffee]/20">
+                  <span className="invisible group-hover/tooltip:visible absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-sm py-2 px-4 rounded-lg whitespace-nowrap border border-[#00ffee]/20">
                     Solana sales data currently not shown
                   </span>
                 </p>

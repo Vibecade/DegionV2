@@ -132,13 +132,13 @@ export const tokens: Token[] = [
   {
     id: 'giza',
     name: 'Giza',
-    status: 'Pending TGE',
-    launchDate: 'TBD',
+    status: 'Live (Vested)',
+    launchDate: '2025-05-20',
     seedPrice: '$0.045',
     currentPrice: '--',
     roi: '--',
     investment: '--',
-    vestingEnd: '20% at TGE, 80% linearly over 24 months',
+    vestingEnd: '24 months',
     description: 'Web3 Agents Stack 𓂀',
     links: {
       website: 'https://gizatech.xyz/',

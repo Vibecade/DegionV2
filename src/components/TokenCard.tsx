@@ -8,6 +8,7 @@ import { getTokenInfo } from '../services/tokenInfo';
 import { ArrowUpRight, Users, Wallet, LineChart, TrendingUp, Info } from 'lucide-react';
 import { salesData } from '../data/sales';
 import { formatUSDC, formatNumber } from '../utils/formatters';
+import { VestingTimer } from './VestingTimer';
 
 interface TokenCardProps {
   token: Token;
@@ -225,10 +226,18 @@ export const TokenCard = ({ token }: TokenCardProps) => {
       {currentVestingEnd && (
         <div className="mt-4 w-full">
           <div className="flex justify-between items-center text-sm sm:text-base">
-            <span className="text-gray-400">Vesting:</span>
-            <span className={`${currentVestingEnd.toLowerCase() === "tbd" ? "vesting-badge" : "no-vesting-badge"} text-xs`}>
-              {currentVestingEnd}
-            </span>
+            <div className="flex flex-col gap-1 w-full">
+              <span className="text-gray-400">Vesting:</span>
+              <span className={`${currentVestingEnd.toLowerCase() === "tbd" ? "vesting-badge" : "no-vesting-badge"} text-xs`}>
+                {currentVestingEnd}
+              </span>
+              {status === 'Live (Vested)' && (
+                <VestingTimer 
+                  startDate={launchDate} 
+                  vestingPeriod={currentVestingEnd}
+                />
+              )}
+            </div>
           </div>
         </div>
       )}

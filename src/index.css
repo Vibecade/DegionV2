@@ -161,6 +161,17 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
   animation: pulse 2s infinite;
 }
 
+.badge-launch-soon {
+  @apply bg-purple-500/20 text-purple-400 border border-purple-500/30;
+  animation: pulse-purple 2s infinite;
+}
+
+@keyframes pulse-purple {
+  0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(168, 85, 247, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
+}
+
 [class*="badge-live-(vested)"] {
   @apply bg-orange-500/20 text-orange-400 border border-orange-500/30;
   animation: pulse 2s infinite;

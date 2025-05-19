@@ -46,11 +46,23 @@ export const TokenCard = ({ token }: TokenCardProps) => {
   const [holders, setHolders] = useState<number>(0);
   const [volume24h, setVolume24h] = useState<number>(0);
   const [isLaunchingSoon, setIsLaunchingSoon] = useState(false);
+  const [isLaunchingSoon, setIsLaunchingSoon] = useState(false);
 
   const saleData = useMemo(() => 
     salesData.find(sale => sale.name.toLowerCase() === name.toLowerCase()),
     [name]
   );
+
+  // Check if token is launching within 24 hours
+  useEffect(() => {
+    if (!currentLaunchDate || currentStatus !== 'Pending TGE') return;
+    
+    const launch = new Date(currentLaunchDate).getTime();
+    const now = new Date().getTime();
+    const diff = launch - now;
+    
+    setIsLaunchingSoon(diff > 0 && diff <= 24 * 60 * 60 * 1000);
+  }, [currentLaunchDate, currentStatus]);
 
   // Check if token is launching within 24 hours
   useEffect(() => {

@@ -34,6 +34,7 @@ export const HomePage = () => {
     const statusPriority = {
       'Live': 0,
       'Live (Vested)': 1,
+      'Launching Soon': 1,
       'Pending TGE': 2,
       'ICO Soon': 3,
       'Cancelled': 4

@@ -117,9 +117,7 @@ const getTradingViewSymbol = (id: string) => {
     case 'silencio':
       return 'KUCOIN:SLCUSDT';
     case 'corn':
-      return 'CRYPTO:CORN3USD';
-    case 'corn':
-      return 'CRYPTO:CORN3USD';
+      return 'MEXC:CORNUSDT';
     default:
       return '';
   }

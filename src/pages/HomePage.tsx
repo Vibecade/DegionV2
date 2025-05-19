@@ -88,9 +88,13 @@ export const HomePage = () => {
                   <TrendingUp className="w-5 h-5" />
                   <span className="font-orbitron text-[#00ffee] text-lg text-center">Total Investment</span>
                 </div>
-                <p className="relative text-4xl sm:text-5xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] via-[#37fffc] to-[#00ffee] bg-clip-text text-transparent group-hover:animate-pulse text-center">
+                <p className="relative text-4xl sm:text-5xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] via-[#37fffc] to-[#00ffee] bg-clip-text text-transparent group-hover:animate-pulse text-center group/tooltip cursor-help">
                   {formatUSDC(totalInvestment)}
+                  <span className="text-[#00ffee]">*</span>
                   <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatUSDC(totalInvestment)}</span>
+                  <span className="invisible group-hover/tooltip:visible absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-sm py-2 px-4 rounded-lg whitespace-nowrap border border-[#00ffee]/20">
+                    Solana sales data currently not shown
+                  </span>
                 </p>
               </a>
               <a
@@ -104,9 +108,13 @@ export const HomePage = () => {
                   <LineChart className="w-5 h-5" />
                   <span className="font-orbitron text-[#00ffee] text-lg text-center">Total Investors</span>
                 </div>
-                <p className="relative text-4xl sm:text-5xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] via-[#37fffc] to-[#00ffee] bg-clip-text text-transparent transform group-hover:scale-110 transition-transform duration-500 text-center">
+                <p className="relative text-4xl sm:text-5xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] via-[#37fffc] to-[#00ffee] bg-clip-text text-transparent transform group-hover:scale-110 transition-transform duration-500 text-center group/tooltip cursor-help">
                   {formatNumber(totalInvestors)}
+                  <span className="text-[#00ffee]">*</span>
                   <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatNumber(totalInvestors)}</span>
+                  <span className="invisible group-hover/tooltip:visible absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-sm py-2 px-4 rounded-lg whitespace-nowrap border border-[#00ffee]/20">
+                    Solana sales data currently not shown
+                  </span>
                 </p>
               </a>
             </div>

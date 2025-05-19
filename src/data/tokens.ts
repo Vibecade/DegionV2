@@ -122,7 +122,7 @@ export const tokens: Token[] = [
     currentPrice: '--',
     roi: '--',
     investment: '--',
-    vestingEnd: '12 months',
+    vestingEnd: '0% at TGE, 12-month cliff, then 12-month linear vest',
     description: 'Imagine if your Bitcoin earns real yield while powering an entire DeFi ecosystem - that\'s Corn, the first Babylon Bitcoin secured network that uses Bitcoin as gas and rewards everyone who participates',
     links: {
       website: 'https://usecorn.com/',
@@ -132,7 +132,7 @@ export const tokens: Token[] = [
   {
     id: 'giza',
     name: 'Giza',
-    status: 'Live (Vested)',
+    status: 'Pending TGE',
     launchDate: '2025-05-20T13:00:00Z',
     seedPrice: '$0.045',
     currentPrice: '--',

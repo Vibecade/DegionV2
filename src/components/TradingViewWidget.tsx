@@ -12,6 +12,8 @@ const getTradingViewSymbol = (id: string) => {
       return 'KUCOIN:SLCUSDT';
     case 'corn':
       return 'MEXC:CORNUSDT';
+    case 'corn':
+      return 'MEXC:CORNUSDT';
     default:
       return '';
   }
@@ -22,7 +24,8 @@ function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!container.current || !symbol) return;
+    const tradingViewSymbol = getTradingViewSymbol(symbol);
+    if (!container.current || !tradingViewSymbol) return;
 
     const scriptId = `tradingview-widget-${symbol}`;
     let script = document.getElementById(scriptId) as HTMLScriptElement;
@@ -39,7 +42,7 @@ function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
 
         const config = {
           autosize: true,
-          symbol: getTradingViewSymbol(symbol),
+          symbol: tradingViewSymbol,
           interval: "D",
           timezone: "Etc/UTC",
           theme: "dark",

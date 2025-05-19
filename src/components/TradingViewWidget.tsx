@@ -4,6 +4,19 @@ interface TradingViewWidgetProps {
   symbol: string;
 }
 
+const getTradingViewSymbol = (id: string) => {
+  switch (id.toLowerCase()) {
+    case 'fuel':
+      return 'KUCOIN:FUELUSDT';
+    case 'silencio':
+      return 'KUCOIN:SLCUSDT';
+    case 'corn':
+      return 'MEXC:CORNUSDT';
+    default:
+      return '';
+  }
+};
+
 function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
   const container = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +39,7 @@ function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
 
         const config = {
           autosize: true,
-          symbol: symbol,
+          symbol: getTradingViewSymbol(symbol),
           interval: "D",
           timezone: "Etc/UTC",
           theme: "dark",
@@ -109,18 +122,5 @@ function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
     </div>
   );
 }
-
-const getTradingViewSymbol = (id: string) => {
-  switch (id.toLowerCase()) {
-    case 'fuel':
-      return 'KUCOIN:FUELUSDT';
-    case 'silencio':
-      return 'KUCOIN:SLCUSDT';
-    case 'corn':
-      return 'MEXC:CORNUSDT';
-    default:
-      return '';
-  }
-};
 
 export default memo(TradingViewWidget);

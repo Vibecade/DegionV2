@@ -1,7 +1,7 @@
 export interface Token {
   id: string;
   name: string;
-  status: 'Live' | 'Pending TGE' | 'ICO Soon' | 'Live (Vested)' | 'Cancelled';
+  status: 'Live' | 'Pending TGE' | 'Launching Soon' | 'ICO Soon' | 'Live (Vested)' | 'Cancelled';
   launchDate: string;
   seedPrice: string;
   currentPrice: string;

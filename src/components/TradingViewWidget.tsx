@@ -4,28 +4,12 @@ interface TradingViewWidgetProps {
   symbol: string;
 }
 
-const getTradingViewSymbol = (id: string) => {
-  switch (id.toLowerCase()) {
-    case 'fuel':
-      return 'KUCOIN:FUELUSDT';
-    case 'silencio':
-      return 'KUCOIN:SLCUSDT';
-    case 'corn':
-      return 'MEXC:CORNUSDT';
-    case 'corn':
-      return 'MEXC:CORNUSDT';
-    default:
-      return '';
-  }
-};
-
 function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
   const container = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const tradingViewSymbol = getTradingViewSymbol(symbol);
-    if (!container.current || !tradingViewSymbol) return;
+    if (!container.current || !symbol) return;
 
     const scriptId = `tradingview-widget-${symbol}`;
     let script = document.getElementById(scriptId) as HTMLScriptElement;
@@ -42,7 +26,7 @@ function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
 
         const config = {
           autosize: true,
-          symbol: tradingViewSymbol,
+          symbol: symbol,
           interval: "D",
           timezone: "Etc/UTC",
           theme: "dark",

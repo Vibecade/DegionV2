@@ -16,9 +16,10 @@ export const Footer = () => {
               href="https://dune.com/jsuh/legion"
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute top-2 right-2 text-xs text-[#00ffee]/60 hover:text-[#00ffee] transition-colors"
+              className="absolute top-2 right-2 px-2 py-1 text-xs text-[#00ffee]/60 hover:text-[#00ffee] flex items-center gap-1 rounded-lg hover:bg-[#00ffee]/10 transition-all duration-300 group/link"
             >
-              View on Dune →
+              <span>View on Dune</span>
+              <ExternalLink className="w-3 h-3 transform group-hover/link:translate-x-0.5 transition-transform" />
             </a>
             <div className="absolute inset-0 bg-gradient-to-r from-[#00ffee]/5 via-transparent to-[#37fffc]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <div className="relative flex items-center justify-center gap-3 mb-4">
@@ -35,9 +36,10 @@ export const Footer = () => {
               href="https://dune.com/jsuh/legion"
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute top-2 right-2 text-xs text-[#00ffee]/60 hover:text-[#00ffee] transition-colors"
+              className="absolute top-2 right-2 px-2 py-1 text-xs text-[#00ffee]/60 hover:text-[#00ffee] flex items-center gap-1 rounded-lg hover:bg-[#00ffee]/10 transition-all duration-300 group/link"
             >
-              View on Dune →
+              <span>View on Dune</span>
+              <ExternalLink className="w-3 h-3 transform group-hover/link:translate-x-0.5 transition-transform" />
             </a>
             <div className="absolute inset-0 bg-gradient-to-r from-[#00ffee]/5 via-transparent to-[#37fffc]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <div className="relative flex items-center justify-center gap-3 mb-4">

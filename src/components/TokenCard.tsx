@@ -253,7 +253,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
               <span className={`${currentVestingEnd.toLowerCase() === "tbd" ? "vesting-badge" : "no-vesting-badge"} text-xs`}>
                 {currentVestingEnd}
               </span>
-              {status === 'Live (Vested)' && (
+              {(status === 'Live (Vested)' || (currentStatus === 'Pending TGE' && currentLaunchDate)) && (
                 <VestingTimer 
                   startDate={launchDate} 
                   vestingPeriod={currentVestingEnd}

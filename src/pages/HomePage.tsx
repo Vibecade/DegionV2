@@ -86,9 +86,9 @@ export const HomePage = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-[#00ffee]/5 via-transparent to-[#37fffc]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative flex items-center justify-center gap-3 mb-4">
                   <TrendingUp className="w-5 h-5" />
-                  <span className="font-orbitron text-[#00ffee] text-lg">Total Investment</span>
+                  <span className="font-orbitron text-[#00ffee] text-lg text-center">Total Investment</span>
                 </div>
-                <p className="relative text-4xl sm:text-5xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] via-[#37fffc] to-[#00ffee] bg-clip-text text-transparent group-hover:animate-pulse">
+                <p className="relative text-4xl sm:text-5xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] via-[#37fffc] to-[#00ffee] bg-clip-text text-transparent group-hover:animate-pulse text-center">
                   {formatUSDC(totalInvestment)}
                   <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatUSDC(totalInvestment)}</span>
                 </p>
@@ -102,9 +102,9 @@ export const HomePage = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-[#00ffee]/5 via-transparent to-[#37fffc]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative flex items-center justify-center gap-3 mb-4">
                   <LineChart className="w-5 h-5" />
-                  <span className="font-orbitron text-[#00ffee] text-lg">Total Investors</span>
+                  <span className="font-orbitron text-[#00ffee] text-lg text-center">Total Investors</span>
                 </div>
-                <p className="relative text-4xl sm:text-5xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] via-[#37fffc] to-[#00ffee] bg-clip-text text-transparent transform group-hover:scale-110 transition-transform duration-500">
+                <p className="relative text-4xl sm:text-5xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] via-[#37fffc] to-[#00ffee] bg-clip-text text-transparent transform group-hover:scale-110 transition-transform duration-500 text-center">
                   {formatNumber(totalInvestors)}
                   <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatNumber(totalInvestors)}</span>
                 </p>

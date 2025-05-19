@@ -14,6 +14,8 @@ export const VestingTimer = ({ startDate, vestingPeriod }: VestingTimerProps) =>
     const calculateTimeLeft = () => {
       const start = new Date(startDate).getTime();
       const now = new Date().getTime();
+      const vestingMatch = vestingPeriod.match(/(\d+)\s*months?/i);
+      const initialUnlock = vestingPeriod.match(/(\d+)%\s*at\s*TGE/i);
       
       // Check if vesting has started
       if (now < start) {
@@ -24,20 +26,22 @@ export const VestingTimer = ({ startDate, vestingPeriod }: VestingTimerProps) =>
         const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
         
-        setTimeLeft(`Starts in ${days}d ${hours}h ${minutes}m`);
+        // Format with leading zeros for hours and minutes
+        const formattedHours = hours.toString().padStart(2, '0');
+        const formattedMinutes = minutes.toString().padStart(2, '0');
+        setTimeLeft(`Starts in ${days}d ${formattedHours}h ${formattedMinutes}m`);
         return;
       }
 
       setIsStarted(true);
       
-      // Parse vesting period (e.g., "24 months", "12 months")
-      const monthsMatch = vestingPeriod.match(/(\d+)\s*months?/i);
-      if (!monthsMatch) {
+      // Handle different vesting formats
+      if (!vestingMatch && !initialUnlock) {
         setTimeLeft('Invalid vesting period');
         return;
       }
 
-      const vestingMonths = parseInt(monthsMatch[1]);
+      const vestingMonths = vestingMatch ? parseInt(vestingMatch[1]) : 0;
       const end = new Date(start);
       end.setMonth(end.getMonth() + vestingMonths);
       
@@ -51,7 +55,16 @@ export const VestingTimer = ({ startDate, vestingPeriod }: VestingTimerProps) =>
       const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
       
-      setTimeLeft(`${days}d ${hours}h ${minutes}m remaining`);
+      // Format with leading zeros
+      const formattedHours = hours.toString().padStart(2, '0');
+      const formattedMinutes = minutes.toString().padStart(2, '0');
+      
+      if (initialUnlock) {
+        const unlockPercent = parseInt(initialUnlock[1]);
+        setTimeLeft(`${100 - unlockPercent}% unlocking: ${days}d ${formattedHours}h ${formattedMinutes}m`);
+      } else {
+        setTimeLeft(`${days}d ${formattedHours}h ${formattedMinutes}m remaining`);
+      }
     };
 
     calculateTimeLeft();

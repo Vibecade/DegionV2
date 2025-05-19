@@ -117,7 +117,7 @@ export const tokens: Token[] = [
     id: 'corn',
     name: 'Corn',
     status: 'Live (Vested)',
-    launchDate: '2025-03-28T00:00:01Z',
+    launchDate: '2026-03-28T00:00:01Z',
     seedPrice: '$0.07',
     currentPrice: '--',
     roi: '--',

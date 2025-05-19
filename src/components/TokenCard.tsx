@@ -154,7 +154,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
       <div className="flex items-center mb-4 relative w-full">
         <img 
           src={id.toLowerCase() === 'fragmetric' 
-            ? 'https://pbs.twimg.com/profile_images/1751350568192925696/qDjRuHZz_400x400.jpg'
+            ? 'https://raw.githubusercontent.com/Sadpepedev/TheLegionProject/main/images/logos/Fragmetric.png'
             : `https://sadpepedev.github.io/TheLegionProject/images/logos/${id.toLowerCase()}.png`}
           alt={`${name} Logo`}
           className="token-logo w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] rounded-full mr-3"

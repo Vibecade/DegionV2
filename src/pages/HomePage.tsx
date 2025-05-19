@@ -13,7 +13,7 @@ const DuneLink = ({ children }: { children: React.ReactNode }) => (
     href="https://dune.com/jsuh/legion"
     target="_blank"
     rel="noopener noreferrer"
-    className="absolute top-2 right-2 px-2 py-1 text-xs text-[#00ffee]/60 hover:text-[#00ffee] flex items-center gap-1 rounded-lg hover:bg-[#00ffee]/10 transition-all duration-300 group/link"
+    className="absolute top-2 right-2 px-2 py-1 text-xs text-[#00ffee]/60 hover:text-[#00ffee] flex items-center gap-1 rounded-lg hover:bg-[#00ffee]/10 transition-all duration-300 group/link cursor-pointer"
   >
     {children}
     <ExternalLink className="w-3 h-3 transform group-hover/link:translate-x-0.5 transition-transform" />

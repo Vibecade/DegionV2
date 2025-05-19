@@ -134,7 +134,7 @@ export const tokens: Token[] = [
     name: 'Giza',
     status: 'Pending TGE',
     launchDate: 'TBD',
-    seedPrice: 'TBD',
+    seedPrice: '$0.045',
     currentPrice: '--',
     roi: '--',
     investment: '--',

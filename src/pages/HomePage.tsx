@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { TokenCard } from '../components/TokenCard';
 import { tokens } from '../data/tokens';
+import { salesData } from '../data/sales';
 import { SupportModal } from '../components/SupportModal';
 import { Footer } from '../components/Footer';
-import { Heart, Search, Filter, RefreshCw } from 'lucide-react';
+import { Heart, Search, Filter, RefreshCw, ExternalLink, TrendingUp, LineChart } from 'lucide-react';
 import { getLastUpdateTime } from '../services/tokenInfo';
+import { formatUSDC, formatNumber } from '../utils/formatters';
 
 export const HomePage = () => {
   const [view] = useState<'grid' | 'table'>('grid');

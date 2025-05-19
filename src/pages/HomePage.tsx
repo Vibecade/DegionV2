@@ -77,8 +77,12 @@ export const HomePage = () => {
           
           <div className="max-w-2xl mx-auto px-4 py-4 mb-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="relative overflow-hidden bg-gradient-to-br from-black/40 via-black/30 to-black/20 rounded-xl border border-[rgba(0,255,238,0.2)] p-8 hover:border-[rgba(0,255,238,0.4)] transition-all duration-500 group hover:shadow-[0_0_50px_rgba(0,255,238,0.2)]">
-                <DuneLink>View on Dune</DuneLink>
+              <a
+                href="https://dune.com/jsuh/legion"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative overflow-hidden bg-gradient-to-br from-black/40 via-black/30 to-black/20 rounded-xl border border-[rgba(0,255,238,0.2)] p-8 hover:border-[rgba(0,255,238,0.4)] transition-all duration-500 group hover:shadow-[0_0_50px_rgba(0,255,238,0.2)] cursor-pointer"
+              >
                 <div className="absolute inset-0 bg-gradient-to-r from-[#00ffee]/5 via-transparent to-[#37fffc]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative flex items-center justify-center gap-3 mb-4">
                   <TrendingUp className="w-5 h-5" />
@@ -88,9 +92,13 @@ export const HomePage = () => {
                   {formatUSDC(totalInvestment)}
                   <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatUSDC(totalInvestment)}</span>
                 </p>
-              </div>
-              <div className="relative overflow-hidden bg-gradient-to-br from-black/40 via-black/30 to-black/20 rounded-xl border border-[rgba(0,255,238,0.2)] p-8 hover:border-[rgba(0,255,238,0.4)] transition-all duration-500 group hover:shadow-[0_0_50px_rgba(0,255,238,0.2)]">
-                <DuneLink>View on Dune</DuneLink>
+              </a>
+              <a
+                href="https://dune.com/jsuh/legion"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative overflow-hidden bg-gradient-to-br from-black/40 via-black/30 to-black/20 rounded-xl border border-[rgba(0,255,238,0.2)] p-8 hover:border-[rgba(0,255,238,0.4)] transition-all duration-500 group hover:shadow-[0_0_50px_rgba(0,255,238,0.2)] cursor-pointer"
+              >
                 <div className="absolute inset-0 bg-gradient-to-r from-[#00ffee]/5 via-transparent to-[#37fffc]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative flex items-center justify-center gap-3 mb-4">
                   <LineChart className="w-5 h-5" />
@@ -100,7 +108,7 @@ export const HomePage = () => {
                   {formatNumber(totalInvestors)}
                   <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatNumber(totalInvestors)}</span>
                 </p>
-              </div>
+              </a>
             </div>
           </div>
 

@@ -164,7 +164,7 @@ export const HomePage = () => {
                 <p className="text-gray-400">No tokens found matching your criteria.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 [&>*:last-child:nth-child(3n-1)]:sm:col-span-2 [&>*:last-child:nth-child(3n-1)]:sm:mx-auto [&>*:last-child:nth-child(3n-2)]:lg:col-span-3 [&>*:last-child:nth-child(3n-2)]:lg:mx-auto">
                 {filteredTokens.map(token => (
                   <TokenCard key={token.id} token={token} />
                 ))}

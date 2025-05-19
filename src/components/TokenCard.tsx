@@ -45,23 +45,11 @@ export const TokenCard = ({ token }: TokenCardProps) => {
   const [currentVestingEnd, setCurrentVestingEnd] = useState(vestingEnd);
   const [holders, setHolders] = useState<number>(0);
   const [volume24h, setVolume24h] = useState<number>(0);
-  const [isLaunchingSoon, setIsLaunchingSoon] = useState(false);
 
   const saleData = useMemo(() => 
     salesData.find(sale => sale.name.toLowerCase() === name.toLowerCase()),
     [name]
   );
-
-  // Check if token is launching within 24 hours
-  useEffect(() => {
-    if (!currentLaunchDate || currentStatus !== 'Pending TGE') return;
-    
-    const launch = new Date(currentLaunchDate).getTime();
-    const now = new Date().getTime();
-    const diff = launch - now;
-    
-    setIsLaunchingSoon(diff > 0 && diff <= 24 * 60 * 60 * 1000);
-  }, [currentLaunchDate, currentStatus]);
 
   // Check if token is launching within 24 hours
   useEffect(() => {
@@ -192,8 +180,14 @@ export const TokenCard = ({ token }: TokenCardProps) => {
           <span className="text-lg sm:text-xl font-semibold text-[#cfd0d1] block truncate font-orbitron">
             {name} ({id.toUpperCase()})
           </span>
-          <span className={`badge ${isLaunchingSoon ? 'badge-launch-soon' : `badge-${currentStatus.toLowerCase().replace(' ', '-')}`} mt-1 inline-block text-xs sm:text-sm`}>
-            {isLaunchingSoon ? 'Launching Soon' : currentStatus}
+          <span className={`badge ${
+            currentStatus === 'Live (Vested)' ? 'badge-live-vested' :
+            isLaunchingSoon ? 'badge-launch-soon' :
+            `badge-${currentStatus.toLowerCase().replace(' ', '-')}`
+          } mt-1 inline-block text-xs sm:text-sm`}>
+            {currentStatus === 'Live (Vested)' ? 'Live (Vested)' :
+             isLaunchingSoon ? 'Launching Soon' :
+             currentStatus}
           </span>
         </div>
         <ArrowUpRight className="w-5 h-5 text-[#00ffee] opacity-0 transform translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" />

@@ -118,6 +118,8 @@ const getTradingViewSymbol = (id: string) => {
       return 'KUCOIN:SLCUSDT';
     case 'corn':
       return 'CRYPTO:CORN3USD';
+    case 'corn':
+      return 'CRYPTO:CORN3USD';
     default:
       return '';
   }

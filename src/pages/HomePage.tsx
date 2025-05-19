@@ -12,6 +12,8 @@ export const HomePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+  const totalInvestment = salesData.reduce((acc, sale) => acc + sale.fundsRaisedUSDC, 0);
+  const totalInvestors = salesData.reduce((acc, sale) => acc + sale.participants, 0);
 
   // Sort tokens by status priority
   const sortedTokens = [...tokens].sort((a, b) => {
@@ -46,6 +48,50 @@ export const HomePage = () => {
     <div className="relative min-h-screen">
       <div className="relative z-10 flex flex-col items-center pt-4">
         <main className="w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 glass-panel rounded-lg">
+          <div className="max-w-2xl mx-auto px-4 py-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="relative overflow-hidden bg-gradient-to-br from-black/40 via-black/30 to-black/20 rounded-xl border border-[rgba(0,255,238,0.2)] p-8 hover:border-[rgba(0,255,238,0.4)] transition-all duration-500 group hover:shadow-[0_0_50px_rgba(0,255,238,0.2)]">
+                <a
+                  href="https://dune.com/jsuh/legion"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute top-2 right-2 px-2 py-1 text-xs text-[#00ffee]/60 hover:text-[#00ffee] flex items-center gap-1 rounded-lg hover:bg-[#00ffee]/10 transition-all duration-300 group/link"
+                >
+                  <span>View on Dune</span>
+                  <ExternalLink className="w-3 h-3 transform group-hover/link:translate-x-0.5 transition-transform" />
+                </a>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#00ffee]/5 via-transparent to-[#37fffc]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative flex items-center justify-center gap-3 mb-4">
+                  <TrendingUp className="w-5 h-5" />
+                  <span className="font-orbitron text-[#00ffee] text-lg">Total Investment</span>
+                </div>
+                <p className="relative text-4xl sm:text-5xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] via-[#37fffc] to-[#00ffee] bg-clip-text text-transparent group-hover:animate-pulse">
+                  {formatUSDC(totalInvestment)}
+                  <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatUSDC(totalInvestment)}</span>
+                </p>
+              </div>
+              <div className="relative overflow-hidden bg-gradient-to-br from-black/40 via-black/30 to-black/20 rounded-xl border border-[rgba(0,255,238,0.2)] p-8 hover:border-[rgba(0,255,238,0.4)] transition-all duration-500 group hover:shadow-[0_0_50px_rgba(0,255,238,0.2)]">
+                <a
+                  href="https://dune.com/jsuh/legion"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute top-2 right-2 px-2 py-1 text-xs text-[#00ffee]/60 hover:text-[#00ffee] flex items-center gap-1 rounded-lg hover:bg-[#00ffee]/10 transition-all duration-300 group/link"
+                >
+                  <span>View on Dune</span>
+                  <ExternalLink className="w-3 h-3 transform group-hover/link:translate-x-0.5 transition-transform" />
+                </a>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#00ffee]/5 via-transparent to-[#37fffc]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative flex items-center justify-center gap-3 mb-4">
+                  <LineChart className="w-5 h-5" />
+                  <span className="font-orbitron text-[#00ffee] text-lg">Total Investors</span>
+                </div>
+                <p className="relative text-4xl sm:text-5xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] via-[#37fffc] to-[#00ffee] bg-clip-text text-transparent transform group-hover:scale-110 transition-transform duration-500">
+                  {formatNumber(totalInvestors)}
+                  <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatNumber(totalInvestors)}</span>
+                </p>
+              </div>
+            </div>
+          </div>
           <div className="logo-container">
             <img
               src="https://sadpepedev.github.io/TheLegionProject/images/logos/degion.png"
@@ -137,7 +183,6 @@ export const HomePage = () => {
           <Footer />
         </main>
       </div>
-
       <SupportModal 
         isOpen={isSupportModalOpen}
         onClose={() => setIsSupportModalOpen(false)}

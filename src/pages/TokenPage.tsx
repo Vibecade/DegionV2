@@ -128,7 +128,9 @@ export const TokenPage = () => {
       case 'silencio':
         return 'KUCOIN:SLCUSDT';
       case 'corn':
-        return 'MEXC:CORNUSDT'
+        return 'MEXC:CORNUSDT';
+      case 'giza':
+        return 'KUCOIN:GIZAUSDT';
       default:
         return '';
     }

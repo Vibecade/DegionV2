@@ -112,8 +112,10 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
 
   const progressBarStyle = {
     background: `linear-gradient(to right, 
+      rgba(0, 255, 238, 0.3) 0%,
       rgba(0, 255, 238, 0.5) ${vestingProgress}%, 
-      rgba(0, 255, 238, 0.1) ${vestingProgress}%)`
+      rgba(0, 255, 238, 0.1) ${vestingProgress}%,
+      rgba(0, 255, 238, 0.1) 100%)`
   };
 
   return (
@@ -125,17 +127,24 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
         <span>{timeLeft}</span>
       </div>
       {isStarted && !timeLeft.includes('Complete') && (
-        <div className="relative w-full h-2 bg-[rgba(0,255,238,0.1)] rounded-full overflow-hidden">
+        <div className="relative w-full h-3 bg-[rgba(0,255,238,0.1)] rounded-full overflow-hidden backdrop-blur-sm border border-[rgba(0,255,238,0.2)]">
           <div 
             className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out"
             style={progressBarStyle}
           />
           {initialUnlockPercent > 0 && (
             <div 
-              className="absolute top-0 h-full border-r border-[rgba(0,255,238,0.5)]"
+              className="absolute top-0 h-full w-[2px] bg-[rgba(0,255,238,0.8)] shadow-[0_0_8px_rgba(0,255,238,0.5)] z-10"
               style={{ left: `${initialUnlockPercent}%` }}
-            />
+            >
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-[10px] text-[#00ffee]">
+                {initialUnlockPercent}%
+              </div>
+            </div>
           )}
+          <div className="absolute top-0 right-1 text-[10px] text-[#00ffee] leading-[12px] mt-0.5">
+            {Math.round(vestingProgress)}%
+          </div>
         </div>
       )}
     </div>

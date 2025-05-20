@@ -33,14 +33,14 @@ export const HomePage = () => {
   const sortedTokens = [...tokens].sort((a, b) => {
     const statusPriority = {
       'Live': 0,
-      'Live (Vested)': 1,
+      'Live (Vested)': 0,
       'Launching Soon': 1,
       'Pending TGE': 2,
       'ICO Soon': 3,
       'Cancelled': 4
     };
-    return (statusPriority[a.status] ?? 999) - (statusPriority[b.status] ?? 999);
-    return 0;
+    return (statusPriority[a.status as keyof typeof statusPriority] ?? 999) - 
+           (statusPriority[b.status as keyof typeof statusPriority] ?? 999);
   });
 
   useEffect(() => {

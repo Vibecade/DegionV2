@@ -32,23 +32,16 @@ export const HomePage = () => {
   // Sort tokens by status priority
   const sortedTokens = [...tokens].sort((a, b) => {
     const statusPriority = {
-      'Live': 1,
+      'Live': 0,
       'Live (Vested)': 1,
-      'Launching Soon': 1,
-      'Pending TGE': 2,
-      'ICO Soon': 3,
-      'Cancelled': 4
+      'Launching Soon': 2,
+      'Pending TGE': 3,
+      'ICO Soon': 4,
+      'Cancelled': 5
     };
     
     const aPriority = statusPriority[a.status as keyof typeof statusPriority] ?? 999;
     const bPriority = statusPriority[b.status as keyof typeof statusPriority] ?? 999;
-    
-    // If priorities are equal, keep Live before Live (Vested)
-    if (aPriority === bPriority) {
-      if (a.status === 'Live' && b.status === 'Live (Vested)') return -1;
-      if (a.status === 'Live (Vested)' && b.status === 'Live') return 1;
-    }
-    
     return aPriority - bPriority;
   });
 

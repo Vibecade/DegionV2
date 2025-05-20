@@ -252,9 +252,9 @@ export const TokenCard = ({ token }: TokenCardProps) => {
                 <VestingTimer 
                   startDate={launchDate} 
                   vestingPeriod={currentVestingEnd}
-                  onStatusChange={(started) => {
+                  onStatusChange={(started, completed) => {
                     if (started && currentStatus === 'Pending TGE') {
-                      setCurrentStatus('Live');
+                      setCurrentStatus(completed ? 'Live' : 'Live (Vested)');
                     }
                   }}
                 />

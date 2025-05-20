@@ -10,6 +10,7 @@ interface VestingTimerProps {
 export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: VestingTimerProps) => {
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [isStarted, setIsStarted] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
     const calculateTimeLeft = () => {
@@ -18,10 +19,12 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
       const vestingMatch = vestingPeriod.match(/(\d+)\s*months?/i);
       const initialUnlock = vestingPeriod.match(/(\d+)%\s*at\s*TGE/i);
       const wasStarted = isStarted;
+      const wasComplete = isComplete;
       
       // Check if vesting has started
       if (now < start) {
         setIsStarted(false);
+        setIsComplete(false);
         if (wasStarted !== false && onStatusChange) {
           onStatusChange(false);
         }
@@ -55,6 +58,10 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
       
       if (now >= end.getTime()) {
         setTimeLeft('Vesting Complete');
+        setIsComplete(true);
+        if (!wasComplete && onStatusChange) {
+          onStatusChange(true, true);
+        }
         return;
       }
 

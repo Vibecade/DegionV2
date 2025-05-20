@@ -21,10 +21,13 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
       const vestingMatch = vestingPeriod.match(/(\d+)\s*months?/i);
       const initialUnlock = vestingPeriod.match(/(\d+)%\s*at\s*TGE/i);
       
-      // Always set initial unlock percentage if available
+      // Set initial unlock percentage and progress immediately when vesting starts
       if (initialUnlock) {
-        setInitialUnlockPercent(parseInt(initialUnlock[1]));
-        setVestingProgress(parseInt(initialUnlock[1]));
+        const unlockPercent = parseInt(initialUnlock[1]);
+        setInitialUnlockPercent(unlockPercent);
+        if (now >= start) {
+          setVestingProgress(Math.max(unlockPercent, vestingProgress));
+        }
       }
       
       const wasStarted = isStarted;
@@ -69,18 +72,13 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
       const totalDuration = end.getTime() - start;
       const elapsed = now - start;
       let progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-      
-      // Always ensure progress includes initial unlock
-      if (initialUnlockPercent > 0) {
-        progress = Math.max(initialUnlockPercent, progress);
-      }
-      
+            
       // If there's an initial unlock, adjust the progress calculation
       if (initialUnlockPercent > 0) {
         const remainingPercent = 100 - initialUnlockPercent;
         const adjustedProgress = Math.max(
           initialUnlockPercent,
-          initialUnlockPercent + (remainingPercent * (elapsed / totalDuration))
+          initialUnlockPercent + ((remainingPercent * elapsed) / totalDuration)
         );
         setVestingProgress(adjustedProgress);
       } else {

@@ -32,17 +32,24 @@ export const HomePage = () => {
   // Sort tokens by status priority
   const sortedTokens = [...tokens].sort((a, b) => {
     const statusPriority = {
-      'Live': 0,
-      'Live (Vested)': 1,
-      'Launching Soon': 2,
-      'Pending TGE': 3,
-      'ICO Soon': 4,
-      'Cancelled': 5
+      'Live': 1,
+      'Live (Vested)': 2,
+      'Launching Soon': 3,
+      'Pending TGE': 4,
+      'ICO Soon': 5,
+      'Cancelled': 6
     };
     
     const aPriority = statusPriority[a.status as keyof typeof statusPriority] ?? 999;
     const bPriority = statusPriority[b.status as keyof typeof statusPriority] ?? 999;
-    return aPriority - bPriority;
+    
+    // If priorities are different, sort by priority
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
+    }
+    
+    // If priorities are the same, sort alphabetically by name
+    return a.name.localeCompare(b.name);
   });
 
   useEffect(() => {

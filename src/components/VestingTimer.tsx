@@ -77,7 +77,8 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
         setVestingProgress(Math.min(100, Math.max(initialUnlockPercent, progress)));
       } else {
         setVestingProgress(progress);
-      
+      }
+
       if (now >= end.getTime()) {
         setTimeLeft('Vesting Complete');
         setVestingProgress(100);
@@ -109,7 +110,7 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
     const timer = setInterval(calculateTimeLeft, 60000); // Update every minute
 
     return () => clearInterval(timer);
-  }, [startDate, vestingPeriod]);
+  }, [startDate, vestingPeriod, isStarted, isComplete, onStatusChange]);
 
   const progressBarStyle = {
     background: `linear-gradient(to right, 

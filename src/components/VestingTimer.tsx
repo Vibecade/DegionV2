@@ -21,8 +21,10 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
       const vestingMatch = vestingPeriod.match(/(\d+)\s*months?/i);
       const initialUnlock = vestingPeriod.match(/(\d+)%\s*at\s*TGE/i);
       
-      if (initialUnlock) {
+      // Set initial unlock percentage
+      if (initialUnlock && !isStarted) {
         setInitialUnlockPercent(parseInt(initialUnlock[1]));
+        setVestingProgress(parseInt(initialUnlock[1]));
       }
       
       const wasStarted = isStarted;
@@ -66,12 +68,15 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
       // Calculate vesting progress
       const totalDuration = end.getTime() - start;
       const elapsed = now - start;
-      const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+      let progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
       
       // If there's an initial unlock, adjust the progress calculation
       if (initialUnlockPercent > 0) {
         const remainingPercent = 100 - initialUnlockPercent;
-        const adjustedProgress = initialUnlockPercent + (remainingPercent * (progress / 100));
+        const adjustedProgress = Math.max(
+          initialUnlockPercent,
+          initialUnlockPercent + (remainingPercent * (progress / 100))
+        );
         setVestingProgress(adjustedProgress);
       } else {
         setVestingProgress(progress);
@@ -122,27 +127,27 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
     <div className="space-y-2">
       <div className={`flex items-center gap-2 text-sm ${
         isStarted ? 'text-orange-400' : 'text-blue-400'
-      }`}>
+      } mb-1`}>
         <Timer className="w-4 h-4" />
         <span>{timeLeft}</span>
       </div>
       {isStarted && !timeLeft.includes('Complete') && (
-        <div className="relative w-full h-3 bg-[rgba(0,255,238,0.1)] rounded-full overflow-hidden backdrop-blur-sm border border-[rgba(0,255,238,0.2)]">
+        <div className="relative w-full h-4 bg-[rgba(0,255,238,0.1)] rounded-full overflow-hidden backdrop-blur-sm border border-[rgba(0,255,238,0.2)]">
           <div 
             className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out"
             style={progressBarStyle}
           />
           {initialUnlockPercent > 0 && (
             <div 
-              className="absolute top-0 h-full w-[2px] bg-[rgba(0,255,238,0.8)] shadow-[0_0_8px_rgba(0,255,238,0.5)] z-10"
+              className="absolute top-0 h-full w-[2px] bg-[rgba(0,255,238,0.8)] shadow-[0_0_10px_rgba(0,255,238,0.8)] z-10"
               style={{ left: `${initialUnlockPercent}%` }}
             >
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-[10px] text-[#00ffee]">
+              <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-[10px] text-[#00ffee] font-semibold">
                 {initialUnlockPercent}%
               </div>
             </div>
           )}
-          <div className="absolute top-0 right-1 text-[10px] text-[#00ffee] leading-[12px] mt-0.5">
+          <div className="absolute top-1/2 right-2 transform -translate-y-1/2 text-[10px] text-[#00ffee] font-semibold">
             {Math.round(vestingProgress)}%
           </div>
         </div>

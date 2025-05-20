@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Timer } from 'lucide-react';
 
-interface VestingTimerProps {
+interface VestingTimerProps { 
   startDate: string;
   vestingPeriod: string;
+  onStatusChange?: (isStarted: boolean) => void;
 }
 
-export const VestingTimer = ({ startDate, vestingPeriod }: VestingTimerProps) => {
+export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: VestingTimerProps) => {
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [isStarted, setIsStarted] = useState(false);
 
@@ -16,10 +17,14 @@ export const VestingTimer = ({ startDate, vestingPeriod }: VestingTimerProps) =>
       const now = new Date().getTime();
       const vestingMatch = vestingPeriod.match(/(\d+)\s*months?/i);
       const initialUnlock = vestingPeriod.match(/(\d+)%\s*at\s*TGE/i);
+      const wasStarted = isStarted;
       
       // Check if vesting has started
       if (now < start) {
         setIsStarted(false);
+        if (wasStarted !== false && onStatusChange) {
+          onStatusChange(false);
+        }
         const difference = start - now;
         
         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
@@ -34,6 +39,9 @@ export const VestingTimer = ({ startDate, vestingPeriod }: VestingTimerProps) =>
       }
 
       setIsStarted(true);
+      if (wasStarted !== true && onStatusChange) {
+        onStatusChange(true);
+      }
       
       // Handle different vesting formats
       if (!vestingMatch && !initialUnlock) {

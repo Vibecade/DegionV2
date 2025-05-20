@@ -45,7 +45,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
   const [currentVestingEnd, setCurrentVestingEnd] = useState(vestingEnd);
   const [holders, setHolders] = useState<number>(0);
   const [volume24h, setVolume24h] = useState<number>(0);
-  const [isLaunchingSoon, setIsLaunchingSoon] = useState(false);
+  const [isLaunchingSoon, setIsLaunchingSoon] = useState<boolean>(false);
 
   const saleData = useMemo(() => 
     salesData.find(sale => sale.name.toLowerCase() === name.toLowerCase()),
@@ -252,6 +252,11 @@ export const TokenCard = ({ token }: TokenCardProps) => {
                 <VestingTimer 
                   startDate={launchDate} 
                   vestingPeriod={currentVestingEnd}
+                  onStatusChange={(started) => {
+                    if (started && currentStatus === 'Pending TGE') {
+                      setCurrentStatus('Live');
+                    }
+                  }}
                 />
               )}
             </div>

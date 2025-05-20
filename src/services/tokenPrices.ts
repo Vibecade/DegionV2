@@ -291,6 +291,14 @@ export async function getCornPrice(): Promise<TokenPrice> {
   );
 }
 
+export async function getGizaPrice(): Promise<TokenPrice> {
+  return fetchWithCache(
+    'https://api.coingecko.com/api/v3/simple/price?ids=giza&vs_currencies=usd',
+    0.045,
+    'giza'
+  );
+}
+
 function calculateRoi(currentPrice: number, seedPrice: number): number {
   if (currentPrice <= 0 || seedPrice <= 0) {
     return 1000; // Return initial investment if prices are invalid

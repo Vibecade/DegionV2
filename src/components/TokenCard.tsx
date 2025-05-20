@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Token } from '../types';
 import { logError } from '../utils/errorLogger';
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { getFuelPrice, getSilencioPrice, getCornPrice } from '../services/tokenPrices';
+import { getFuelPrice, getSilencioPrice, getCornPrice, getGizaPrice } from '../services/tokenPrices';
 import { fetchTokenHolders, fetchTradingVolume } from '../services/duneApi';
 import { getTokenInfo } from '../services/tokenInfo';
 import { ArrowUpRight, Users, Wallet, LineChart, TrendingUp, Info } from 'lucide-react';
@@ -104,7 +104,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
 
   // Get live price data for tokens that are trading
   const fetchPrice = useCallback(async () => {
-    if (!['fuel', 'silencio', 'corn'].includes(id.toLowerCase())) return;
+    if (!['fuel', 'silencio', 'corn', 'giza'].includes(id.toLowerCase())) return;
     
     setIsLoading(true);
     try {
@@ -113,6 +113,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
           case 'fuel': return await getFuelPrice();
           case 'silencio': return await getSilencioPrice();
           case 'corn': return await getCornPrice();
+          case 'giza': return await getGizaPrice();
           default: throw new Error('Unsupported token');
         }
       })();
@@ -132,7 +133,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
   }, [id, seedPrice]);
 
   useEffect(() => {
-    if (['fuel', 'silencio', 'corn'].includes(id.toLowerCase())) {
+    if (['fuel', 'silencio', 'corn', 'giza'].includes(id.toLowerCase())) {
       fetchPrice();
       const interval = setInterval(fetchPrice, 30000);
       return () => clearInterval(interval);

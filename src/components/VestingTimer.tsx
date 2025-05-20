@@ -4,12 +4,14 @@ import { Timer } from 'lucide-react';
 interface VestingTimerProps { 
   startDate: string;
   vestingPeriod: string;
-  onStatusChange?: (isStarted: boolean) => void;
+  onStatusChange?: (isStarted: boolean, completed?: boolean) => void;
 }
 
 export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: VestingTimerProps) => {
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [isStarted, setIsStarted] = useState(false);
+  const [vestingProgress, setVestingProgress] = useState(0);
+  const [initialUnlockPercent, setInitialUnlockPercent] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
@@ -18,6 +20,11 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
       const now = new Date().getTime();
       const vestingMatch = vestingPeriod.match(/(\d+)\s*months?/i);
       const initialUnlock = vestingPeriod.match(/(\d+)%\s*at\s*TGE/i);
+      
+      if (initialUnlock) {
+        setInitialUnlockPercent(parseInt(initialUnlock[1]));
+      }
+      
       const wasStarted = isStarted;
       const wasComplete = isComplete;
       
@@ -56,8 +63,23 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
       const end = new Date(start);
       end.setMonth(end.getMonth() + vestingMonths);
       
+      // Calculate vesting progress
+      const totalDuration = end.getTime() - start;
+      const elapsed = now - start;
+      const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+      
+      // If there's an initial unlock, adjust the progress calculation
+      if (initialUnlockPercent > 0) {
+        const remainingPercent = 100 - initialUnlockPercent;
+        const adjustedProgress = initialUnlockPercent + (remainingPercent * (progress / 100));
+        setVestingProgress(adjustedProgress);
+      } else {
+        setVestingProgress(progress);
+      }
+      
       if (now >= end.getTime()) {
         setTimeLeft('Vesting Complete');
+        setVestingProgress(100);
         setIsComplete(true);
         if (!wasComplete && onStatusChange) {
           onStatusChange(true, true);
@@ -88,12 +110,34 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
     return () => clearInterval(timer);
   }, [startDate, vestingPeriod]);
 
+  const progressBarStyle = {
+    background: `linear-gradient(to right, 
+      rgba(0, 255, 238, 0.5) ${vestingProgress}%, 
+      rgba(0, 255, 238, 0.1) ${vestingProgress}%)`
+  };
+
   return (
-    <div className={`flex items-center gap-2 text-sm ${
-      isStarted ? 'text-orange-400' : 'text-blue-400'
-    }`}>
-      <Timer className="w-4 h-4" />
-      <span>{timeLeft}</span>
+    <div className="space-y-2">
+      <div className={`flex items-center gap-2 text-sm ${
+        isStarted ? 'text-orange-400' : 'text-blue-400'
+      }`}>
+        <Timer className="w-4 h-4" />
+        <span>{timeLeft}</span>
+      </div>
+      {isStarted && !timeLeft.includes('Complete') && (
+        <div className="relative w-full h-2 bg-[rgba(0,255,238,0.1)] rounded-full overflow-hidden">
+          <div 
+            className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out"
+            style={progressBarStyle}
+          />
+          {initialUnlockPercent > 0 && (
+            <div 
+              className="absolute top-0 h-full border-r border-[rgba(0,255,238,0.5)]"
+              style={{ left: `${initialUnlockPercent}%` }}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ExternalLink, TrendingUp, LineChart } from 'lucide-react';
 import { salesData } from '../data/sales';
 import { formatUSDC, formatNumber } from '../utils/formatters';
@@ -32,6 +33,24 @@ export const Footer = () => {
             <span>Sales Data by Kroneastus</span>
             <ExternalLink className="w-4 h-4 transform group-hover:translate-x-0.5 transition-transform" />
           </a>
+          </div>
+        </div>
+        <div className="mt-4 pt-4 border-t border-[#00ffee]/10">
+          <div className="flex justify-center space-x-6 text-sm">
+            <Link 
+              to="/about" 
+              className="text-[#00ffee] hover:text-[#37fffc] transition-colors"
+            >
+              About
+            </Link>
+            <a 
+              href="https://dune.com/jsuh/legion" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[#00ffee] hover:text-[#37fffc] transition-colors"
+            >
+              Analytics
+            </a>
           </div>
         </div>
       </div>

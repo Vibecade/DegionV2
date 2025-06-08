@@ -672,6 +672,37 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
   }
 }
 
+/* Back to top button */
+.back-to-top-button {
+  @apply fixed bottom-6 right-6 z-50 p-3 rounded-full 
+         bg-gradient-to-r from-[#00ffee] to-[#37fffc] text-black
+         shadow-lg hover:shadow-xl transition-all duration-300
+         hover:scale-110 active:scale-95
+         focus:outline-none focus:ring-2 focus:ring-[#00ffee] focus:ring-offset-2 focus:ring-offset-cyber-bg;
+  
+  /* Glow effect */
+  box-shadow: 0 4px 15px rgba(0, 255, 238, 0.3);
+  
+  /* Animation */
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.back-to-top-button:hover {
+  box-shadow: 0 6px 25px rgba(0, 255, 238, 0.5);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.back-to-top-button:active {
+  transform: translateY(0) scale(0.95);
+}
+
+/* Responsive adjustments for back to top button */
+@media (max-width: 640px) {
+  .back-to-top-button {
+    @apply bottom-4 right-4 p-2;
+  }
+}
+
 /* Loading skeleton animations */
 @keyframes shimmer {
   0% {

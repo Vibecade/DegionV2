@@ -4,7 +4,9 @@ import { SEOHead } from './components/SEOHead';
 import { HomePage } from './pages/HomePage';
 import { TokenPage } from './pages/TokenPage';
 import { DiscussionPage } from './pages/DiscussionPage';
+import { AboutPage } from './pages/AboutPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { BackToTopButton } from './components/BackToTopButton';
 import { useEffect } from 'react';
 import { secureStorage } from './utils/security';
 import { memoryMonitor } from './utils/performance';
@@ -31,8 +33,10 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/:tokenId" element={<TokenPage />} />
               <Route path="/:tokenId/discussions" element={<DiscussionPage />} />
+              <Route path="/about" element={<AboutPage />} />
             </Routes>
           </div>
+          <BackToTopButton />
         </div>
       </Router>
     </ErrorBoundary>

@@ -127,8 +127,7 @@ async function rateLimit() {
   const timeToWait = Math.max(0, lastRequestTime + RATE_LIMIT_DELAY - now);
   if (timeToWait > 0) {
     console.log(`Rate limiting: waiting ${Math.round(timeToWait/1000)} seconds before next request`);
-    // Don't wait for rate limit, just log it and continue
-    // await new Promise(resolve => setTimeout(resolve, timeToWait));
+    await new Promise(resolve => setTimeout(resolve, timeToWait));
   }
   lastRequestTime = Date.now();
 }

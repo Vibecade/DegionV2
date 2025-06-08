@@ -99,7 +99,8 @@ export const TokenPage = () => {
           setInvestment(`$${data.roi_value.toFixed(2)}`);
           setTimeout(() => setIsUpdating(false), 500);
         } catch (error) {
-          console.error(`Error fetching ${tokenId} price:`, error);
+          // Silently handle price fetch errors - fallback prices will be used
+          console.warn(`Price fetch failed for ${tokenId}, using fallback`);
         } finally {
           setIsLoading(false);
         }

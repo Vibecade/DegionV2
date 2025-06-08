@@ -105,11 +105,9 @@ export const TokenCard = ({ token }: TokenCardProps) => {
   // Get live price data for tokens that are trading
   const fetchPrice = useCallback(async () => {
     if (!['fuel', 'silencio', 'corn', 'giza'].includes(id.toLowerCase())) {
-      console.log(`Token ${id} not in live price list`);
       return;
     }
     
-    console.log(`Fetching price for ${id}...`);
     setIsLoading(true);
     try {
       const data = await (async () => {
@@ -122,7 +120,6 @@ export const TokenCard = ({ token }: TokenCardProps) => {
         }
       })();
       
-      console.log(`Price data for ${id}:`, data);
       setIsUpdating(true);
       setCurrentPrice(`$${data.current_price.toFixed(6)}`);
       const seedPriceNum = parseFloat(seedPrice.replace('$', ''));
@@ -131,7 +128,8 @@ export const TokenCard = ({ token }: TokenCardProps) => {
       setInvestment(`$${data.roi_value.toFixed(2)}`);
       setTimeout(() => setIsUpdating(false), 500);
     } catch (error) {
-      handleError(error as Error, 'loadData');
+      // Silently handle price fetch errors - fallback prices will be used
+      console.warn(`Price fetch failed for ${id}, using fallback`);
     } finally {
       setIsLoading(false);
     }

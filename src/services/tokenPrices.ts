@@ -12,8 +12,16 @@ export type TokenPriceError = {
   code: string;
 };
 
-const CACHE_DURATION = 30 * 1000; // 30 seconds in milliseconds
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 const CACHE_KEY_PREFIX = 'token_price_';
+
+// Fallback prices when API is not available
+const FALLBACK_PRICES = {
+  fuel: { price: 0.05, seedPrice: 0.02 },
+  silencio: { price: 0.0006, seedPrice: 0.0006 },
+  corn: { price: 0.07, seedPrice: 0.07 },
+  giza: { price: 0.045, seedPrice: 0.045 }
+};
 
 // Clear old cache on startup
 function clearOldCache() {
@@ -28,7 +36,6 @@ function clearOldCache() {
             const now = Date.now();
             if (now - timestamp > CACHE_DURATION) {
               localStorage.removeItem(key);
-              console.log(`Cleared old cache for ${key}`);
             }
           } catch (e) {
             localStorage.removeItem(key);
@@ -87,28 +94,10 @@ function setCache(tokenId: string, data: TokenPriceResponse): void {
     console.error('Cache error:', error);
   }
 }
-let lastRequestTime = 0;
-const RATE_LIMIT_DELAY = 1000; // 1 second between requests to avoid overwhelming the API
-const MAX_RETRIES = 3;
-const INITIAL_RETRY_DELAY = 5000; // 5 seconds
-
-async function rateLimit() {
-  const now = Date.now();
-  const timeToWait = Math.max(0, lastRequestTime + RATE_LIMIT_DELAY - now);
-  if (timeToWait > 0) {
-    console.log(`Rate limiting: waiting ${Math.round(timeToWait/1000)} seconds before next request`);
-    // Don't wait for rate limit in development, just log it
-    if (process.env.NODE_ENV === 'production') {
-      await new Promise(resolve => setTimeout(resolve, timeToWait));
-    }
-  }
-  lastRequestTime = Date.now();
-}
 
 async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | null> {
   try {
     if (!isSupabaseAvailable) {
-      console.warn('Supabase environment variables not configured. Skipping cache lookup.');
       return null;
     }
 
@@ -124,7 +113,6 @@ async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | nul
     }
 
     if (!data) {
-      console.log('No cached price data found');
       return null;
     }
 
@@ -132,12 +120,11 @@ async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | nul
     const updated = new Date(data.updated_at);
     const age = now.getTime() - updated.getTime();
 
-    if (age > CACHE_DURATION) {
-      console.log('Cache is stale, will fetch fresh data');
+    // Use longer cache for stored prices (30 minutes)
+    if (age > 30 * 60 * 1000) {
       return null;
     }
 
-    console.log('Using cached price data:', data);
     return {
       current_price: Number(data.price),
       roi_value: Number(data.roi_value)
@@ -151,7 +138,6 @@ async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | nul
 async function storePrice(tokenId: string, price: number, roiValue: number) {
   try {
     if (!isSupabaseAvailable) {
-      console.warn('Supabase environment variables not configured. Skipping price storage.');
       return;
     }
 
@@ -170,7 +156,7 @@ async function storePrice(tokenId: string, price: number, roiValue: number) {
         }
       );
 
-    if (error && error.code !== '23505') { // Ignore unique constraint violations
+    if (error && error.code !== '23505') {
       console.error('Error storing price in Supabase:', error);
     }
   } catch (error) {
@@ -178,33 +164,84 @@ async function storePrice(tokenId: string, price: number, roiValue: number) {
   }
 }
 
-async function fetchWithRetry(url: string, retryCount = 0): Promise<Response> {
-  try {
-    await rateLimit();
-    const response = await fetch(url);
-    
-    if (response.status === 429 && retryCount < MAX_RETRIES) {
-      const retryDelay = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
-      console.log(`Rate limit hit, retrying in ${retryDelay/1000} seconds...`);
-      await new Promise(resolve => setTimeout(resolve, retryDelay));
-      return fetchWithRetry(url, retryCount + 1);
+// Try multiple proxy services for CORS bypass
+async function fetchWithCORSProxy(url: string): Promise<Response> {
+  const proxyServices = [
+    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    `https://cors-anywhere.herokuapp.com/${url}`
+  ];
+
+  for (const proxyUrl of proxyServices) {
+    try {
+      console.log(`Trying proxy: ${proxyUrl}`);
+      const response = await fetch(proxyUrl);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Handle different proxy response formats
+        if (data.contents) {
+          // allorigins format
+          return new Response(data.contents, { status: 200 });
+        } else if (data.status && data.status.url) {
+          // corsproxy format
+          return response;
+        } else {
+          // Direct response
+          return response;
+        }
+      }
+    } catch (error) {
+      console.warn(`Proxy ${proxyUrl} failed:`, error);
+      continue;
     }
-    
-    return response;
-  } catch (error) {
-    if (retryCount < MAX_RETRIES) {
-      const retryDelay = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
-      console.log(`Network error, retrying in ${retryDelay/1000} seconds...`);
-      await new Promise(resolve => setTimeout(resolve, retryDelay));
-      return fetchWithRetry(url, retryCount + 1);
-    }
-    throw error;
   }
+  
+  throw new Error('All proxy services failed');
+}
+
+async function fetchTokenPrice(url: string, tokenId: string): Promise<any> {
+  try {
+    // First try direct fetch (works in development)
+    let response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.log(`Direct fetch failed for ${tokenId}, trying proxy...`);
+    
+    try {
+      // Try with CORS proxy
+      const proxyResponse = await fetchWithCORSProxy(url);
+      const data = await proxyResponse.json();
+      return data;
+    } catch (proxyError) {
+      console.error(`All fetch methods failed for ${tokenId}:`, proxyError);
+      throw proxyError;
+    }
+  }
+}
+
+function getFallbackPrice(tokenId: string): TokenPriceResponse {
+  const fallback = FALLBACK_PRICES[tokenId as keyof typeof FALLBACK_PRICES];
+  if (!fallback) {
+    return { current_price: 0, roi_value: 1000 };
+  }
+  
+  const roiValue = calculateRoi(fallback.price, fallback.seedPrice);
+  return {
+    current_price: fallback.price,
+    roi_value: roiValue
+  };
 }
 
 async function fetchWithCache(url: string, seedPrice: number, tokenId: string): Promise<TokenPriceResponse> {
   try {
-    console.log(`Fetching price for ${tokenId} from ${url}`);
+    console.log(`Fetching price for ${tokenId}`);
     
     // Check client-side cache first
     const cachedData = getFromCache(tokenId);
@@ -221,56 +258,47 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
       return cachedPrice;
     }
 
-    console.log(`Making fresh API request for ${tokenId}`);
-    const response = await fetchWithRetry(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    let price = 0;
-    console.log(`CoinGecko response for ${tokenId}:`, data);
-    
-    if (data && typeof data === 'object') {
-      const firstKey = Object.keys(data)[0];
-      if (firstKey && data[firstKey] && typeof data[firstKey].usd === 'number') {
-        price = data[firstKey].usd;
-        console.log(`Extracted price for ${tokenId}:`, price);
+    // Try to fetch fresh data
+    try {
+      const data = await fetchTokenPrice(url, tokenId);
+      
+      let price = 0;
+      if (data && typeof data === 'object') {
+        const firstKey = Object.keys(data)[0];
+        if (firstKey && data[firstKey] && typeof data[firstKey].usd === 'number') {
+          price = data[firstKey].usd;
+        }
       }
-    }
-    
-    const roiValue = calculateRoi(price, seedPrice);
-    const result = {
-      current_price: price,
-      roi_value: roiValue
-    };
+      
+      if (price > 0) {
+        const roiValue = calculateRoi(price, seedPrice);
+        const result = {
+          current_price: price,
+          roi_value: roiValue
+        };
 
-    // Store in Supabase if we got a valid price
-    if (price > 0) {
-      console.log(`Storing new price for ${tokenId} in Supabase:`, result);
-      await storePrice(tokenId, price, roiValue);
-      setCache(tokenId, result);
+        // Store and cache the result
+        await storePrice(tokenId, price, roiValue);
+        setCache(tokenId, result);
+        return result;
+      }
+    } catch (fetchError) {
+      console.warn(`Failed to fetch fresh price for ${tokenId}:`, fetchError);
     }
 
-    return result;
+    // If all else fails, use fallback price
+    console.log(`Using fallback price for ${tokenId}`);
+    const fallbackResult = getFallbackPrice(tokenId);
+    setCache(tokenId, fallbackResult);
+    return fallbackResult;
+
   } catch (error) {
-    console.error(`Error fetching ${tokenId} price:`, error);
-    // Return cached price if available, even if stale
-    const staleCachedPrice = await getStoredPrice(tokenId);
-    if (staleCachedPrice) {
-      console.log(`Using stale cached price for ${tokenId} due to error:`, staleCachedPrice);
-      return staleCachedPrice;
-    }
-    return { 
-      current_price: 0, 
-      roi_value: 0, 
-      error: error instanceof Error ? error.message : 'Unknown error occurred' 
-    };
+    console.error(`Error in fetchWithCache for ${tokenId}:`, error);
+    return getFallbackPrice(tokenId);
   }
 }
 
-export async function getFuelPrice(): Promise<TokenPrice> {
+export async function getFuelPrice(): Promise<TokenPriceResponse> {
   return fetchWithCache(
     'https://api.coingecko.com/api/v3/simple/price?ids=fuel-network&vs_currencies=usd',
     0.02,
@@ -278,7 +306,7 @@ export async function getFuelPrice(): Promise<TokenPrice> {
   );
 }
 
-export async function getSilencioPrice(): Promise<TokenPrice> {
+export async function getSilencioPrice(): Promise<TokenPriceResponse> {
   return fetchWithCache(
     'https://api.coingecko.com/api/v3/simple/price?ids=silencio&vs_currencies=usd',
     0.0006,
@@ -286,7 +314,7 @@ export async function getSilencioPrice(): Promise<TokenPrice> {
   );
 }
 
-export async function getCornPrice(): Promise<TokenPrice> {
+export async function getCornPrice(): Promise<TokenPriceResponse> {
   return fetchWithCache(
     'https://api.coingecko.com/api/v3/simple/price?ids=corn-3&vs_currencies=usd',
     0.07,
@@ -294,8 +322,7 @@ export async function getCornPrice(): Promise<TokenPrice> {
   );
 }
 
-export async function getGizaPrice(): Promise<TokenPrice> {
-  console.log('Fetching Giza price from CoinGecko...');
+export async function getGizaPrice(): Promise<TokenPriceResponse> {
   return fetchWithCache(
     'https://api.coingecko.com/api/v3/simple/price?ids=giza&vs_currencies=usd',
     0.045,

@@ -3,7 +3,7 @@ import { tokens } from '../data/tokens';
 import { useEffect, useState } from 'react';
 import { TokenSentiment } from '../types';
 import { getTokenSentiment, submitVote } from '../services/sentiment';
-import { getFuelPrice, getSilencioPrice, getCornPrice } from '../services/tokenPrices';
+import { getFuelPrice, getSilencioPrice, getCornPrice, getGizaPrice } from '../services/tokenPrices';
 import { getTokenInfo } from '../services/tokenInfo';
 import { MessageSquare, ArrowLeft, ExternalLink, Wallet, Users, ArrowUpRight, ChevronRight } from 'lucide-react';
 import TradingViewWidget from '../components/TradingViewWidget';

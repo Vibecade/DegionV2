@@ -61,7 +61,7 @@ export const TokenPage = () => {
   useEffect(() => {
     if (!token || !tokenId) return;
 
-    if (tokenId.toLowerCase() === 'fuel' || tokenId.toLowerCase() === 'silencio' || tokenId.toLowerCase() === 'corn') {
+    if (tokenId.toLowerCase() === 'fuel' || tokenId.toLowerCase() === 'silencio' || tokenId.toLowerCase() === 'corn' || tokenId.toLowerCase() === 'giza') {
       const fetchPrice = async () => {
         setIsLoading(true);
         try {
@@ -70,6 +70,7 @@ export const TokenPage = () => {
               case 'fuel': return await getFuelPrice();
               case 'silencio': return await getSilencioPrice();
               case 'corn': return await getCornPrice();
+              case 'giza': return await getGizaPrice();
               default: throw new Error('Unsupported token');
             }
           })();

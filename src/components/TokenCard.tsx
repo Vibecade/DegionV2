@@ -167,7 +167,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
     <Link 
       to={`/${id}`}
       aria-label={`View details for ${name}`}
-      className="grid-item flex flex-col items-center p-4 sm:p-6 bg-black/30 rounded-lg group"
+      className="grid-item flex flex-col items-center p-4 sm:p-6 bg-black/30 rounded-lg group transition-all duration-300 hover:scale-[1.02]"
     >
       <div className="flex items-center mb-4 relative w-full">
         <img 
@@ -175,7 +175,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
             ? 'https://raw.githubusercontent.com/Sadpepedev/TheLegionProject/main/images/logos/Fragmetric.png'
             : `https://sadpepedev.github.io/TheLegionProject/images/logos/${id.toLowerCase()}.png`}
           alt={`${name} Logo`}
-          className="token-logo w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] rounded-full mr-3"
+          className="token-logo w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] rounded-full mr-3 transition-all duration-300"
           loading="lazy"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
@@ -197,7 +197,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
              currentStatus}
           </span>
         </div>
-        <ArrowUpRight className="w-5 h-5 text-[#00ffee] opacity-0 transform translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" />
+        <ArrowUpRight className="w-5 h-5 text-[#00ffee] opacity-0 transform translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 group-hover:scale-110" />
       </div>
 
       <div className="w-full space-y-2 sm:space-y-3">
@@ -207,37 +207,37 @@ export const TokenCard = ({ token }: TokenCardProps) => {
         </div>
         <div className="data-row">
           <span className="data-label">Current Price:</span>
-          <span className={`${isUpdating ? 'price-update' : ''} ${isLoading ? 'animate-pulse' : ''}`}>
+          <span className={`${isUpdating ? 'price-update' : ''} ${isLoading ? 'animate-pulse' : ''} transition-all duration-300`}>
             {currentPrice}
           </span>
         </div>
         <div className="data-row">
           <span className="data-label">ROI:</span>
-          <span className={`${roiColorClass} ${isUpdating ? 'price-update' : ''} ${isLoading ? 'animate-pulse' : ''}`}>
+          <span className={`${roiColorClass} ${isUpdating ? 'price-update' : ''} ${isLoading ? 'animate-pulse' : ''} transition-all duration-300 font-semibold`}>
             {roi}
           </span>
         </div>
         <div className="data-row">
           <span className="data-label">$1000 Investment:</span>
-          <span className={`${investColorClass} ${isUpdating ? 'price-update' : ''} ${isLoading ? 'animate-pulse' : ''}`}>
+          <span className={`${investColorClass} ${isUpdating ? 'price-update' : ''} ${isLoading ? 'animate-pulse' : ''} transition-all duration-300 font-semibold`}>
             {investment}
           </span>
         </div>
       </div>
 
       {saleData && (
-        <div className="mt-4 w-full pt-4 border-t border-[#00ffee]/10">
+        <div className="mt-4 w-full pt-4 border-t border-[#00ffee]/10 transition-all duration-300 group-hover:border-[#00ffee]/20">
           <div className="grid grid-cols-1 gap-2">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-cyber-primary" />
+                <TrendingUp className="w-4 h-4 text-cyber-primary transition-all duration-300 group-hover:scale-110" />
                 <span className="text-gray-400">Investors:</span>
               </div>
               <span>{formatNumber(saleData.participants)}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
-                <Wallet className="w-4 h-4 text-cyber-primary" />
+                <Wallet className="w-4 h-4 text-cyber-primary transition-all duration-300 group-hover:scale-110" />
                 <span className="text-gray-400">Invested:</span>
               </div>
               <span>{formatUSDC(saleData.fundsRaisedUSDC)}</span>
@@ -251,7 +251,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
           <div className="flex justify-between items-center text-sm sm:text-base">
             <div className="flex flex-col gap-1 w-full">
               <span className="text-gray-400">Vesting:</span>
-              <span className={`${currentVestingEnd.toLowerCase() === "tbd" ? "vesting-badge" : "no-vesting-badge"} text-xs`}>
+              <span className={`${currentVestingEnd.toLowerCase() === "tbd" ? "vesting-badge" : "no-vesting-badge"} text-xs transition-all duration-300`}>
                 {currentVestingEnd}
               </span>
               {currentLaunchDate && /^\d{4}-\d{2}-\d{2}/.test(currentLaunchDate) && (

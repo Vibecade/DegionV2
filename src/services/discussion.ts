@@ -8,9 +8,14 @@ const commentRateLimiter = new RateLimiter(5, 60 * 1000); // 5 comments per minu
 
 // Get client IP and hash it
 async function getAuthorHash(): Promise<string> {
-  const response = await fetch('https://api.ipify.org?format=json');
-  const { ip } = await response.json();
-  return hashIP(ip);
+  try {
+    const response = await fetch('https://api.ipify.org?format=json');
+    const { ip } = await response.json();
+    return hashIP(ip);
+  } catch (error) {
+    // Fallback to a random hash if IP service fails
+    return hashIP(Math.random().toString());
+  }
 }
 
 function hashIP(ip: string): string {
@@ -25,6 +30,7 @@ function hashIP(ip: string): string {
 
 export async function getDiscussions(tokenId: string) {
   if (!isSupabaseAvailable) {
+    console.warn('Discussion feature not available - Supabase not configured');
     return [];
   }
 
@@ -44,6 +50,7 @@ export async function getDiscussions(tokenId: string) {
     return [];
   }
 
+  console.log(`💬 Retrieved ${data.length} discussions for ${tokenId}`);
   return data;
 }
 
@@ -83,6 +90,7 @@ export async function createDiscussion(tokenId: string, title: string, content: 
     throw error;
   }
 
+  console.log(`💬 Created discussion for ${tokenId}`);
   return data;
 }
 
@@ -120,5 +128,6 @@ export async function addComment(discussionId: string, content: string) {
     throw error;
   }
 
+  console.log(`💬 Added comment to discussion ${discussionId}`);
   return data;
 }

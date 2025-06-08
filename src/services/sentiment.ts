@@ -16,9 +16,22 @@ function hashIP(ip: string): string {
   return hash.toString(36);
 }
 
+// Get client IP and hash it
+async function getAuthorHash(): Promise<string> {
+  try {
+    const response = await fetch('https://api.ipify.org?format=json');
+    const { ip } = await response.json();
+    return hashIP(ip);
+  } catch (error) {
+    // Fallback to a random hash if IP service fails
+    return hashIP(Math.random().toString());
+  }
+}
+
 export async function getTokenSentiment(tokenId: string): Promise<TokenSentiment> {
   try {
     if (!isSupabaseAvailable) {
+      console.warn('Sentiment feature not available - Supabase not configured');
       return { rocket: 0, poop: 0 };
     }
 
@@ -48,7 +61,7 @@ export async function getTokenSentiment(tokenId: string): Promise<TokenSentiment
 export async function submitVote(tokenId: string, sentiment: 'rocket' | 'poop'): Promise<boolean> {
   try {
     if (!isSupabaseAvailable) {
-      console.warn('Supabase not available. Vote not submitted.');
+      console.warn('Voting feature not available - Supabase not configured');
       return false;
     }
 
@@ -70,10 +83,11 @@ export async function submitVote(tokenId: string, sentiment: 'rocket' | 'poop'):
     if (error) {
       if (error.code === '23505') { // Unique violation
         console.log('User has already voted for this token');
+        return false;
       } else {
         console.error('Error submitting vote:', error);
+        return false;
       }
-      return false;
     }
 
     return true;

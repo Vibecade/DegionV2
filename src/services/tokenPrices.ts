@@ -75,6 +75,7 @@ function getFromCache(tokenId: string): TokenPriceResponse | null {
       return null;
     }
     
+    console.log(`📦 Using cached price for ${tokenId}`);
     return data;
   } catch (error) {
     console.error('Cache error:', error);
@@ -90,6 +91,7 @@ function setCache(tokenId: string, data: TokenPriceResponse): void {
       timestamp: Date.now()
     };
     localStorage.setItem(cacheKey, JSON.stringify(cacheItem));
+    console.log(`💾 Cached price for ${tokenId}`);
   } catch (error) {
     console.error('Cache error:', error);
   }
@@ -122,9 +124,11 @@ async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | nul
 
     // Use longer cache for stored prices (30 minutes)
     if (age > 30 * 60 * 1000) {
+      console.log(`⏰ Supabase cache expired for ${tokenId}`);
       return null;
     }
 
+    console.log(`🗄️ Using Supabase cached price for ${tokenId}`);
     return {
       current_price: Number(data.price),
       roi_value: Number(data.roi_value)
@@ -138,6 +142,7 @@ async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | nul
 async function storePrice(tokenId: string, price: number, roiValue: number) {
   try {
     if (!isSupabaseAvailable) {
+      console.warn(`⚠️ Cannot store price for ${tokenId} - Supabase not configured`);
       return;
     }
 
@@ -158,6 +163,8 @@ async function storePrice(tokenId: string, price: number, roiValue: number) {
 
     if (error && error.code !== '23505') {
       console.error('Error storing price in Supabase:', error);
+    } else {
+      console.log(`💾 Stored price for ${tokenId} in Supabase`);
     }
   } catch (error) {
     console.error('Error in storePrice:', error);
@@ -174,7 +181,7 @@ async function fetchWithCORSProxy(url: string): Promise<Response> {
 
   for (const proxyUrl of proxyServices) {
     try {
-      console.log(`Trying proxy: ${proxyUrl}`);
+      console.log(`🔄 Trying proxy: ${proxyUrl.split('?')[0]}`);
       const response = await fetch(proxyUrl);
       
       if (response.ok) {
@@ -193,7 +200,7 @@ async function fetchWithCORSProxy(url: string): Promise<Response> {
         }
       }
     } catch (error) {
-      console.warn(`Proxy ${proxyUrl} failed:`, error);
+      console.warn(`❌ Proxy failed: ${proxyUrl.split('?')[0]}`);
       continue;
     }
   }
@@ -204,6 +211,7 @@ async function fetchWithCORSProxy(url: string): Promise<Response> {
 async function fetchTokenPrice(url: string, tokenId: string): Promise<any> {
   try {
     // First try direct fetch (works in development)
+    console.log(`🌐 Direct fetch for ${tokenId}`);
     let response = await fetch(url);
     
     if (!response.ok) {
@@ -212,15 +220,16 @@ async function fetchTokenPrice(url: string, tokenId: string): Promise<any> {
     
     return await response.json();
   } catch (error) {
-    console.log(`Direct fetch failed for ${tokenId}, trying proxy...`);
+    console.log(`❌ Direct fetch failed for ${tokenId}, trying proxy...`);
     
     try {
       // Try with CORS proxy
       const proxyResponse = await fetchWithCORSProxy(url);
       const data = await proxyResponse.json();
+      console.log(`✅ Proxy fetch successful for ${tokenId}`);
       return data;
     } catch (proxyError) {
-      console.error(`All fetch methods failed for ${tokenId}:`, proxyError);
+      console.error(`❌ All fetch methods failed for ${tokenId}:`, proxyError);
       throw proxyError;
     }
   }
@@ -233,6 +242,7 @@ function getFallbackPrice(tokenId: string): TokenPriceResponse {
   }
   
   const roiValue = calculateRoi(fallback.price, fallback.seedPrice);
+  console.log(`🔄 Using fallback price for ${tokenId}: $${fallback.price}`);
   return {
     current_price: fallback.price,
     roi_value: roiValue
@@ -241,19 +251,17 @@ function getFallbackPrice(tokenId: string): TokenPriceResponse {
 
 async function fetchWithCache(url: string, seedPrice: number, tokenId: string): Promise<TokenPriceResponse> {
   try {
-    console.log(`Fetching price for ${tokenId}`);
+    console.log(`💰 Fetching price for ${tokenId}`);
     
     // Check client-side cache first
     const cachedData = getFromCache(tokenId);
     if (cachedData) {
-      console.log('Using client-side cache for', tokenId);
       return cachedData;
     }
 
     // Try to get cached price from Supabase
     const cachedPrice = await getStoredPrice(tokenId);
     if (cachedPrice) {
-      console.log('Using Supabase cached price for', tokenId);
       setCache(tokenId, cachedPrice);
       return cachedPrice;
     }
@@ -267,6 +275,7 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
         const firstKey = Object.keys(data)[0];
         if (firstKey && data[firstKey] && typeof data[firstKey].usd === 'number') {
           price = data[firstKey].usd;
+          console.log(`💲 Fresh price for ${tokenId}: $${price}`);
         }
       }
       
@@ -283,17 +292,16 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
         return result;
       }
     } catch (fetchError) {
-      console.warn(`Failed to fetch fresh price for ${tokenId}:`, fetchError);
+      console.warn(`⚠️ Failed to fetch fresh price for ${tokenId}:`, fetchError);
     }
 
     // If all else fails, use fallback price
-    console.log(`Using fallback price for ${tokenId}`);
     const fallbackResult = getFallbackPrice(tokenId);
     setCache(tokenId, fallbackResult);
     return fallbackResult;
 
   } catch (error) {
-    console.error(`Error in fetchWithCache for ${tokenId}:`, error);
+    console.error(`❌ Error in fetchWithCache for ${tokenId}:`, error);
     return getFallbackPrice(tokenId);
   }
 }

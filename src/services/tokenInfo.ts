@@ -1,13 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
 import { Token } from '../types';
-
 import { supabase, isSupabaseAvailable } from './supabaseClient';
 
 // Function to get token info from the database
 export async function getTokenInfo(tokenId: string): Promise<Partial<Token> | null> {
   try {
     if (!isSupabaseAvailable) {
-      console.warn('Supabase environment variables not configured. Skipping token info lookup.');
+      console.warn('Token info feature not available - Supabase not configured');
       return null;
     }
 
@@ -26,6 +24,7 @@ export async function getTokenInfo(tokenId: string): Promise<Partial<Token> | nu
       return null;
     }
 
+    console.log(`📊 Retrieved token info for ${tokenId}`);
     return data.data as Partial<Token>;
   } catch (error) {
     console.error('Error in getTokenInfo:', error);
@@ -37,7 +36,7 @@ export async function getTokenInfo(tokenId: string): Promise<Partial<Token> | nu
 export async function getAllTokenInfo(): Promise<Record<string, Partial<Token>> | null> {
   try {
     if (!isSupabaseAvailable) {
-      console.warn('Supabase environment variables not configured. Skipping token info lookup.');
+      console.warn('Token info feature not available - Supabase not configured');
       return null;
     }
 
@@ -60,6 +59,7 @@ export async function getAllTokenInfo(): Promise<Record<string, Partial<Token>> 
       tokenInfoMap[item.token_id] = item.data as Partial<Token>;
     }
 
+    console.log(`📊 Retrieved info for ${Object.keys(tokenInfoMap).length} tokens`);
     return tokenInfoMap;
   } catch (error) {
     console.error('Error in getAllTokenInfo:', error);

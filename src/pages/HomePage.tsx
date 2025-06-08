@@ -40,8 +40,20 @@ export const HomePage = () => {
       const result = a.name.localeCompare(b.name);
       return sortOrder === 'asc' ? result : -result;
     } else if (sortBy === 'roi') {
-      const aRoi = parseFloat(a.roi.replace('%', '')) || 0;
-      const bRoi = parseFloat(b.roi.replace('%', '')) || 0;
+      // Helper function to parse ROI values properly
+      const parseROI = (roiString: string): number => {
+        // Handle "--" or empty values
+        if (roiString === '--' || roiString === '' || !roiString) {
+          return -Infinity; // Put these at the bottom when sorting ascending
+        }
+        
+        // Remove % symbol and parse
+        const numericValue = parseFloat(roiString.replace('%', ''));
+        return isNaN(numericValue) ? -Infinity : numericValue;
+      };
+      
+      const aRoi = parseROI(a.roi);
+      const bRoi = parseROI(b.roi);
       const result = aRoi - bRoi;
       return sortOrder === 'asc' ? result : -result;
     } else {

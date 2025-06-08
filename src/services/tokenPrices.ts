@@ -292,6 +292,7 @@ export async function getCornPrice(): Promise<TokenPrice> {
 }
 
 export async function getGizaPrice(): Promise<TokenPrice> {
+  console.log('Fetching Giza price from CoinGecko...');
   return fetchWithCache(
     'https://api.coingecko.com/api/v3/simple/price?ids=giza&vs_currencies=usd',
     0.045,

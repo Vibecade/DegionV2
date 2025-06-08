@@ -217,13 +217,23 @@ export const TokenPage = () => {
             <div className="glass-panel p-6 sm:p-8 rounded-lg">
               <div className="flex items-center mb-6">
                 <img 
-                  src={`https://sadpepedev.github.io/TheLegionProject/images/logos/${token.id.toLowerCase()}.png`}
+                  src={(() => {
+                    const tokenId = token.id.toLowerCase();
+                    if (tokenId === 'fragmetric') {
+                      return 'https://raw.githubusercontent.com/Sadpepedev/TheLegionProject/main/images/logos/Fragmetric.png';
+                    } else if (tokenId === 'arcium') {
+                      return 'https://pbs.twimg.com/profile_images/1862239493079052288/ca6520f2_400x400.jpg';
+                    } else {
+                      return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenId}.png`;
+                    }
+                  })()}
                   alt={`${name} Logo`}
                   className="w-16 h-16 rounded-full mr-4 animate-float"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.onerror = null;
-                    target.src = 'https://sadpepedev.github.io/TheLegionProject/images/logos/placeholder.png';
+                    // Try a generic crypto logo as fallback
+                    target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ii8+Cjwvc3ZnPgo8L3N2Zz4K';
                   }}
                 />
                 <div>

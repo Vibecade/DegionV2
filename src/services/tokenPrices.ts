@@ -118,7 +118,7 @@ function setCache(tokenId: string, data: TokenPriceResponse): void {
   }
 }
 let lastRequestTime = 0;
-const RATE_LIMIT_DELAY = 2 * 60 * 1000; // 2 minutes between requests (reduced from 30 minutes)
+const RATE_LIMIT_DELAY = 1000; // 1 second between requests to avoid overwhelming the API
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY = 5000; // 5 seconds
 
@@ -127,7 +127,10 @@ async function rateLimit() {
   const timeToWait = Math.max(0, lastRequestTime + RATE_LIMIT_DELAY - now);
   if (timeToWait > 0) {
     console.log(`Rate limiting: waiting ${Math.round(timeToWait/1000)} seconds before next request`);
-    await new Promise(resolve => setTimeout(resolve, timeToWait));
+    // Don't wait for rate limit in development, just log it
+    if (process.env.NODE_ENV === 'production') {
+      await new Promise(resolve => setTimeout(resolve, timeToWait));
+    }
   }
   lastRequestTime = Date.now();
 }

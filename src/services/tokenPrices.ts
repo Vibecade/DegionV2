@@ -17,7 +17,7 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Validate that we have the required environment variables
 if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing Supabase environment variables. Please check your .env file.');
+  console.warn('Missing Supabase environment variables. Some features may not work.');
 }
 
 // Create Supabase client with error handling

@@ -80,6 +80,16 @@
         <p>This application requires JavaScript to function properly. Please enable JavaScript in your browser settings.</p>
       </div>
     </noscript>
+    <!-- Fallback for deployment issues -->
+    <script>
+      // Check if React app loaded properly
+      setTimeout(function() {
+        var root = document.getElementById('root');
+        if (root && root.children.length === 0) {
+          root.innerHTML = '<div style="text-align: center; padding: 20px; background: #121212; color: #F0F0F0;"><h1>Loading...</h1><p>If this message persists, please refresh the page.</p></div>';
+        }
+      }, 5000);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

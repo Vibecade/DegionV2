@@ -8,28 +8,21 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // Validate that we have the required environment variables
 let supabase;
 try {
-  supabase = createClient(
-    supabaseUrl,
-    supabaseKey
-  );
+  if (supabaseUrl && supabaseKey) {
+    supabase = createClient(supabaseUrl, supabaseKey);
+  } else {
+    console.warn('Supabase environment variables not configured');
+    supabase = null;
+  }
 } catch (error) {
   console.error('Failed to initialize Supabase client:', error);
-  // Create a dummy client that will gracefully fail
-  supabase = {
-    from: () => ({
-      select: () => ({
-        eq: () => ({
-          maybeSingle: async () => ({ data: null, error: new Error('Supabase client not initialized') })
-        })
-      })
-    })
-  };
+  supabase = null;
 }
 
 // Function to get token info from the database
 export async function getTokenInfo(tokenId: string): Promise<Partial<Token> | null> {
   try {
-    if (!supabaseUrl || !supabaseKey) {
+    if (!supabase) {
       console.warn('Supabase environment variables not configured. Skipping token info lookup.');
       return null;
     }
@@ -59,7 +52,7 @@ export async function getTokenInfo(tokenId: string): Promise<Partial<Token> | nu
 // Function to get all token info
 export async function getAllTokenInfo(): Promise<Record<string, Partial<Token>> | null> {
   try {
-    if (!supabaseUrl || !supabaseKey) {
+    if (!supabase) {
       console.warn('Supabase environment variables not configured. Skipping token info lookup.');
       return null;
     }
@@ -93,7 +86,7 @@ export async function getAllTokenInfo(): Promise<Record<string, Partial<Token>> 
 // Get the latest update timestamp
 export async function getLastUpdateTime(): Promise<string | null> {
   try {
-    if (!supabaseUrl || !supabaseKey) {
+    if (!supabase) {
       return null;
     }
 

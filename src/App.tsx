@@ -13,12 +13,16 @@ import { memoryMonitor } from './utils/performance';
 
 function App() {
   useEffect(() => {
-    // Clear expired cache items on app start
-    secureStorage.clearExpired();
-    
-    // Log initial memory usage in development
-    if (process.env.NODE_ENV === 'development') {
-      memoryMonitor.logMemoryUsage('App Start');
+    try {
+      // Clear expired cache items on app start
+      secureStorage.clearExpired();
+      
+      // Log initial memory usage in development
+      if (import.meta.env.DEV) {
+        memoryMonitor.logMemoryUsage('App Start');
+      }
+    } catch (error) {
+      console.error('Error in App initialization:', error);
     }
   }, []);
 

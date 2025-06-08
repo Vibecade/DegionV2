@@ -1,11 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
 import { TokenSentiment } from '../types';
 import { RateLimiter } from '../utils/rateLimiter';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { supabase, isSupabaseAvailable } from './supabaseClient';
 
 // Create rate limiters
 const voteRateLimiter = new RateLimiter(5, 60 * 1000); // 5 votes per minute
@@ -23,6 +18,10 @@ function hashIP(ip: string): string {
 
 export async function getTokenSentiment(tokenId: string): Promise<TokenSentiment> {
   try {
+    if (!isSupabaseAvailable) {
+      return { rocket: 0, poop: 0 };
+    }
+
     const { data, error } = await supabase
       .from('token_sentiment')
       .select('sentiment')
@@ -48,6 +47,11 @@ export async function getTokenSentiment(tokenId: string): Promise<TokenSentiment
 
 export async function submitVote(tokenId: string, sentiment: 'rocket' | 'poop'): Promise<boolean> {
   try {
+    if (!isSupabaseAvailable) {
+      console.warn('Supabase not available. Vote not submitted.');
+      return false;
+    }
+
     const authorHash = await getAuthorHash();
 
     // Check rate limit

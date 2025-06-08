@@ -10,12 +10,18 @@ import { BackToTopButton } from './components/BackToTopButton';
 import { useEffect } from 'react';
 import { secureStorage } from './utils/security';
 import { memoryMonitor } from './utils/performance';
+import { isSupabaseAvailable } from './services/supabaseClient';
 
 function App() {
   useEffect(() => {
     try {
       // Clear expired cache items on app start
       secureStorage.clearExpired();
+      
+      // Log Supabase availability
+      if (!isSupabaseAvailable) {
+        console.warn('Running in offline mode - some features may be limited');
+      }
       
       // Log initial memory usage in development
       if (import.meta.env.DEV) {

@@ -1,11 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
 import { RateLimiter } from '../utils/rateLimiter';
 import DOMPurify from 'isomorphic-dompurify';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { supabase, isSupabaseAvailable } from './supabaseClient';
 
 // Create rate limiters
 const discussionRateLimiter = new RateLimiter(3, 5 * 60 * 1000); // 3 discussions per 5 minutes
@@ -29,6 +24,10 @@ function hashIP(ip: string): string {
 }
 
 export async function getDiscussions(tokenId: string) {
+  if (!isSupabaseAvailable) {
+    return [];
+  }
+
   const { data, error } = await supabase
     .from('discussions')
     .select(`
@@ -49,6 +48,10 @@ export async function getDiscussions(tokenId: string) {
 }
 
 export async function createDiscussion(tokenId: string, title: string, content: string) {
+  if (!isSupabaseAvailable) {
+    throw new Error('Discussion feature not available. Please try again later.');
+  }
+
   const authorIp = await getAuthorHash();
   
   // Check rate limit
@@ -84,6 +87,10 @@ export async function createDiscussion(tokenId: string, title: string, content: 
 }
 
 export async function addComment(discussionId: string, content: string) {
+  if (!isSupabaseAvailable) {
+    throw new Error('Comment feature not available. Please try again later.');
+  }
+
   const authorIp = await getAuthorHash();
   
   // Check rate limit

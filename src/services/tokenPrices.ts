@@ -1,5 +1,5 @@
 import { TokenPriceResponse } from '../types';
-import { createClient } from '@supabase/supabase-js';
+import { supabase, isSupabaseAvailable } from './supabaseClient';
 
 export interface TokenPriceResponse {
   current_price: number;
@@ -11,36 +11,6 @@ export type TokenPriceError = {
   message: string;
   code: string;
 };
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Validate that we have the required environment variables
-if (!supabaseUrl || !supabaseKey) {
-  console.warn('Missing Supabase environment variables. Some features may not work.');
-}
-
-// Create Supabase client with error handling
-let supabase;
-try {
-  supabase = createClient(
-    supabaseUrl,
-    supabaseKey
-  );
-} catch (error) {
-  console.error('Failed to initialize Supabase client:', error);
-  // Create a dummy client that will gracefully fail
-  supabase = {
-    from: () => ({
-      select: () => ({
-        eq: () => ({
-          maybeSingle: async () => ({ data: null, error: new Error('Supabase client not initialized') })
-        })
-      }),
-      upsert: async () => ({ error: new Error('Supabase client not initialized') })
-    })
-  };
-}
 
 const CACHE_DURATION = 30 * 1000; // 30 seconds in milliseconds
 const CACHE_KEY_PREFIX = 'token_price_';
@@ -137,7 +107,7 @@ async function rateLimit() {
 
 async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | null> {
   try {
-    if (!supabaseUrl || !supabaseKey) {
+    if (!isSupabaseAvailable) {
       console.warn('Supabase environment variables not configured. Skipping cache lookup.');
       return null;
     }
@@ -180,7 +150,7 @@ async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | nul
 
 async function storePrice(tokenId: string, price: number, roiValue: number) {
   try {
-    if (!supabaseUrl || !supabaseKey) {
+    if (!isSupabaseAvailable) {
       console.warn('Supabase environment variables not configured. Skipping price storage.');
       return;
     }

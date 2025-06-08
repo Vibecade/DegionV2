@@ -1,5 +1,5 @@
 import { TokenSale, DuneQueryResult } from '../types';
-import { supabase } from './supabaseClient';
+import { supabase, isSupabaseAvailable } from './supabaseClient';
 
 const CACHE_DURATION = 3 * 60 * 60 * 1000; // 3 hours
 
@@ -69,6 +69,11 @@ function transformSalesData(result: DuneQueryResult): TokenSale[] {
 
 async function cacheSalesData(salesData: TokenSale[]): Promise<void> {
   try {
+    if (!isSupabaseAvailable) {
+      console.warn('Supabase not available. Skipping sales data caching.');
+      return;
+    }
+
     const { error } = await supabase
       .from('dune_sales_data')
       .upsert(

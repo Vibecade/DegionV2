@@ -301,4 +301,20 @@ export const tokens: Token[] = [
       twitter: 'https://x.com/ResolvLabs'
     }
   },
+  {
+    id: 'arcium',
+    name: 'Arcium',
+    status: 'ICO Soon',
+    launchDate: 'TBD',
+    seedPrice: 'TBD',
+    currentPrice: '--',
+    roi: '--',
+    investment: '--',
+    vestingEnd: 'TBD',
+    description: 'The encrypted supercomputer.',
+    links: {
+      website: 'https://arcium.com',
+      twitter: 'https://x.com/ArciumHQ'
+    }
+  },
 ];

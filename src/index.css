@@ -587,6 +587,91 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
   }
 }
 
+/* Accessibility improvements */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Focus indicators */
+*:focus {
+  outline: 2px solid #00ffee;
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid #00ffee;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .glass-panel {
+    border-width: 2px;
+    border-color: #00ffee;
+  }
+  
+  .badge {
+    border-width: 2px;
+  }
+  
+  .btn-primary,
+  .btn-outline {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .animate-pulse,
+  .animate-spin,
+  .animate-float {
+    animation: none !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .glass-panel {
+    background: white !important;
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+  }
+  
+  .btn-primary,
+  .btn-outline {
+    background: white !important;
+    color: black !important;
+    border: 1px solid #000 !important;
+  }
+  
+  .badge {
+    background: white !important;
+    color: black !important;
+    border: 1px solid #000 !important;
+  }
+}
+
 /* Loading skeleton animations */
 @keyframes shimmer {
   0% {

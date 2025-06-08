@@ -1,18 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { tokens } from '../data/tokens';
+import { SEOHead } from '../components/SEOHead';
 import { getDiscussions, createDiscussion, addComment } from '../services/discussion';
+import { useAnnouncement } from '../hooks/useAccessibility';
 import { MessageSquarePlus, MessageCircle, ArrowLeft, ChevronRight } from 'lucide-react';
 
 export const DiscussionPage = () => {
   const { tokenId } = useParams();
   const token = tokens.find(t => t.id.toLowerCase() === tokenId?.toLowerCase());
+  const announce = useAnnouncement();
   const [discussions, setDiscussions] = useState<any[]>([]);
   const [newDiscussion, setNewDiscussion] = useState({ title: '', content: '' });
   const [newComment, setNewComment] = useState('');
   const [selectedDiscussion, setSelectedDiscussion] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Generate SEO data
+  const seoTitle = token ? `${token.name} Discussions - Community Sentiment & Analysis | Degion.xyz` : 'Token Not Found | Degion.xyz';
+  const seoDescription = token ? `Join the ${token.name} community discussion. Share insights, analysis, and sentiment about ${token.name} token performance and future prospects.` : 'Token not found on Degion.xyz';
 
   useEffect(() => {
     if (tokenId) {
@@ -26,8 +33,10 @@ export const DiscussionPage = () => {
     try {
       const data = await getDiscussions(tokenId);
       setDiscussions(data);
+      announce(`Loaded ${data.length} discussions`, 'polite');
     } catch (err) {
       setError('Failed to load discussions');
+      announce('Failed to load discussions', 'assertive');
     } finally {
       setIsLoading(false);
     }
@@ -41,8 +50,10 @@ export const DiscussionPage = () => {
       await createDiscussion(tokenId, newDiscussion.title, newDiscussion.content);
       setNewDiscussion({ title: '', content: '' });
       await loadDiscussions();
+      announce('Discussion created successfully', 'polite');
     } catch (err) {
       setError('Failed to create discussion');
+      announce('Failed to create discussion', 'assertive');
     }
   };
 
@@ -54,14 +65,20 @@ export const DiscussionPage = () => {
       setNewComment('');
       setSelectedDiscussion(null);
       await loadDiscussions();
+      announce('Comment added successfully', 'polite');
     } catch (err) {
       setError('Failed to add comment');
+      announce('Failed to add comment', 'assertive');
     }
   };
 
   if (!token) {
     return (
       <div className="min-h-screen bg-[#09131b] text-[#cfd0d1] p-8">
+        <SEOHead 
+          title="Token Not Found | Degion.xyz"
+          description="The requested token was not found on Degion.xyz"
+        />
         <div className="text-center">
           <h1 className="text-3xl font-bold text-[#00ffee] mb-4 font-orbitron">Token Not Found</h1>
           <Link to="/" className="btn-outline">Return Home</Link>
@@ -72,12 +89,18 @@ export const DiscussionPage = () => {
 
   return (
     <div className="min-h-screen bg-[#09131b] text-[#cfd0d1] p-4 sm:p-8">
+      <SEOHead 
+        title={seoTitle}
+        description={seoDescription}
+        canonicalUrl={`https://degion.xyz/${tokenId}/discussions`}
+      />
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center mb-4">
             <Link 
               to="/"
               className="inline-flex items-center text-[#00ffee] hover:text-[#37fffc] transition-colors group"
+              aria-label="Return to home page"
             >
               <ArrowLeft className="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" />
               <span>Home</span>
@@ -86,6 +109,7 @@ export const DiscussionPage = () => {
             <Link 
               to={`/${tokenId}`}
               className="text-[#00ffee] hover:text-[#37fffc] transition-colors"
+              aria-label={`View ${token.name} details`}
             >
               {token.name}
             </Link>

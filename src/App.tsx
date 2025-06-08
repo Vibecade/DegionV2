@@ -1,14 +1,29 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { TronGrid } from './components/TronGrid';
+import { SEOHead } from './components/SEOHead';
 import { HomePage } from './pages/HomePage';
 import { TokenPage } from './pages/TokenPage';
 import { DiscussionPage } from './pages/DiscussionPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { useEffect } from 'react';
+import { secureStorage } from './utils/security';
+import { memoryMonitor } from './utils/performance';
 
 function App() {
+  useEffect(() => {
+    // Clear expired cache items on app start
+    secureStorage.clearExpired();
+    
+    // Log initial memory usage in development
+    if (process.env.NODE_ENV === 'development') {
+      memoryMonitor.logMemoryUsage('App Start');
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <Router>
+        <SEOHead />
         <div className="min-h-screen bg-cyber-bg text-cyber-text font-['Orbitron'] relative overflow-x-hidden">
           <TronGrid />
           <div className="relative z-10">

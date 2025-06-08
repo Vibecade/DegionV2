@@ -1,10 +1,13 @@
 import { useParams, Link } from 'react-router-dom';
 import { tokens } from '../data/tokens';
 import { useEffect, useState } from 'react';
+import { SEOHead } from '../components/SEOHead';
 import { TokenSentiment } from '../types';
 import { getTokenSentiment, submitVote } from '../services/sentiment';
 import { getFuelPrice, getSilencioPrice, getCornPrice, getGizaPrice } from '../services/tokenPrices';
 import { getTokenInfo } from '../services/tokenInfo';
+import { seoUtils } from '../utils/seo';
+import { useAnnouncement } from '../hooks/useAccessibility';
 import { MessageSquare, ArrowLeft, ExternalLink, Wallet, Users, ArrowUpRight, ChevronRight } from 'lucide-react';
 import TradingViewWidget from '../components/TradingViewWidget';
 import { Footer } from '../components/Footer';
@@ -14,6 +17,7 @@ import { formatUSDC, formatNumber } from '../utils/formatters';
 export const TokenPage = () => {
   const { tokenId } = useParams();
   const token = tokens.find(t => t.id.toLowerCase() === tokenId?.toLowerCase());
+  const announce = useAnnouncement();
   const [sentiment, setSentiment] = useState<TokenSentiment>({ rocket: 0, poop: 0 });
   const [isVoting, setIsVoting] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
@@ -30,11 +34,23 @@ export const TokenPage = () => {
   
   const saleData = salesData.find(sale => sale.name.toLowerCase() === token?.name.toLowerCase());
 
+  // Generate SEO data
+  const seoTitle = token ? `${token.name} (${token.id.toUpperCase()}) - Legion ICO Performance | Degion.xyz` : 'Token Not Found | Degion.xyz';
+  const seoDescription = token ? `Track ${token.name} token performance with real-time price${currentPrice !== '--' ? ` (${currentPrice})` : ''}, ROI${roi !== '--' ? ` (${roi})` : ''}, and community sentiment. Comprehensive analytics and investment tracking.` : 'Token not found on Degion.xyz';
+  const seoKeywords = token ? seoUtils.generateKeywords(token.name, currentStatus, ['price tracking', 'investment analysis']) : '';
+
   useEffect(() => {
     if (tokenId) {
       loadSentiment();
     }
   }, [tokenId]);
+
+  // Announce price updates to screen readers
+  useEffect(() => {
+    if (isUpdating && token) {
+      announce(`${token.name} price updated to ${currentPrice}`, 'polite');
+    }
+  }, [isUpdating, currentPrice, token, announce]);
 
   // Update token data from Legion API
   useEffect(() => {
@@ -166,12 +182,19 @@ export const TokenPage = () => {
 
   return (
     <div className="min-h-screen bg-[#09131b] text-[#cfd0d1] p-4 sm:p-8">
+      <SEOHead 
+        title={seoTitle}
+        description={seoDescription}
+        keywords={seoKeywords}
+        canonicalUrl={`https://degion.xyz/${tokenId}`}
+      />
       <div className="max-w-[1200px] mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div className="flex items-center">
             <Link 
               to="/"
               className="inline-flex items-center text-[#00ffee] hover:text-[#37fffc] transition-colors group"
+              aria-label="Return to home page"
             >
               <ArrowLeft className="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" />
               <span>Home</span>
@@ -182,6 +205,7 @@ export const TokenPage = () => {
           <Link
             to={`/${tokenId}/discussions`}
             className="inline-flex items-center px-4 py-2 bg-[#00ffee] text-black rounded-lg hover:bg-[#37fffc] transition-colors shadow-[0_0_20px_rgba(0,255,238,0.2)] hover:shadow-[0_0_30px_rgba(0,255,238,0.4)]"
+            aria-label={`View discussions for ${name}`}
           >
             <MessageSquare className="w-5 h-5 mr-2" />
             View Discussions

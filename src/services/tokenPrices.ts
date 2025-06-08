@@ -45,6 +45,35 @@ try {
 const CACHE_DURATION = 30 * 1000; // 30 seconds in milliseconds
 const CACHE_KEY_PREFIX = 'token_price_';
 
+// Clear old cache on startup
+function clearOldCache() {
+  try {
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith(CACHE_KEY_PREFIX)) {
+        const cached = localStorage.getItem(key);
+        if (cached) {
+          try {
+            const { timestamp } = JSON.parse(cached);
+            const now = Date.now();
+            if (now - timestamp > CACHE_DURATION) {
+              localStorage.removeItem(key);
+              console.log(`Cleared old cache for ${key}`);
+            }
+          } catch (e) {
+            localStorage.removeItem(key);
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error clearing old cache:', error);
+  }
+}
+
+// Clear old cache on module load
+clearOldCache();
+
 interface CacheItem {
   data: TokenPriceResponse;
   timestamp: number;
@@ -89,7 +118,7 @@ function setCache(tokenId: string, data: TokenPriceResponse): void {
   }
 }
 let lastRequestTime = 0;
-const RATE_LIMIT_DELAY = 30 * 60 * 1000; // 30 minutes between requests
+const RATE_LIMIT_DELAY = 2 * 60 * 1000; // 2 minutes between requests (reduced from 30 minutes)
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY = 5000; // 5 seconds
 
@@ -97,8 +126,9 @@ async function rateLimit() {
   const now = Date.now();
   const timeToWait = Math.max(0, lastRequestTime + RATE_LIMIT_DELAY - now);
   if (timeToWait > 0) {
-    console.log(`Rate limiting: waiting ${Math.round(timeToWait/60000)} minutes before next request`);
-    await new Promise(resolve => setTimeout(resolve, timeToWait));
+    console.log(`Rate limiting: waiting ${Math.round(timeToWait/1000)} seconds before next request`);
+    // Don't wait for rate limit, just log it and continue
+    // await new Promise(resolve => setTimeout(resolve, timeToWait));
   }
   lastRequestTime = Date.now();
 }
@@ -131,11 +161,8 @@ async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | nul
     const age = now.getTime() - updated.getTime();
 
     if (age > CACHE_DURATION) {
-      console.log('Using stale cache while waiting for rate limit');
-      return {
-        current_price: Number(data.price),
-        roi_value: Number(data.roi_value)
-      };
+      console.log('Cache is stale, will fetch fresh data');
+      return null;
     }
 
     console.log('Using cached price data:', data);
@@ -205,6 +232,8 @@ async function fetchWithRetry(url: string, retryCount = 0): Promise<Response> {
 
 async function fetchWithCache(url: string, seedPrice: number, tokenId: string): Promise<TokenPriceResponse> {
   try {
+    console.log(`Fetching price for ${tokenId} from ${url}`);
+    
     // Check client-side cache first
     const cachedData = getFromCache(tokenId);
     if (cachedData) {
@@ -215,10 +244,12 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
     // Try to get cached price from Supabase
     const cachedPrice = await getStoredPrice(tokenId);
     if (cachedPrice) {
+      console.log('Using Supabase cached price for', tokenId);
       setCache(tokenId, cachedPrice);
       return cachedPrice;
     }
 
+    console.log(`Making fresh API request for ${tokenId}`);
     const response = await fetchWithRetry(url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -227,13 +258,13 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
     const data = await response.json();
     
     let price = 0;
-    console.log('CoinGecko response:', data);
+    console.log(`CoinGecko response for ${tokenId}:`, data);
     
     if (data && typeof data === 'object') {
       const firstKey = Object.keys(data)[0];
       if (firstKey && data[firstKey] && typeof data[firstKey].usd === 'number') {
         price = data[firstKey].usd;
-        console.log('Extracted price:', price);
+        console.log(`Extracted price for ${tokenId}:`, price);
       }
     }
     
@@ -245,7 +276,7 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
 
     // Store in Supabase if we got a valid price
     if (price > 0) {
-      console.log('Storing new price in Supabase:', result);
+      console.log(`Storing new price for ${tokenId} in Supabase:`, result);
       await storePrice(tokenId, price, roiValue);
       setCache(tokenId, result);
     }
@@ -256,7 +287,7 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
     // Return cached price if available, even if stale
     const staleCachedPrice = await getStoredPrice(tokenId);
     if (staleCachedPrice) {
-      console.log('Using stale cached price due to error:', staleCachedPrice);
+      console.log(`Using stale cached price for ${tokenId} due to error:`, staleCachedPrice);
       return staleCachedPrice;
     }
     return { 

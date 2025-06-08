@@ -135,9 +135,9 @@ export const tokens: Token[] = [
     status: 'Live',
     launchDate: '2025-01-27',
     seedPrice: '$0.045',
-    currentPrice: '$0.045',
-    roi: '0.00%',
-    investment: '$1000.00',
+    currentPrice: '--',
+    roi: '--',
+    investment: '--',
     vestingEnd: '20% at TGE, then 24 months linear',
     description: 'Web3 Agents Stack 𓂀',
     links: {

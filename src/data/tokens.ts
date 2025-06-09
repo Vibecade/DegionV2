@@ -256,12 +256,12 @@ export const tokens: Token[] = [
   {
     id: 'skate',
     name: 'Skate',
-    status: 'Pending TGE',
-    launchDate: 'TBD',
-    seedPrice: 'TBD',
-    currentPrice: '--',
-    roi: '--',
-    investment: '--',
+    status: 'Live',
+    launchDate: '2025-01-06',
+    seedPrice: '$0.08',
+    currentPrice: '$0.08',
+    roi: '0.00%',
+    investment: '$1000.00',
     vestingEnd: '40% at TGE, 60% linearly over 3 months',
     description: 'Skate enables users to interact with applications from any VM while staying on their favorite chain.',
     links: {

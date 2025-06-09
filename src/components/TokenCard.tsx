@@ -104,7 +104,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
 
   // Get live price data for tokens that are trading
   const fetchPrice = useCallback(async () => {
-    if (!['fuel', 'silencio', 'corn', 'giza'].includes(id.toLowerCase())) {
+    if (!['fuel', 'silencio', 'corn', 'giza', 'skate'].includes(id.toLowerCase())) {
       return;
     }
     
@@ -116,6 +116,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
           case 'silencio': return await getSilencioPrice();
           case 'corn': return await getCornPrice();
           case 'giza': return await getGizaPrice();
+          case 'skate': return await getSkatePrice();
           default: throw new Error('Unsupported token');
         }
       })();
@@ -136,7 +137,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
   }, [id, seedPrice]);
 
   useEffect(() => {
-    if (['fuel', 'silencio', 'corn', 'giza'].includes(id.toLowerCase())) {
+    if (['fuel', 'silencio', 'corn', 'giza', 'skate'].includes(id.toLowerCase())) {
       fetchPrice();
       const interval = setInterval(fetchPrice, 30000);
       return () => clearInterval(interval);

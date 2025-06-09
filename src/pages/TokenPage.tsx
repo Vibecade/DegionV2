@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { SEOHead } from '../components/SEOHead';
 import { TokenSentiment } from '../types';
 import { getTokenSentiment, submitVote } from '../services/sentiment';
-import { getFuelPrice, getSilencioPrice, getCornPrice, getGizaPrice } from '../services/tokenPrices';
+import { getFuelPrice, getSilencioPrice, getCornPrice, getGizaPrice, getSkatePrice } from '../services/tokenPrices';
 import { getTokenInfo } from '../services/tokenInfo';
 import { seoUtils } from '../utils/seo';
 import { useAnnouncement } from '../hooks/useAccessibility';
@@ -77,7 +77,7 @@ export const TokenPage = () => {
   useEffect(() => {
     if (!token || !tokenId) return;
 
-    if (tokenId.toLowerCase() === 'fuel' || tokenId.toLowerCase() === 'silencio' || tokenId.toLowerCase() === 'corn' || tokenId.toLowerCase() === 'giza') {
+    if (['fuel', 'silencio', 'corn', 'giza', 'skate'].includes(tokenId.toLowerCase())) {
       const fetchPrice = async () => {
         setIsLoading(true);
         try {
@@ -87,6 +87,7 @@ export const TokenPage = () => {
               case 'silencio': return await getSilencioPrice();
               case 'corn': return await getCornPrice();
               case 'giza': return await getGizaPrice();
+              case 'skate': return await getSkatePrice();
               default: throw new Error('Unsupported token');
             }
           })();
@@ -149,6 +150,8 @@ export const TokenPage = () => {
         return 'MEXC:CORNUSDT';
       case 'giza':
         return 'KUCOIN:GIZAUSDT';
+      case 'skate':
+        return 'KUCOIN:SKATEUSDT';
       default:
         return '';
     }

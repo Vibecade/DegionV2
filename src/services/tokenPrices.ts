@@ -20,7 +20,8 @@ const FALLBACK_PRICES = {
   fuel: { price: 0.05, seedPrice: 0.02 },
   silencio: { price: 0.0006, seedPrice: 0.0006 },
   corn: { price: 0.07, seedPrice: 0.07 },
-  giza: { price: 0.045, seedPrice: 0.045 }
+  giza: { price: 0.045, seedPrice: 0.045 },
+  skate: { price: 0.08, seedPrice: 0.08 }
 };
 
 // Clear old cache on startup
@@ -338,6 +339,13 @@ export async function getGizaPrice(): Promise<TokenPriceResponse> {
   );
 }
 
+export async function getSkatePrice(): Promise<TokenPriceResponse> {
+  return fetchWithCache(
+    'https://api.coingecko.com/api/v3/simple/price?ids=skate&vs_currencies=usd',
+    0.08,
+    'skate'
+  );
+}
 function calculateRoi(currentPrice: number, seedPrice: number): number {
   if (currentPrice <= 0 || seedPrice <= 0) {
     return 1000; // Return initial investment if prices are invalid

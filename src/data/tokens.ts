@@ -257,7 +257,7 @@ export const tokens: Token[] = [
     id: 'skate',
     name: 'Skate',
     status: 'Live',
-    launchDate: '2025-01-09',
+    launchDate: '2025-06-09',
     seedPrice: '$0.08',
     currentPrice: '$0.08',
     roi: '0.00%',

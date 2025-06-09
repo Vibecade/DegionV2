@@ -16,7 +16,19 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const start = new Date(startDate).getTime();
+      // Handle different date formats
+      let startTime;
+      if (startDate.includes('T') || startDate.includes('Z')) {
+        // ISO format
+        startTime = new Date(startDate).getTime();
+      } else if (startDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        // YYYY-MM-DD format - treat as UTC
+        startTime = new Date(startDate + 'T00:00:00Z').getTime();
+      } else {
+        // Other formats
+        startTime = new Date(startDate).getTime();
+      }
+      
       const now = new Date().getTime();
       const vestingMatch = vestingPeriod.match(/(\d+)\s*months?/i);
       const initialUnlock = vestingPeriod.match(/(\d+)%\s*at\s*TGE/i);
@@ -31,13 +43,13 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
       const wasComplete = isComplete;
       
       // Check if vesting has started
-      if (now < start) {
+      if (now < startTime) {
         setIsStarted(false);
         setIsComplete(false);
         if (wasStarted !== false && onStatusChange) {
           onStatusChange(false);
         }
-        const difference = start - now;
+        const difference = startTime - now;
         
         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
         const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -62,12 +74,12 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
       }
 
       const vestingMonths = vestingMatch ? parseInt(vestingMatch[1]) : 0;
-      const end = new Date(start);
+      const end = new Date(startTime);
       end.setMonth(end.getMonth() + vestingMonths);
       
       // Calculate vesting progress
-      const totalDuration = end.getTime() - start;
-      const elapsed = now - start;
+      const totalDuration = end.getTime() - startTime;
+      const elapsed = now - startTime;
       let progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
       
       // If there's an initial unlock, adjust the progress calculation

@@ -151,7 +151,7 @@ export const TokenPage = () => {
       case 'giza':
         return 'KUCOIN:GIZAUSDT';
       case 'skate':
-        return 'KUCOIN:SKATEUSDT';
+        return 'UNISWAP3ETH:SKATEUSDC_4A480F.USD';
       default:
         return '';
     }

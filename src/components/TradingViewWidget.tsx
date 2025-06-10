@@ -58,9 +58,7 @@ function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
       const widgetContainer = document.createElement('div');
       widgetContainer.className = 'tradingview-widget-container__widget h-[calc(100%-32px)] w-full';
       
-      // Clear existing content
       if (container.current) {
-        container.current.innerHTML = '';
         container.current.appendChild(widgetContainer);
         container.current.appendChild(script);
       }
@@ -74,22 +72,25 @@ function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
       console.error('Error initializing TradingView widget:', err);
       setError('Failed to initialize chart');
     }
-  }, [symbol, isLoaded]);
-  }, [symbol]);
+  }
+  )
 
   useEffect(() => {
     if (!container.current || !symbol) return;
 
-    // Reset loaded state when symbol changes
-    setIsLoaded(false);
-    setError(null);
-    
     // Load the widget with a slight delay to ensure proper initialization
-    const timeoutId = setTimeout(loadWidget, 300);
+    const timeoutId = setTimeout(loadWidget, 200);
 
     return () => {
       clearTimeout(timeoutId);
+      if (container.current) {
+        container.current.innerHTML = '';
+      }
+      const script = document.getElementById(`tradingview-widget-${symbol}`);
+      script?.remove();
+      setIsLoaded(false);
     };
+  }, [symbol, loadWidget]);
 
   if (error) {
     return (

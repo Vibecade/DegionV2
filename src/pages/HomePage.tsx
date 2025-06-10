@@ -187,7 +187,8 @@ export const HomePage = () => {
                 <input
                   type="text"
                   placeholder="Search tokens..."
-                  onChange={handleSearchChange}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-black/30 border border-[rgba(0,255,238,0.2)] rounded-lg pl-10 pr-4 py-2 text-[#cfd0d1] focus:outline-none focus:border-[#00ffee] transition-colors"
                 />
               </div>

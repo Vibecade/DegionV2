@@ -619,6 +619,25 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
   }
 }
 
+/* Shimmer animation for loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.08) 0%, 
+    rgba(255, 255, 255, 0.15) 50%, 
+    rgba(255, 255, 255, 0.08) 100%);
+  background-size: 200px 100%;
+  animation: shimmer 2s infinite;
+}
+
 /* Enhanced Animation utilities */
 .animate-in {
   animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);

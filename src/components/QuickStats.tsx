@@ -1,6 +1,7 @@
 import React from 'react';
 import { TrendingUp, LineChart, DollarSign, Users, Activity, Clock } from 'lucide-react';
 import { formatUSDC, formatNumber } from '../utils/formatters';
+import { AnimatedCounter } from './AnimatedCounter';
 
 interface QuickStatsProps {
   totalInvestment: number;
@@ -23,7 +24,8 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
     {
       icon: DollarSign,
       label: 'Total Investment',
-      value: formatUSDC(totalInvestment),
+      value: totalInvestment,
+      formatter: (value: number) => formatUSDC(value),
       color: 'text-green-400',
       bgColor: 'from-green-500/20 to-green-600/10',
       borderColor: 'border-green-500/30'
@@ -31,7 +33,8 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
     {
       icon: Users,
       label: 'Total Investors',
-      value: formatNumber(totalInvestors),
+      value: totalInvestors,
+      formatter: (value: number) => formatNumber(value),
       color: 'text-blue-400',
       bgColor: 'from-blue-500/20 to-blue-600/10',
       borderColor: 'border-blue-500/30'
@@ -39,7 +42,8 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
     {
       icon: Activity,
       label: 'Live Tokens',
-      value: liveTokens.toString(),
+      value: liveTokens,
+      formatter: (value: number) => value.toString(),
       color: 'text-[#00ffee]',
       bgColor: 'from-[#00ffee]/20 to-[#37fffc]/10',
       borderColor: 'border-[#00ffee]/30'
@@ -47,15 +51,17 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
     {
       icon: Clock,
       label: 'Pending TGE',
-      value: pendingTokens.toString(),
+      value: pendingTokens,
+      formatter: (value: number) => value.toString(),
       color: 'text-yellow-400',
       bgColor: 'from-yellow-500/20 to-yellow-600/10',
       borderColor: 'border-yellow-500/30'
     },
-       {
+    {
       icon: Clock,
       label: 'ICO Soon',
-      value: ICOSoon.toString(),
+      value: ICOSoon,
+      formatter: (value: number) => value.toString(),
       color: 'text-blue-400',
       bgColor: 'from-blue-500/20 to-blue-600/10',
       borderColor: 'border-blue-500/30'
@@ -80,7 +86,11 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
           <div className="relative">
             <p className="text-sm text-gray-400 mb-1">{stat.label}</p>
             <p className={`text-2xl font-bold ${stat.color} font-orbitron group-hover:text-shadow-glow transition-all duration-300`}>
-              {stat.value}
+              <AnimatedCounter
+                end={stat.value}
+                formatter={stat.formatter}
+                duration={1500}
+              />
             </p>
           </div>
           

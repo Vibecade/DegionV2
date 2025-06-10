@@ -177,6 +177,8 @@ export const TokenPage = () => {
         return 'KUCOIN:GIZAUSDT';
       case 'skate':
         return 'UNISWAP3ETH:SKATEUSDC_4A480F.USD';
+      case 'resolv':
+        return 'MEXC:RESOLVUSDT';
       default:
         return '';
     }

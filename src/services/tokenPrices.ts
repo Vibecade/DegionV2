@@ -24,7 +24,8 @@ const FALLBACK_PRICES = {
   silencio: { price: 0.0006, seedPrice: 0.0006 },
   corn: { price: 0.07, seedPrice: 0.07 },
   giza: { price: 0.045, seedPrice: 0.045 },
-  skate: { price: 0.08, seedPrice: 0.08 }
+  skate: { price: 0.08, seedPrice: 0.08 },
+  resolv: { price: 0.05, seedPrice: 0.05 }
 };
 
 // Clear old cache on startup

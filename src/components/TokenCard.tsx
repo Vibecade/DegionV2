@@ -138,7 +138,7 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
   }, [id, seedPrice]);
 
   useEffect(() => {
-    if (['fuel', 'silencio', 'corn', 'giza', 'skate'].includes(id.toLowerCase())) {
+    if (['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv'].includes(id.toLowerCase())) {
       fetchPrice();
       const interval = setInterval(fetchPrice, 60000); // Reduced frequency
       return () => clearInterval(interval);

@@ -75,23 +75,21 @@ function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
       setError('Failed to initialize chart');
     }
   }, [symbol, isLoaded]);
+  }, [symbol]);
 
   useEffect(() => {
     if (!container.current || !symbol) return;
 
+    // Reset loaded state when symbol changes
+    setIsLoaded(false);
+    setError(null);
+    
     // Load the widget with a slight delay to ensure proper initialization
-    const timeoutId = setTimeout(loadWidget, 200);
+    const timeoutId = setTimeout(loadWidget, 300);
 
     return () => {
       clearTimeout(timeoutId);
-      if (container.current) {
-        container.current.innerHTML = '';
-      }
-      const script = document.getElementById(`tradingview-widget-${symbol}`);
-      script?.remove();
-      setIsLoaded(false);
     };
-  }, [symbol, loadWidget]);
 
   if (error) {
     return (

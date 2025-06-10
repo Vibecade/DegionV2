@@ -51,11 +51,7 @@ const TokenCard = memo(({ token }: TokenCardProps) => {
     salesData.find(sale => sale.name.toLowerCase() === name.toLowerCase()),
     [name]
   );
-});
 
-TokenCard.displayName = 'TokenCard';
-
-export { TokenCard };
   // Check if token is launching within 24 hours
   useEffect(() => {
     if (!currentLaunchDate || currentStatus !== 'Pending TGE') return;
@@ -292,3 +288,6 @@ export { TokenCard };
       )}
     </Link>
   );
+});
+
+export default TokenCard;

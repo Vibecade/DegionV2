@@ -53,7 +53,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
       borderColor: 'border-yellow-500/30'
     },
        {
-      icon: Sleep,
+      icon: Clock,
       label: 'ICO Soon',
       value: icoSoon.toString(),
       color: 'text-blue-400',

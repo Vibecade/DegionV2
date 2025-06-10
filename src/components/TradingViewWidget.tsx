@@ -58,7 +58,9 @@ function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
       const widgetContainer = document.createElement('div');
       widgetContainer.className = 'tradingview-widget-container__widget h-[calc(100%-32px)] w-full';
       
+      // Clear existing content
       if (container.current) {
+        container.current.innerHTML = '';
         container.current.appendChild(widgetContainer);
         container.current.appendChild(script);
       }
@@ -72,32 +74,29 @@ function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
       console.error('Error initializing TradingView widget:', err);
       setError('Failed to initialize chart');
     }
-  }
-  )
+  }, [symbol, isLoaded]);
 
   useEffect(() => {
     if (!container.current || !symbol) return;
 
+    // Reset loaded state when symbol changes
+    setIsLoaded(false);
+    setError(null);
+    
     // Load the widget with a slight delay to ensure proper initialization
-    const timeoutId = setTimeout(loadWidget, 200);
+    const timeoutId = setTimeout(loadWidget, 300);
 
     return () => {
       clearTimeout(timeoutId);
-      if (container.current) {
-        container.current.innerHTML = '';
-      }
-      const script = document.getElementById(`tradingview-widget-${symbol}`);
-      script?.remove();
-      setIsLoaded(false);
     };
-  }, [symbol, loadWidget]);
+  }, [symbol]);
 
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-black/20 rounded-lg border border-[rgba(0,255,238,0.1)] p-8">
         <div className="mb-4 text-[#00ffee]/50">
-          <svg className="w-16 h-16 mx-auto\" fill="none\" stroke="currentColor\" viewBox="0 0 24 24">
-            <path strokeLinecap="round\" strokeLinejoin="round\" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
         </div>
         <h3 className="text-lg font-semibold text-gray-300 mb-2 font-orbitron">Chart Unavailable</h3>

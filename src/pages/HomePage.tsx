@@ -233,7 +233,7 @@ export const HomePage = () => {
               totalInvestors={totalInvestors}
               liveTokens={quickStats.liveTokens}
               pendingTokens={quickStats.pendingTokens}
-              averageROI={quickStats.averageROI}
+              ICOSoon={quickStats.ICOSoon}
               lastUpdate={lastUpdate}
             />
 

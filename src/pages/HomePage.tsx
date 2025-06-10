@@ -154,6 +154,7 @@ export const HomePage = () => {
   const quickStats = useMemo(() => {
     const liveTokens = tokens.filter(t => t.status === 'Live' || t.status === 'Live (Vested)').length;
     const pendingTokens = tokens.filter(t => t.status === 'Pending TGE').length;
+    const ICOSoon = tokens.filter(t => t.status === 'ICO Soon').length;
     
     // Calculate average ROI for tokens with valid ROI data
     const tokensWithROI = tokens.filter(t => t.roi !== '--' && !isNaN(parseFloat(t.roi)));
@@ -164,7 +165,8 @@ export const HomePage = () => {
     return {
       liveTokens,
       pendingTokens,
-      averageROI
+      averageROI,
+      ICOSoon
     };
   }, [tokens]);
 

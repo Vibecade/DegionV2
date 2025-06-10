@@ -291,3 +291,5 @@ const TokenCard = memo(({ token }: TokenCardProps) => {
 });
 
 export default TokenCard;
+
+export { TokenCard }

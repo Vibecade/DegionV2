@@ -93,7 +93,7 @@ export const TokenPage = () => {
   useEffect(() => {
     if (!token || !tokenId) return;
 
-    const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate'];
+    const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv'];
     if (!supportedTokens.includes(tokenId.toLowerCase())) {
       return;
     }
@@ -109,7 +109,8 @@ export const TokenPage = () => {
           silencio: 'silencio',
           corn: 'corn-3',
           giza: 'giza',
-          skate: 'skate'
+          skate: 'skate',
+          resolv: 'resolv'
         };
 
         const coingeckoId = coingeckoIds[tokenId.toLowerCase()];

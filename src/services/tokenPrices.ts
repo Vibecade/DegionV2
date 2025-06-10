@@ -25,7 +25,7 @@ const FALLBACK_PRICES = {
   corn: { price: 0.07, seedPrice: 0.07 },
   giza: { price: 0.045, seedPrice: 0.045 },
   skate: { price: 0.08, seedPrice: 0.08 },
-  resolv: { price: 0.05, seedPrice: 0.05 }
+  resolv: { price: 0.10, seedPrice: 0.10 }
 };
 
 // Clear old cache on startup
@@ -320,4 +320,8 @@ export async function getGizaPrice(): Promise<TokenPriceResponse> {
 
 export async function getSkatePrice(): Promise<TokenPriceResponse> {
   return getTokenPrice('skate', 0.08, 'skate');
+}
+
+export async function getResolvPrice(): Promise<TokenPriceResponse> {
+  return getTokenPrice('resolv', 0.10, 'resolv');
 }

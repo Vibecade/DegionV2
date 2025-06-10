@@ -290,7 +290,7 @@ export const tokens: Token[] = [
     name: 'Resolv',
     status: 'Live',
     launchDate: '2025-01-27',
-    seedPrice: '$0.05',
+    seedPrice: '$0.10',
     currentPrice: '--',
     roi: '--',
     investment: '--',

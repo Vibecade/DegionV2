@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Token } from '../types';
 import { logError } from '../utils/errorLogger';
 import { useEffect, useState, useMemo, useCallback, memo } from 'react';
-import { getFuelPrice, getSilencioPrice, getCornPrice, getGizaPrice, getSkatePrice } from '../services/tokenPrices';
+import { getFuelPrice, getSilencioPrice, getCornPrice, getGizaPrice, getSkatePrice, getResolvPrice } from '../services/tokenPrices';
 import { fetchTokenHolders, fetchTradingVolume } from '../services/duneApi';
 import { getTokenInfo } from '../services/tokenInfo';
 import { ArrowUpRight, Users, Wallet, LineChart, TrendingUp, Info } from 'lucide-react';
@@ -105,7 +105,7 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
 
   // Get live price data for tokens that are trading
   const fetchPrice = useCallback(async () => {
-    if (!['fuel', 'silencio', 'corn', 'giza', 'skate'].includes(id.toLowerCase())) {
+    if (!['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv'].includes(id.toLowerCase())) {
       return;
     }
     
@@ -118,6 +118,7 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
           case 'corn': return await getCornPrice();
           case 'giza': return await getGizaPrice();
           case 'skate': return await getSkatePrice();
+          case 'resolv': return await getResolvPrice();
           default: throw new Error('Unsupported token');
         }
       })();

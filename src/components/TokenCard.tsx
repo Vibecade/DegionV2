@@ -12,9 +12,10 @@ import { VestingTimer } from './VestingTimer';
 
 interface TokenCardProps {
   token: Token;
+  viewMode?: 'grid' | 'list' | 'compact';
 }
 
-const TokenCard = memo(({ token }: TokenCardProps) => {
+const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
   const {
     id,
     name,
@@ -154,6 +155,143 @@ const TokenCard = memo(({ token }: TokenCardProps) => {
     ? investNum < 1000 ? "investment-negative" : "investment-positive"
     : "";
 
+  // Different layouts based on view mode
+  if (viewMode === 'list') {
+    return (
+      <Link 
+        to={`/${id}`}
+        aria-label={`View details for ${name}`}
+        className="grid-item flex items-center p-4 sm:p-6 bg-black/30 rounded-lg group transition-all duration-300 hover:scale-[1.01]"
+      >
+        <img 
+          src={(() => {
+            const tokenId = id.toLowerCase();
+            if (tokenId === 'fragmetric') {
+              return 'https://raw.githubusercontent.com/Sadpepedev/TheLegionProject/main/images/logos/Fragmetric.png';
+            } else if (tokenId === 'arcium') {
+              return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenId}.png`;
+            } else {
+              return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenId}.png`;
+            }
+          })()}
+          alt={`${name} Logo`}
+          className="token-logo w-12 h-12 rounded-full mr-4 transition-all duration-300"
+          loading="lazy"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            if (id.toLowerCase() === 'arcium') {
+              target.src = '/ca6520f2-0b43-465d-bd4d-2d6c45de2f70.jpg';
+              target.onError = () => {
+                target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
+              };
+            } else {
+              target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
+            }
+          }}
+        />
+        
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
+          <div className="md:col-span-2">
+            <h3 className="text-lg font-semibold text-[#cfd0d1] font-orbitron">{name}</h3>
+            <span className={`badge ${
+              currentStatus === 'Live (Vested)' ? 'badge-live-vested' :
+              isLaunchingSoon ? 'badge-launch-soon' :
+              `badge-${currentStatus.toLowerCase().replace(' ', '-')}`
+            } mt-1 inline-block text-xs`}>
+              {currentStatus === 'Live (Vested)' ? 'Live (Vested)' :
+               isLaunchingSoon ? 'Launching Soon' :
+               currentStatus}
+            </span>
+          </div>
+          
+          <div className="text-center">
+            <div className="text-sm text-gray-400">Price</div>
+            <div className={`font-semibold ${isUpdating ? 'price-update' : ''}`}>{currentPrice}</div>
+          </div>
+          
+          <div className="text-center">
+            <div className="text-sm text-gray-400">ROI</div>
+            <div className={`font-semibold ${roiColorClass} ${isUpdating ? 'price-update' : ''}`}>{roi}</div>
+          </div>
+          
+          <div className="text-center">
+            <div className="text-sm text-gray-400">$1K Value</div>
+            <div className={`font-semibold ${investColorClass} ${isUpdating ? 'price-update' : ''}`}>{investment}</div>
+          </div>
+          
+          <div className="text-right">
+            <ArrowUpRight className="w-5 h-5 text-[#00ffee] opacity-0 transform translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 group-hover:scale-110 ml-auto" />
+          </div>
+        </div>
+      </Link>
+    );
+  }
+
+  if (viewMode === 'compact') {
+    return (
+      <Link 
+        to={`/${id}`}
+        aria-label={`View details for ${name}`}
+        className="grid-item flex flex-col p-3 bg-black/30 rounded-lg group transition-all duration-300 hover:scale-[1.02]"
+      >
+        <div className="flex items-center mb-2">
+          <img 
+            src={(() => {
+              const tokenId = id.toLowerCase();
+              if (tokenId === 'fragmetric') {
+                return 'https://raw.githubusercontent.com/Sadpepedev/TheLegionProject/main/images/logos/Fragmetric.png';
+              } else if (tokenId === 'arcium') {
+                return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenId}.png`;
+              } else {
+                return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenId}.png`;
+              }
+            })()}
+            alt={`${name} Logo`}
+            className="token-logo w-8 h-8 rounded-full mr-2"
+            loading="lazy"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.onerror = null;
+              if (id.toLowerCase() === 'arcium') {
+                target.src = '/ca6520f2-0b43-465d-bd4d-2d6c45de2f70.jpg';
+                target.onError = () => {
+                  target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
+                };
+              } else {
+                target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
+              }
+            }}
+          />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-[#cfd0d1] truncate">{name}</div>
+            <span className={`badge ${
+              currentStatus === 'Live (Vested)' ? 'badge-live-vested' :
+              isLaunchingSoon ? 'badge-launch-soon' :
+              `badge-${currentStatus.toLowerCase().replace(' ', '-')}`
+            } text-xs`}>
+              {currentStatus === 'Live (Vested)' ? 'Live (Vested)' :
+               isLaunchingSoon ? 'Launching Soon' :
+               currentStatus}
+            </span>
+          </div>
+        </div>
+        
+        <div className="space-y-1 text-xs">
+          <div className="flex justify-between">
+            <span className="text-gray-400">ROI:</span>
+            <span className={`${roiColorClass} ${isUpdating ? 'price-update' : ''} font-semibold`}>{roi}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Price:</span>
+            <span className={`${isUpdating ? 'price-update' : ''}`}>{currentPrice}</span>
+          </div>
+        </div>
+      </Link>
+    );
+  }
+
+  // Default grid view
   if (error) {
     return (
       <div className="grid-item flex flex-col items-center p-4 sm:p-6 bg-black/30 rounded-lg">

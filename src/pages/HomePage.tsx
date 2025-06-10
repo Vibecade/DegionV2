@@ -1,31 +1,18 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { TokenCard } from '../components/TokenCard';
-import { TokenCardSkeleton } from '../components/TokenCardSkeleton';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import { SearchAndFilters } from '../components/SearchAndFilters';
+import { TokenGrid } from '../components/TokenGrid';
+import { QuickStats } from '../components/QuickStats';
 import { SupportModal } from '../components/SupportModal';
 import { Footer } from '../components/Footer';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 import { fetchTokensFromDatabase, getTokensLastUpdate } from '../services/tokenService';
 import { fetchTokenSalesDetails } from '../services/tokenService';
 import { Token } from '../types';
-import { Heart, Search, Filter, RefreshCw, ExternalLink, TrendingUp, LineChart } from 'lucide-react';
+import { Heart, ExternalLink, TrendingUp, LineChart } from 'lucide-react';
 import { formatUSDC, formatNumber } from '../utils/formatters';
-import { debounce } from '../utils/performance';
 import { logError } from '../utils/errorLogger';
 
-const DuneLink = ({ children }: { children: React.ReactNode }) => (
-  <a
-    href="https://dune.com/jsuh/legion"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="absolute top-2 right-2 px-2 py-1 text-xs text-[#00ffee]/60 hover:text-[#00ffee] flex items-center gap-1 rounded-lg hover:bg-[#00ffee]/10 transition-all duration-300 group/link cursor-pointer"
-  >
-    {children}
-    <ExternalLink className="w-3 h-3 transform group-hover/link:translate-x-0.5 transition-transform" />
-  </a>
-);
-
 export const HomePage = () => {
-  const [view] = useState<'grid' | 'table'>('grid');
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -163,6 +150,24 @@ export const HomePage = () => {
     }
   }, [sortBy, sortOrder]);
 
+  // Calculate quick stats
+  const quickStats = useMemo(() => {
+    const liveTokens = tokens.filter(t => t.status === 'Live' || t.status === 'Live (Vested)').length;
+    const pendingTokens = tokens.filter(t => t.status === 'Pending TGE').length;
+    
+    // Calculate average ROI for tokens with valid ROI data
+    const tokensWithROI = tokens.filter(t => t.roi !== '--' && !isNaN(parseFloat(t.roi)));
+    const averageROI = tokensWithROI.length > 0 
+      ? tokensWithROI.reduce((sum, t) => sum + parseFloat(t.roi), 0) / tokensWithROI.length
+      : 0;
+    
+    return {
+      liveTokens,
+      pendingTokens,
+      averageROI
+    };
+  }, [tokens]);
+
   // Refresh tokens
   const refreshTokens = useCallback(async () => {
     setIsLoading(true);
@@ -267,111 +272,41 @@ export const HomePage = () => {
           </div>
 
           <div className="mb-8">
-            <div className="flex flex-col lg:flex-row gap-4 mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search tokens..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-black/30 border border-[rgba(0,255,238,0.2)] rounded-lg pl-10 pr-4 py-2 text-[#cfd0d1] focus:outline-none focus:border-[#00ffee] transition-colors"
-                />
-              </div>
-              <div className="flex gap-2">
-                <div className="relative">
-                  <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="bg-black/30 border border-[rgba(0,255,238,0.2)] rounded-lg pl-10 pr-8 py-2 text-[#cfd0d1] appearance-none focus:outline-none focus:border-[#00ffee] transition-colors"
-                  >
-                    <option value="all">All Statuses</option>
-                    <option value="live">Live</option>
-                    <option value="pending tge">Pending TGE</option>
-                    <option value="ico soon">ICO Soon</option>
-                  </select>
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                  </div>
-                </div>
-                
-                <div className="flex bg-black/30 border border-[rgba(0,255,238,0.2)] rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => handleSortChange('status')}
-                    className={`px-3 py-2 text-sm transition-colors ${
-                      sortBy === 'status' 
-                        ? 'bg-[#00ffee]/20 text-[#00ffee]' 
-                        : 'text-gray-400 hover:text-[#00ffee]'
-                    }`}
-                  >
-                    Status {sortBy === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </button>
-                  <button
-                    onClick={() => handleSortChange('name')}
-                    className={`px-3 py-2 text-sm transition-colors border-l border-[rgba(0,255,238,0.2)] ${
-                      sortBy === 'name' 
-                        ? 'bg-[#00ffee]/20 text-[#00ffee]' 
-                        : 'text-gray-400 hover:text-[#00ffee]'
-                    }`}
-                  >
-                    Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </button>
-                  <button
-                    onClick={() => handleSortChange('roi')}
-                    className={`px-3 py-2 text-sm transition-colors border-l border-[rgba(0,255,238,0.2)] ${
-                      sortBy === 'roi' 
-                        ? 'bg-[#00ffee]/20 text-[#00ffee]' 
-                        : 'text-gray-400 hover:text-[#00ffee]'
-                    }`}
-                  >
-                    ROI {sortBy === 'roi' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </button>
-                </div>
 
-                <button
-                  onClick={refreshTokens}
-                  disabled={isLoading}
-                  className="px-3 py-2 bg-black/30 border border-[rgba(0,255,238,0.2)] rounded-lg text-gray-400 hover:text-[#00ffee] transition-colors disabled:opacity-50"
-                  title="Refresh data"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                </button>
-              </div>
-            </div>
 
-            {lastUpdate && (
-              <div className="flex items-center justify-center mb-4 text-sm text-gray-400">
-                <RefreshCw className="w-3 h-3 mr-2" />
-                Last updated: {lastUpdate}
-              </div>
-            )}
 
-            {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {[...Array(9)].map((_, index) => (
-                  <TokenCardSkeleton key={index} />
-                ))}
-              </div>
-            ) : filteredTokens.length === 0 ? (
-              <div className="text-center py-12 bg-black/20 rounded-lg border border-[rgba(0,255,238,0.1)]">
-                <div className="mb-4">
-                  <Search className="w-12 h-12 mx-auto text-[#00ffee]/50" />
-                </div>
-                <p className="text-gray-400 mb-2">No tokens found matching your criteria.</p>
-                <p className="text-sm text-gray-500">Try adjusting your search or filter settings.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 [&>*:last-child:nth-child(3n-1)]:sm:col-span-2 [&>*:last-child:nth-child(3n-1)]:sm:mx-auto [&>*:last-child:nth-child(3n-2)]:lg:col-span-3 [&>*:last-child:nth-child(3n-2)]:lg:mx-auto">
-                {filteredTokens.map((token, index) => (
-                  <div key={token.id} className="stagger-animation">
-                    <TokenCard token={token} />
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Quick Stats */}
+            <QuickStats
+              totalInvestment={totalInvestment}
+              totalInvestors={totalInvestors}
+              liveTokens={quickStats.liveTokens}
+              pendingTokens={quickStats.pendingTokens}
+              averageROI={quickStats.averageROI}
+              lastUpdate={lastUpdate}
+            />
+
+            {/* Search and Filters */}
+            <SearchAndFilters
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSortChange={handleSortChange}
+              onRefresh={refreshTokens}
+              isLoading={isLoading}
+              tokenCount={tokens.length}
+              filteredCount={filteredTokens.length}
+            />
+
+            {/* Token Grid */}
+            <TokenGrid
+              tokens={sortedTokens}
+              isLoading={isLoading}
+              searchTerm={searchTerm}
+              statusFilter={statusFilter}
+            />
           </div>
 
           <div className="flex items-center justify-center mt-8 mb-8 text-center">

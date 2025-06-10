@@ -34,10 +34,13 @@ interface ProjectUpdate {
 
 // Constants
 const API_URL = "https://legion.cc/api/v1/rounds";
+
+// Updated KNOWN_TOKENS array with all expected tokens
 const KNOWN_TOKENS = [
-  "fuel", "silencio", "almanak", "pulse", "enclave", "corn", 
-  "giza", "nil", "eoracle", "hyperlane", "electron", "litprotocol", 
-  "skate", "resolv"
+  "fuel", "silencio", "almanak", "pulse", "enclave", "enclavemoney", 
+  "fragmetric", "corn", "giza", "nil", "eoracle", "intuition", 
+  "inferencelabs", "hyperlane", "electron", "litprotocol", "skate", 
+  "session", "resolv", "arcium"
 ];
 
 // Convert Legion stage to our status format
@@ -84,6 +87,78 @@ function formatTGE(tge: string): string {
   
   // Default to TBD if format is unknown
   return "TBD";
+}
+
+// Enhanced vesting logic to construct descriptive string
+function formatVestingEnd(vest: number, cliff: number, lock: number): string {
+  const vestingMonths = Math.ceil(vest / 30);
+  const cliffMonths = Math.ceil(cliff / 30);
+  const lockMonths = Math.ceil(lock / 30);
+  
+  let vestingDescription = "";
+  
+  // Handle different vesting scenarios
+  if (lockMonths > 0 && vestingMonths > 0) {
+    vestingDescription = `${lockMonths}-month lockup, then ${vestingMonths}-month linear vest`;
+  } else if (lockMonths > 0) {
+    vestingDescription = `${lockMonths}-month lockup`;
+  } else if (vestingMonths > 0 && cliffMonths > 0) {
+    vestingDescription = `${cliffMonths}-month cliff, then ${vestingMonths}-month linear vest`;
+  } else if (vestingMonths > 0) {
+    vestingDescription = `${vestingMonths}-month linear vest`;
+  } else {
+    vestingDescription = "100% at TGE";
+  }
+  
+  return vestingDescription;
+}
+
+// Map chain names to standardized network names
+function mapChainToNetwork(chain: string): string {
+  switch (chain.toLowerCase()) {
+    case "ethereum":
+    case "eth":
+      return "ethereum";
+    case "arbitrum":
+    case "arb":
+      return "arbitrum";
+    case "polygon":
+    case "matic":
+      return "polygon";
+    case "base":
+      return "base";
+    case "optimism":
+    case "op":
+      return "optimism";
+    default:
+      return chain.toLowerCase();
+  }
+}
+
+// Parse funds raised from requested field
+function parseFundsRaised(requested: string): number {
+  if (!requested) return 0;
+  
+  // Remove currency symbols and commas
+  const cleanValue = requested.replace(/[$,]/g, '');
+  
+  // Handle different formats like "1M", "1.5K", etc.
+  const multipliers: { [key: string]: number } = {
+    'k': 1000,
+    'm': 1000000,
+    'b': 1000000000
+  };
+  
+  const match = cleanValue.match(/^(\d+(?:\.\d+)?)\s*([kmb])?$/i);
+  if (match) {
+    const value = parseFloat(match[1]);
+    const multiplier = match[2] ? multipliers[match[2].toLowerCase()] || 1 : 1;
+    return value * multiplier;
+  }
+  
+  // Try direct parsing
+  const directValue = parseFloat(cleanValue);
+  return isNaN(directValue) ? 0 : directValue;
 }
 
 // Get current UTC date in ISO format
@@ -167,49 +242,66 @@ async function updateDatabase(projects: LegionProject[]): Promise<void> {
         continue;
       }
       
-      // Prepare the update
-      const update: ProjectUpdate = {
+      // Prepare the vesting description
+      const vestingEnd = formatVestingEnd(project.vest, project.cliff, project.lock);
+      
+      // Prepare the update for token_info with new columns
+      const tokenInfoData: ProjectUpdate = {
         id: tokenId,
         name: project.name,
         status: mapStageToStatus(project.stage),
         launchDate: formatTGE(project.tge),
         seedPrice: formatPrice(project.target),
         description: project.description || "",
+        vestingEnd: vestingEnd
+      };
+
+      // Prepare links object (empty for now, can be populated later)
+      const links = {
+        website: "",
+        twitter: ""
       };
       
-      // Add vesting information if available
-      if (project.vest > 0) {
-        // Convert days to months roughly
-        const vestingMonths = Math.ceil(project.vest / 30);
-        update.vestingEnd = `${vestingMonths} Months`;
-      }
-      
-      // Update token_info table
-      // First check if we have this table in our schema
-      const { data: tableExists, error: tableCheckError } = await supabase
-        .from('token_info')
-        .select('id')
-        .limit(1);
-      
-      if (tableCheckError) {
-        // Table doesn't exist, create it
-        const { error: createError } = await supabase.rpc('create_token_info_table');
-        if (createError) {
-          throw new Error(`Error creating token_info table: ${createError.message}`);
-        }
-      }
-      
-      // Insert or update the token info
-      const { error: upsertError } = await supabase
+      // Update token_info table with new column structure
+      const { error: tokenInfoError } = await supabase
         .from('token_info')
         .upsert({
           token_id: tokenId,
-          data: update,
+          name: project.name,
+          status: mapStageToStatus(project.stage),
+          launch_date: formatTGE(project.tge),
+          seed_price: formatPrice(project.target),
+          vesting_end: vestingEnd,
+          description: project.description || "",
+          links: links,
+          data: tokenInfoData, // Keep the full object in JSONB for flexibility
           updated_at: getCurrentUTCDate()
         }, { onConflict: 'token_id' });
       
-      if (upsertError) {
-        throw new Error(`Error updating token info: ${upsertError.message}`);
+      if (tokenInfoError) {
+        throw new Error(`Error updating token info: ${tokenInfoError.message}`);
+      }
+      
+      // Update token_sales_details table if we have contract and chain info
+      if (project.contract && project.chain) {
+        const fundsRaised = parseFundsRaised(project.requested);
+        
+        const { error: salesError } = await supabase
+          .from('token_sales_details')
+          .upsert({
+            token_id: tokenId,
+            address: project.contract,
+            network: mapChainToNetwork(project.chain),
+            funds_raised_usdc: fundsRaised,
+            participants: 0, // Not available from Legion API - to be populated from other sources
+            transactions: 0, // Not available from Legion API - to be populated from other sources
+            updated_at: getCurrentUTCDate()
+          }, { onConflict: 'token_id' });
+        
+        if (salesError) {
+          console.warn(`Warning: Could not update sales details for ${tokenId}: ${salesError.message}`);
+          // Don't throw error here as token_info update was successful
+        }
       }
       
       updates.push({ tokenId, updated: true });

@@ -55,7 +55,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
        {
       icon: Clock,
       label: 'ICO Soon',
-      value: icoSoon.toString(),
+      value: ICOSoon.toString(),
       color: 'text-blue-400',
       bgColor: 'from-blue-500/20 to-blue-600/10',
       borderColor: 'border-blue-500/30'

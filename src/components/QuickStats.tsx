@@ -16,7 +16,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
   totalInvestors,
   liveTokens,
   pendingTokens,
-  ICOSoon
+  ICOSoon,
   lastUpdate
 }) => {
   const stats = [

@@ -232,7 +232,7 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
                   Positive ROI Only
                 </button>
                 <button className="w-full text-left px-3 py-2 rounded-lg border border-gray-600 hover:border-gray-500 text-gray-400 hover:text-gray-300 transition-all duration-300">
-                  High Performers (>100% ROI)
+                  High Performers (&gt;100% ROI)
                 </button>
                 <button className="w-full text-left px-3 py-2 rounded-lg border border-gray-600 hover:border-gray-500 text-gray-400 hover:text-gray-300 transition-all duration-300">
                   Recently Launched

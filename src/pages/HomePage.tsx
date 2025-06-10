@@ -2,14 +2,15 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { TokenCard } from '../components/TokenCard';
 import { TokenCardSkeleton } from '../components/TokenCardSkeleton';
 import { LoadingSpinner } from '../components/LoadingSpinner';
-import { tokens } from '../data/tokens';
-import { salesData } from '../data/sales';
 import { SupportModal } from '../components/SupportModal';
 import { Footer } from '../components/Footer';
+import { fetchTokensFromDatabase, getTokensLastUpdate } from '../services/tokenService';
+import { fetchTokenSalesDetails } from '../services/tokenService';
+import { Token } from '../types';
 import { Heart, Search, Filter, RefreshCw, ExternalLink, TrendingUp, LineChart } from 'lucide-react';
-import { getLastUpdateTime } from '../services/tokenInfo';
 import { formatUSDC, formatNumber } from '../utils/formatters';
 import { debounce } from '../utils/performance';
+import { logError } from '../utils/errorLogger';
 
 const DuneLink = ({ children }: { children: React.ReactNode }) => (
   <a
@@ -32,12 +33,68 @@ export const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'name' | 'status' | 'roi'>('status');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  
-  // Memoize expensive calculations
-  const { totalInvestment, totalInvestors } = useMemo(() => ({
-    totalInvestment: salesData.reduce((acc, sale) => acc + sale.fundsRaisedUSDC, 0),
-    totalInvestors: salesData.reduce((acc, sale) => acc + sale.participants, 0)
-  }), []);
+  const [tokens, setTokens] = useState<Token[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [totalInvestment, setTotalInvestment] = useState(0);
+  const [totalInvestors, setTotalInvestors] = useState(0);
+
+  // Load tokens from database
+  useEffect(() => {
+    const loadTokens = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        console.log('🔄 Loading tokens from database...');
+        const fetchedTokens = await fetchTokensFromDatabase();
+        setTokens(fetchedTokens);
+        
+        // Calculate totals from sales data
+        let totalFunds = 0;
+        let totalParticipants = 0;
+        
+        for (const token of fetchedTokens) {
+          try {
+            const salesData = await fetchTokenSalesDetails(token.id);
+            if (salesData) {
+              totalFunds += salesData.fundsRaisedUSDC || 0;
+              totalParticipants += salesData.participants || 0;
+            }
+          } catch (salesError) {
+            console.warn(`Failed to fetch sales data for ${token.id}:`, salesError);
+          }
+        }
+        
+        setTotalInvestment(totalFunds);
+        setTotalInvestors(totalParticipants);
+        
+        console.log(`✅ Loaded ${fetchedTokens.length} tokens`);
+      } catch (error) {
+        logError(error as Error, 'HomePage:loadTokens');
+        setError('Failed to load tokens. Please try refreshing the page.');
+        console.error('Failed to load tokens:', error);
+      } finally {
+        // Simulate loading time for better UX
+        setTimeout(() => setIsLoading(false), 1000);
+      }
+    };
+
+    loadTokens();
+  }, []);
+
+  // Get last update time
+  useEffect(() => {
+    const fetchLastUpdate = async () => {
+      try {
+        const time = await getTokensLastUpdate();
+        setLastUpdate(time);
+      } catch (error) {
+        console.warn('Failed to get last update time:', error);
+      }
+    };
+
+    fetchLastUpdate();
+  }, []);
 
   // Sort tokens by status priority
   const sortedTokens = useMemo(() => [...tokens].sort((a, b) => {
@@ -88,19 +145,7 @@ export const HomePage = () => {
       // If priorities are the same, sort alphabetically by name
       return a.name.localeCompare(b.name);
     }
-  }), [sortBy, sortOrder]);
-
-  useEffect(() => {
-    const fetchLastUpdate = async () => {
-      setIsLoading(true);
-      const time = await getLastUpdateTime();
-      setLastUpdate(time);
-      // Simulate loading time for better UX
-      setTimeout(() => setIsLoading(false), 1000);
-    };
-
-    fetchLastUpdate();
-  }, []);
+  }), [tokens, sortBy, sortOrder]);
 
   const filteredTokens = useMemo(() => sortedTokens.filter(token => {
     const matchesSearch = token.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -117,6 +162,47 @@ export const HomePage = () => {
       setSortOrder('asc');
     }
   }, [sortBy, sortOrder]);
+
+  // Refresh tokens
+  const refreshTokens = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const fetchedTokens = await fetchTokensFromDatabase();
+      setTokens(fetchedTokens);
+      const time = await getTokensLastUpdate();
+      setLastUpdate(time);
+    } catch (error) {
+      logError(error as Error, 'HomePage:refreshTokens');
+      setError('Failed to refresh tokens');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  if (error) {
+    return (
+      <div className="relative min-h-screen">
+        <div className="relative z-10 flex flex-col items-center pt-4">
+          <main className="w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 glass-panel rounded-lg">
+            <div className="text-center py-12">
+              <div className="mb-4 text-red-400">
+                <ExternalLink className="w-12 h-12 mx-auto" />
+              </div>
+              <h1 className="text-2xl font-bold text-red-400 mb-4 font-orbitron">Error Loading Data</h1>
+              <p className="text-gray-400 mb-6">{error}</p>
+              <button
+                onClick={refreshTokens}
+                className="btn-primary"
+                disabled={isLoading}
+              >
+                {isLoading ? <LoadingSpinner size="sm" /> : 'Try Again'}
+              </button>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen">
@@ -153,7 +239,7 @@ export const HomePage = () => {
                   <span className="text-[#00ffee]">*</span>
                   <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatUSDC(totalInvestment)}</span>
                   <span className="invisible group-hover/tooltip:visible absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-sm py-2 px-4 rounded-lg whitespace-nowrap border border-[#00ffee]/20">
-                    Solana sales data currently not shown
+                    Data from database and static sources
                   </span>
                 </p>
               </a>
@@ -173,7 +259,7 @@ export const HomePage = () => {
                   <span className="text-[#00ffee]">*</span>
                   <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatNumber(totalInvestors)}</span>
                   <span className="invisible group-hover/tooltip:visible absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-sm py-2 px-4 rounded-lg whitespace-nowrap border border-[#00ffee]/20">
-                    Solana sales data currently not shown
+                    Data from database and static sources
                   </span>
                 </p>
               </a>
@@ -244,6 +330,15 @@ export const HomePage = () => {
                     ROI {sortBy === 'roi' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </button>
                 </div>
+
+                <button
+                  onClick={refreshTokens}
+                  disabled={isLoading}
+                  className="px-3 py-2 bg-black/30 border border-[rgba(0,255,238,0.2)] rounded-lg text-gray-400 hover:text-[#00ffee] transition-colors disabled:opacity-50"
+                  title="Refresh data"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                </button>
               </div>
             </div>
 

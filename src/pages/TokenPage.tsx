@@ -1,48 +1,85 @@
 import { useParams, Link } from 'react-router-dom';
-import { tokens } from '../data/tokens';
 import { useEffect, useState } from 'react';
 import { SEOHead } from '../components/SEOHead';
-import { TokenSentiment } from '../types';
+import { TokenSentiment, Token } from '../types';
 import { getTokenSentiment, submitVote } from '../services/sentiment';
-import { getFuelPrice, getSilencioPrice, getCornPrice, getGizaPrice, getSkatePrice } from '../services/tokenPrices';
-import { getTokenInfo } from '../services/tokenInfo';
+import { getTokenPrice } from '../services/tokenPrices';
+import { fetchTokenDetails, fetchTokenSalesDetails } from '../services/tokenService';
 import { seoUtils } from '../utils/seo';
 import { useAnnouncement } from '../hooks/useAccessibility';
+import { logError } from '../utils/errorLogger';
 import { MessageSquare, ArrowLeft, ExternalLink, Wallet, Users, ArrowUpRight, ChevronRight } from 'lucide-react';
 import TradingViewWidget from '../components/TradingViewWidget';
 import { Footer } from '../components/Footer';
-import { salesData } from '../data/sales';
 import { formatUSDC, formatNumber } from '../utils/formatters';
 
 export const TokenPage = () => {
   const { tokenId } = useParams();
-  const token = tokens.find(t => t.id.toLowerCase() === tokenId?.toLowerCase());
   const announce = useAnnouncement();
+  const [token, setToken] = useState<Token | null>(null);
   const [sentiment, setSentiment] = useState<TokenSentiment>({ rocket: 0, poop: 0 });
   const [isVoting, setIsVoting] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
   const [voteError, setVoteError] = useState('');
-  const [currentPrice, setCurrentPrice] = useState(token?.currentPrice || '--');
-  const [roi, setRoi] = useState(token?.roi || '--');
-  const [investment, setInvestment] = useState(token?.investment || '--');
-  const [isLoading, setIsLoading] = useState(false);
+  const [currentPrice, setCurrentPrice] = useState('--');
+  const [roi, setRoi] = useState('--');
+  const [investment, setInvestment] = useState('--');
+  const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState(token?.status || '');
-  const [currentLaunchDate, setCurrentLaunchDate] = useState(token?.launchDate || '');
-  const [currentDescription, setCurrentDescription] = useState(token?.description || '');
-  const [currentVestingEnd, setCurrentVestingEnd] = useState(token?.vestingEnd || '');
-  
-  const saleData = salesData.find(sale => sale.name.toLowerCase() === token?.name.toLowerCase());
+  const [saleData, setSaleData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Generate SEO data
   const seoTitle = token ? `${token.name} (${token.id.toUpperCase()}) - Legion ICO Performance | Degion.xyz` : 'Token Not Found | Degion.xyz';
   const seoDescription = token ? `Track ${token.name} token performance with real-time price${currentPrice !== '--' ? ` (${currentPrice})` : ''}, ROI${roi !== '--' ? ` (${roi})` : ''}, and community sentiment. Comprehensive analytics and investment tracking.` : 'Token not found on Degion.xyz';
-  const seoKeywords = token ? seoUtils.generateKeywords(token.name, currentStatus, ['price tracking', 'investment analysis']) : '';
+  const seoKeywords = token ? seoUtils.generateKeywords(token.name, token.status, ['price tracking', 'investment analysis']) : '';
 
+  // Load token data
   useEffect(() => {
-    if (tokenId) {
-      loadSentiment();
-    }
+    if (!tokenId) return;
+
+    const loadTokenData = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        console.log(`🔄 Loading token data for ${tokenId}`);
+        
+        // Fetch token details from database
+        const tokenData = await fetchTokenDetails(tokenId);
+        if (!tokenData) {
+          setError('Token not found');
+          return;
+        }
+        
+        setToken(tokenData);
+        
+        // Fetch sales data
+        try {
+          const salesDetails = await fetchTokenSalesDetails(tokenId);
+          setSaleData(salesDetails);
+        } catch (salesError) {
+          console.warn(`Failed to fetch sales data for ${tokenId}:`, salesError);
+        }
+
+        // Load sentiment data
+        try {
+          const sentimentData = await getTokenSentiment(tokenId);
+          setSentiment(sentimentData);
+        } catch (sentimentError) {
+          console.warn(`Failed to fetch sentiment for ${tokenId}:`, sentimentError);
+        }
+
+        console.log(`✅ Loaded token data for ${tokenId}`);
+      } catch (error) {
+        logError(error as Error, 'TokenPage:loadTokenData', { tokenId });
+        setError('Failed to load token data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTokenData();
   }, [tokenId]);
 
   // Announce price updates to screen readers
@@ -52,71 +89,59 @@ export const TokenPage = () => {
     }
   }, [isUpdating, currentPrice, token, announce]);
 
-  // Update token data from Legion API
+  // Fetch live price data for supported tokens
   useEffect(() => {
     if (!token || !tokenId) return;
 
-    const fetchTokenInfo = async () => {
+    const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate'];
+    if (!supportedTokens.includes(tokenId.toLowerCase())) {
+      return;
+    }
+
+    const fetchPrice = async () => {
       try {
-        const tokenInfo = await getTokenInfo(tokenId);
-        if (tokenInfo) {
-          if (tokenInfo.status) setCurrentStatus(tokenInfo.status);
-          if (tokenInfo.launchDate) setCurrentLaunchDate(tokenInfo.launchDate);
-          if (tokenInfo.description) setCurrentDescription(tokenInfo.description);
-          if (tokenInfo.vestingEnd) setCurrentVestingEnd(tokenInfo.vestingEnd);
-        }
+        const seedPriceNum = parseFloat(token.seedPrice.replace('$', ''));
+        if (isNaN(seedPriceNum)) return;
+
+        // Map token IDs to CoinGecko IDs
+        const coingeckoIds: { [key: string]: string } = {
+          fuel: 'fuel-network',
+          silencio: 'silencio',
+          corn: 'corn-3',
+          giza: 'giza',
+          skate: 'skate'
+        };
+
+        const coingeckoId = coingeckoIds[tokenId.toLowerCase()];
+        if (!coingeckoId) return;
+
+        setIsUpdating(true);
+        const data = await getTokenPrice(tokenId.toLowerCase(), seedPriceNum, coingeckoId);
+        
+        setCurrentPrice(`$${data.current_price.toFixed(6)}`);
+        const roiValue = ((data.current_price - seedPriceNum) / seedPriceNum) * 100;
+        setRoi(`${roiValue.toFixed(2)}%`);
+        setInvestment(`$${data.roi_value.toFixed(2)}`);
+        
+        setTimeout(() => setIsUpdating(false), 500);
       } catch (error) {
-        console.error(`Error fetching ${tokenId} info:`, error);
+        console.warn(`Price fetch failed for ${tokenId}, using fallback`);
       }
     };
 
-    fetchTokenInfo();
-  }, [tokenId, token]);
-
-  // Fetch live price data
-  useEffect(() => {
-    if (!token || !tokenId) return;
-
-    if (['fuel', 'silencio', 'corn', 'giza', 'skate'].includes(tokenId.toLowerCase())) {
-      const fetchPrice = async () => {
-        setIsLoading(true);
-        try {
-          const data = await (async () => {
-            switch (tokenId.toLowerCase()) {
-              case 'fuel': return await getFuelPrice();
-              case 'silencio': return await getSilencioPrice();
-              case 'corn': return await getCornPrice();
-              case 'giza': return await getGizaPrice();
-              case 'skate': return await getSkatePrice();
-              default: throw new Error('Unsupported token');
-            }
-          })();
-          
-          setIsUpdating(true);
-          setCurrentPrice(`$${data.current_price.toFixed(6)}`);
-          const seedPriceNum = parseFloat(token.seedPrice.replace('$', ''));
-          const roiValue = ((data.current_price - seedPriceNum) / seedPriceNum) * 100;
-          setRoi(`${roiValue.toFixed(2)}%`);
-          setInvestment(`$${data.roi_value.toFixed(2)}`);
-          setTimeout(() => setIsUpdating(false), 500);
-        } catch (error) {
-          // Silently handle price fetch errors - fallback prices will be used
-          console.warn(`Price fetch failed for ${tokenId}, using fallback`);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchPrice();
-      const interval = setInterval(fetchPrice, 30000);
-      return () => clearInterval(interval);
-    }
+    fetchPrice();
+    const interval = setInterval(fetchPrice, 30000);
+    return () => clearInterval(interval);
   }, [tokenId, token]);
 
   const loadSentiment = async () => {
     if (!tokenId) return;
-    const data = await getTokenSentiment(tokenId);
-    setSentiment(data);
+    try {
+      const data = await getTokenSentiment(tokenId);
+      setSentiment(data);
+    } catch (error) {
+      console.warn('Failed to load sentiment:', error);
+    }
   };
 
   const handleVote = async (type: 'rocket' | 'poop') => {
@@ -157,11 +182,35 @@ export const TokenPage = () => {
     }
   };
 
-  if (!token) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#09131b] text-[#cfd0d1] p-4 sm:p-8">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="animate-pulse space-y-8">
+            <div className="h-8 bg-gray-700/50 rounded w-1/3"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                <div className="h-64 bg-gray-700/50 rounded"></div>
+                <div className="h-48 bg-gray-700/50 rounded"></div>
+              </div>
+              <div className="space-y-6">
+                <div className="h-32 bg-gray-700/50 rounded"></div>
+                <div className="h-48 bg-gray-700/50 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !token) {
     return (
       <div className="min-h-screen bg-[#09131b] text-[#cfd0d1] p-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-[#00ffee] mb-4 font-orbitron">Token Not Found</h1>
+          <h1 className="text-3xl font-bold text-[#00ffee] mb-4 font-orbitron">
+            {error || 'Token Not Found'}
+          </h1>
           <Link 
             to="/"
             className="inline-flex items-center px-6 py-3 border border-[#00ffee] rounded-full text-[#00ffee] hover:bg-[#00ffee] hover:text-[#09131b] transition-all hover:shadow-[0_0_20px_rgba(0,255,238,0.3)]"
@@ -222,14 +271,13 @@ export const TokenPage = () => {
               <div className="flex items-center mb-6">
                 <img 
                   src={(() => {
-                    const tokenId = token.id.toLowerCase();
-                    if (tokenId === 'fragmetric') {
+                    const tokenIdLower = token.id.toLowerCase();
+                    if (tokenIdLower === 'fragmetric') {
                       return 'https://raw.githubusercontent.com/Sadpepedev/TheLegionProject/main/images/logos/Fragmetric.png';
-                    } else if (tokenId === 'arcium') {
-                      // Try the standard path first, then fallback will handle it
-                      return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenId}.png`;
+                    } else if (tokenIdLower === 'arcium') {
+                      return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenIdLower}.png`;
                     } else {
-                      return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenId}.png`;
+                      return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenIdLower}.png`;
                     }
                   })()}
                   alt={`${name} Logo`}
@@ -237,15 +285,12 @@ export const TokenPage = () => {
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.onerror = null;
-                    // For Arcium specifically, try the downloaded image first
                     if (token.id.toLowerCase() === 'arcium') {
                       target.src = '/ca6520f2-0b43-465d-bd4d-2d6c45de2f70.jpg';
                       target.onError = () => {
-                        // Final fallback to generic crypto logo
                         target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
                       };
                     } else {
-                      // Generic fallback for other tokens
                       target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
                     }
                   }}
@@ -253,17 +298,17 @@ export const TokenPage = () => {
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-bold text-[#00ffee] title-glow mb-2 font-orbitron">{name}</h1>
                   <div className="flex flex-wrap items-center gap-4">
-                    <span className={`badge badge-${currentStatus.toLowerCase().replace(' ', '-')}`}>
-                      {currentStatus}
+                    <span className={`badge badge-${token.status.toLowerCase().replace(' ', '-')}`}>
+                      {token.status}
                     </span>
-                    <span className="text-gray-400">{currentLaunchDate}</span>
+                    <span className="text-gray-400">{token.launchDate}</span>
                   </div>
                 </div>
               </div>
 
-              {currentDescription && (
+              {token.description && (
                 <p className="text-gray-300 bg-black/20 p-4 rounded-lg border border-[rgba(0,255,238,0.1)] leading-relaxed">
-                  {currentDescription}
+                  {token.description}
                 </p>
               )}
             </div>
@@ -277,19 +322,19 @@ export const TokenPage = () => {
                 </div>
                 <div className="hover-card bg-black/20 p-4 rounded-lg border border-[rgba(0,255,238,0.1)]">
                   <div className="text-gray-400 text-sm mb-1">Current Price</div>
-                  <div className={`text-xl font-semibold ${isUpdating ? 'price-update' : ''} ${isLoading ? 'animate-pulse' : ''}`}>
+                  <div className={`text-xl font-semibold ${isUpdating ? 'price-update' : ''}`}>
                     {currentPrice}
                   </div>
                 </div>
                 <div className="hover-card bg-black/20 p-4 rounded-lg border border-[rgba(0,255,238,0.1)]">
                   <div className="text-gray-400 text-sm mb-1">ROI</div>
-                  <div className={`text-xl font-semibold ${parseFloat(roi) >= 0 ? "text-green-500" : "text-red-500"} ${isUpdating ? 'price-update' : ''} ${isLoading ? 'animate-pulse' : ''}`}>
+                  <div className={`text-xl font-semibold ${parseFloat(roi) >= 0 ? "text-green-500" : "text-red-500"} ${isUpdating ? 'price-update' : ''}`}>
                     {roi}
                   </div>
                 </div>
                 <div className="hover-card bg-black/20 p-4 rounded-lg border border-[rgba(0,255,238,0.1)]">
                   <div className="text-gray-400 text-sm mb-1">$1000 Investment Now Worth</div>
-                  <div className={`text-xl font-semibold ${parseFloat(investment.replace(/\$/, '')) >= 1000 ? "text-green-500" : "text-red-500"} ${isUpdating ? 'price-update' : ''} ${isLoading ? 'animate-pulse' : ''}`}>
+                  <div className={`text-xl font-semibold ${parseFloat(investment.replace(/\$/, '')) >= 1000 ? "text-green-500" : "text-red-500"} ${isUpdating ? 'price-update' : ''}`}>
                     {investment}
                   </div>
                 </div>
@@ -449,12 +494,12 @@ export const TokenPage = () => {
               </div>
             </div>
 
-            {currentVestingEnd && (
+            {token.vestingEnd && (
               <div className="glass-panel p-6 rounded-lg">
                 <h2 className="text-xl font-bold text-[#00ffee] mb-4 font-orbitron">Vesting</h2>
                 <div className="hover-card bg-black/20 p-4 rounded-lg border border-[rgba(0,255,238,0.1)]">
                   <div className="text-gray-400 text-sm mb-1">Vesting Period</div>
-                  <div className="text-xl font-semibold">{currentVestingEnd}</div>
+                  <div className="text-xl font-semibold">{token.vestingEnd}</div>
                 </div>
               </div>
             )}

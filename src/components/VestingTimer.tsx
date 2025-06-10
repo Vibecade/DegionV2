@@ -30,13 +30,20 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
       }
       
       const now = new Date().getTime();
-      const vestingMatch = vestingPeriod.match(/(\d+)\s*months?/i);
+      
+      // Parse vesting period - handle new database format
+      const vestingMatch = vestingPeriod.match(/(\d+)[-\s]*month/i);
       const initialUnlock = vestingPeriod.match(/(\d+)%\s*at\s*TGE/i);
+      const lockupMatch = vestingPeriod.match(/(\d+)[-\s]*month\s*lockup/i);
+      const cliffMatch = vestingPeriod.match(/(\d+)[-\s]*month\s*cliff/i);
+      const linearMatch = vestingPeriod.match(/(\d+)[-\s]*month\s*linear/i);
       
       // Set initial unlock percentage
       if (initialUnlock) {
         const unlockPercent = parseInt(initialUnlock[1]);
         setInitialUnlockPercent(unlockPercent);
+      } else if (vestingPeriod.includes('100% at TGE')) {
+        setInitialUnlockPercent(100);
       }
       
       const wasStarted = isStarted;
@@ -67,56 +74,26 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
         onStatusChange(true);
       }
       
-      // Handle different vesting formats
-      // Check for "linearly over X months" pattern
-      const linearVestingMatch = vestingPeriod.match(/(\d+)%.*?linearly\s+over\s+(\d+)\s*months?/i);
-      
-      if (!vestingMatch && !initialUnlock && !linearVestingMatch) {
-        setTimeLeft('Invalid vesting period');
-        return;
-      }
-
-      // Determine vesting duration
+      // Handle different vesting formats from database
       let vestingMonths = 0;
-      if (linearVestingMatch) {
-        vestingMonths = parseInt(linearVestingMatch[2]); // Get months from "linearly over X months"
+      let lockupMonths = 0;
+      
+      // Parse lockup period
+      if (lockupMatch) {
+        lockupMonths = parseInt(lockupMatch[1]);
+      } else if (cliffMatch) {
+        lockupMonths = parseInt(cliffMatch[1]);
+      }
+      
+      // Parse vesting period
+      if (linearMatch) {
+        vestingMonths = parseInt(linearMatch[1]);
       } else if (vestingMatch) {
         vestingMonths = parseInt(vestingMatch[1]);
       }
       
-      const end = new Date(startTime);
-      end.setMonth(end.getMonth() + vestingMonths);
-      
-      // Calculate vesting progress
-      const totalDuration = end.getTime() - startTime;
-      const elapsed = now - startTime;
-      
-      // If there's an initial unlock, adjust the progress calculation
-      if (initialUnlockPercent > 0) {
-        if (vestingMonths > 0) {
-          const remainingPercent = 100 - initialUnlockPercent;
-          const vestingProgress = (elapsed / totalDuration) * remainingPercent;
-          setVestingProgress(Math.min(100, initialUnlockPercent + vestingProgress));
-        } else {
-          // If no vesting period, just show initial unlock
-          setVestingProgress(initialUnlockPercent);
-        }
-      } else {
-        const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-        setVestingProgress(progress);
-      }
-
-      // Check if vesting is complete
-      if (vestingMonths > 0 && now >= end.getTime()) {
-        setTimeLeft('Vesting Complete');
-        setVestingProgress(100);
-        setIsComplete(true);
-        if (!wasComplete && onStatusChange) {
-          onStatusChange(true, true);
-        }
-        return;
-      } else if (vestingMonths === 0 && initialUnlockPercent === 100) {
-        // 100% at TGE case
+      // Handle "100% at TGE" case
+      if (vestingPeriod.includes('100% at TGE') || initialUnlockPercent === 100) {
         setTimeLeft('Vesting Complete');
         setVestingProgress(100);
         setIsComplete(true);
@@ -125,29 +102,58 @@ export const VestingTimer = ({ startDate, vestingPeriod, onStatusChange }: Vesti
         }
         return;
       }
-
-      // Show remaining time if there's still vesting
-      if (vestingMonths > 0) {
-        const difference = end.getTime() - now;
+      
+      // Calculate vesting timeline
+      const lockupEnd = new Date(startTime);
+      lockupEnd.setMonth(lockupEnd.getMonth() + lockupMonths);
+      
+      const vestingEnd = new Date(lockupEnd.getTime());
+      vestingEnd.setMonth(vestingEnd.getMonth() + vestingMonths);
+      
+      // Calculate progress
+      if (lockupMonths > 0 && now < lockupEnd.getTime()) {
+        // Still in lockup period
+        const lockupProgress = (now - startTime) / (lockupEnd.getTime() - startTime);
+        setVestingProgress(initialUnlockPercent);
+        
+        const difference = lockupEnd.getTime() - now;
         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
         const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
         
-        // Format with leading zeros
         const formattedHours = hours.toString().padStart(2, '0');
         const formattedMinutes = minutes.toString().padStart(2, '0');
+        setTimeLeft(`Lockup ends in ${days}d ${formattedHours}h ${formattedMinutes}m`);
+        return;
+      }
+      
+      // In vesting period
+      if (vestingMonths > 0 && now < vestingEnd.getTime()) {
+        const vestingStart = lockupMonths > 0 ? lockupEnd.getTime() : startTime;
+        const vestingDuration = vestingEnd.getTime() - vestingStart;
+        const vestingElapsed = now - vestingStart;
         
-        if (initialUnlock) {
-          const unlockPercent = parseInt(initialUnlock[1]);
-          setTimeLeft(`${100 - unlockPercent}% unlocking: ${days}d ${formattedHours}h ${formattedMinutes}m`);
-        } else {
-          setTimeLeft(`${days}d ${formattedHours}h ${formattedMinutes}m remaining`);
-        }
-      } else {
-        // No vesting period, just show that initial unlock is available
-        if (initialUnlockPercent > 0) {
-          setTimeLeft(`${initialUnlockPercent}% unlocked at TGE`);
-        }
+        const remainingPercent = 100 - initialUnlockPercent;
+        const vestingProgress = (vestingElapsed / vestingDuration) * remainingPercent;
+        setVestingProgress(Math.min(100, initialUnlockPercent + vestingProgress));
+        
+        const difference = vestingEnd.getTime() - now;
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        
+        const formattedHours = hours.toString().padStart(2, '0');
+        const formattedMinutes = minutes.toString().padStart(2, '0');
+        setTimeLeft(`${days}d ${formattedHours}h ${formattedMinutes}m remaining`);
+        return;
+      }
+      
+      // Vesting complete
+      setTimeLeft('Vesting Complete');
+      setVestingProgress(100);
+      setIsComplete(true);
+      if (!wasComplete && onStatusChange) {
+        onStatusChange(true, true);
       }
     };
 

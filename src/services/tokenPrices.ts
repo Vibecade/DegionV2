@@ -1,5 +1,6 @@
 import { TokenPriceResponse } from '../types';
 import { supabase, isSupabaseAvailable } from './supabaseClient';
+import { logError } from '../utils/errorLogger';
 
 export interface TokenPriceResponse {
   current_price: number;
@@ -100,6 +101,7 @@ function setCache(tokenId: string, data: TokenPriceResponse): void {
   }
 }
 
+// Get stored price from Supabase
 async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | null> {
   try {
     if (!isSupabaseAvailable) {
@@ -142,6 +144,7 @@ async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | nul
   }
 }
 
+// Store price in Supabase
 async function storePrice(tokenId: string, price: number, roiValue: number) {
   try {
     if (!isSupabaseAvailable) {
@@ -191,48 +194,11 @@ async function retryRequest<T>(
   }
 }
 
-// Try multiple proxy services for CORS bypass
-async function fetchWithCORSProxy(url: string): Promise<Response> {
-  const proxyServices = [
-    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-    `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    `https://cors-anywhere.herokuapp.com/${url}`
-  ];
-
-  for (const proxyUrl of proxyServices) {
-    try {
-      console.log(`🔄 Trying proxy: ${proxyUrl.split('?')[0]}`);
-      const response = await fetch(proxyUrl);
-      
-      if (response.ok) {
-        const data = await retryRequest(() => fetchTokenPrice(url, tokenId));
-        
-        // Handle different proxy response formats
-        if (data.contents) {
-          // allorigins format
-          return new Response(data.contents, { status: 200 });
-        } else if (data.status && data.status.url) {
-          // corsproxy format
-          return response;
-        } else {
-          // Direct response
-          return response;
-        }
-      }
-    } catch (error) {
-      console.warn(`❌ Proxy failed: ${proxyUrl.split('?')[0]}`);
-      continue;
-    }
-  }
-  
-  throw new Error('All proxy services failed');
-}
-
+// Fetch token price from CoinGecko API
 async function fetchTokenPrice(url: string, tokenId: string): Promise<any> {
   try {
-    // First try direct fetch (works in development)
-    console.log(`🌐 Direct fetch for ${tokenId}`);
-    let response = await retryRequest(() => fetch(url));
+    console.log(`🌐 Fetching price for ${tokenId}`);
+    const response = await retryRequest(() => fetch(url));
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -240,18 +206,8 @@ async function fetchTokenPrice(url: string, tokenId: string): Promise<any> {
     
     return await response.json();
   } catch (error) {
-    console.log(`❌ Direct fetch failed for ${tokenId}, trying proxy...`);
-    
-    try {
-      // Try with CORS proxy
-      const proxyResponse = await fetchWithCORSProxy(url);
-      const data = await proxyResponse.json();
-      console.log(`✅ Proxy fetch successful for ${tokenId}`);
-      return data;
-    } catch (proxyError) {
-      console.error(`❌ All fetch methods failed for ${tokenId}:`, proxyError);
-      throw proxyError;
-    }
+    console.error(`❌ Fetch failed for ${tokenId}:`, error);
+    throw error;
   }
 }
 
@@ -269,7 +225,17 @@ function getFallbackPrice(tokenId: string): TokenPriceResponse {
   };
 }
 
-async function fetchWithCache(url: string, seedPrice: number, tokenId: string): Promise<TokenPriceResponse> {
+function calculateRoi(currentPrice: number, seedPrice: number): number {
+  if (currentPrice <= 0 || seedPrice <= 0) {
+    return 1000; // Return initial investment if prices are invalid
+  }
+  const roiPercentage = ((currentPrice - seedPrice) / seedPrice);
+  const investmentValue = 1000 * (1 + roiPercentage);
+  return Math.round(investmentValue * 100) / 100; // Round to 2 decimal places
+}
+
+// Generic token price fetcher
+export async function getTokenPrice(tokenId: string, seedPrice: number, coingeckoId?: string): Promise<TokenPriceResponse> {
   try {
     console.log(`💰 Fetching price for ${tokenId}`);
     
@@ -286,15 +252,23 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
       return cachedPrice;
     }
 
-    // Try to fetch fresh data
+    // If no CoinGecko ID provided, use fallback
+    if (!coingeckoId) {
+      const fallbackResult = getFallbackPrice(tokenId);
+      setCache(tokenId, fallbackResult);
+      return fallbackResult;
+    }
+
+    // Try to fetch fresh data from CoinGecko
     try {
+      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coingeckoId}&vs_currencies=usd`;
       const data = await fetchTokenPrice(url, tokenId);
       
       let price = 0;
       if (data && typeof data === 'object') {
-        const firstKey = Object.keys(data)[0];
-        if (firstKey && data[firstKey] && typeof data[firstKey].usd === 'number') {
-          price = data[firstKey].usd;
+        const tokenData = data[coingeckoId];
+        if (tokenData && typeof tokenData.usd === 'number') {
+          price = tokenData.usd;
           console.log(`💲 Fresh price for ${tokenId}: $${price}`);
         }
       }
@@ -321,55 +295,28 @@ async function fetchWithCache(url: string, seedPrice: number, tokenId: string): 
     return fallbackResult;
 
   } catch (error) {
-    console.error(`❌ Error in fetchWithCache for ${tokenId}:`, error);
+    logError(error as Error, 'getTokenPrice', { tokenId });
     return getFallbackPrice(tokenId);
   }
 }
 
+// Specific token price functions (maintained for backward compatibility)
 export async function getFuelPrice(): Promise<TokenPriceResponse> {
-  return fetchWithCache(
-    'https://api.coingecko.com/api/v3/simple/price?ids=fuel-network&vs_currencies=usd',
-    0.02,
-    'fuel'
-  );
+  return getTokenPrice('fuel', 0.02, 'fuel-network');
 }
 
 export async function getSilencioPrice(): Promise<TokenPriceResponse> {
-  return fetchWithCache(
-    'https://api.coingecko.com/api/v3/simple/price?ids=silencio&vs_currencies=usd',
-    0.0006,
-    'silencio'
-  );
+  return getTokenPrice('silencio', 0.0006, 'silencio');
 }
 
 export async function getCornPrice(): Promise<TokenPriceResponse> {
-  return fetchWithCache(
-    'https://api.coingecko.com/api/v3/simple/price?ids=corn-3&vs_currencies=usd',
-    0.07,
-    'corn'
-  );
+  return getTokenPrice('corn', 0.07, 'corn-3');
 }
 
 export async function getGizaPrice(): Promise<TokenPriceResponse> {
-  return fetchWithCache(
-    'https://api.coingecko.com/api/v3/simple/price?ids=giza&vs_currencies=usd',
-    0.045,
-    'giza'
-  );
+  return getTokenPrice('giza', 0.045, 'giza');
 }
 
 export async function getSkatePrice(): Promise<TokenPriceResponse> {
-  return fetchWithCache(
-    'https://api.coingecko.com/api/v3/simple/price?ids=skate&vs_currencies=usd',
-    0.08,
-    'skate'
-  );
-}
-function calculateRoi(currentPrice: number, seedPrice: number): number {
-  if (currentPrice <= 0 || seedPrice <= 0) {
-    return 1000; // Return initial investment if prices are invalid
-  }
-  const roiPercentage = ((currentPrice - seedPrice) / seedPrice);
-  const investmentValue = 1000 * (1 + roiPercentage);
-  return Math.round(investmentValue * 100) / 100; // Round to 2 decimal places
+  return getTokenPrice('skate', 0.08, 'skate');
 }

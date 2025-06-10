@@ -36,7 +36,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
-    exclude: ['lucide-react', '@supabase/supabase-js'],
+    exclude: ['lucide-react'],
   },
   server: {
     headers: {

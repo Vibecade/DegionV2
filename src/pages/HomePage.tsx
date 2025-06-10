@@ -226,55 +226,7 @@ export const HomePage = () => {
             />
           </div>
           
-          <div className="max-w-2xl mx-auto px-4 py-4 mb-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <a
-                href="https://dune.com/jsuh/legion"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative overflow-hidden bg-gradient-to-br from-black/40 via-black/30 to-black/20 rounded-xl border border-[rgba(0,255,238,0.2)] p-8 hover:border-[rgba(0,255,238,0.4)] transition-all duration-500 group hover:shadow-[0_0_50px_rgba(0,255,238,0.2)] cursor-pointer"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-[#00ffee]/5 via-transparent to-[#37fffc]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative flex items-center justify-center gap-3 mb-4">
-                  <TrendingUp className="w-5 h-5" />
-                  <span className="font-orbitron text-[#00ffee] text-lg text-center">Total Investment</span>
-                </div>
-                <p className="relative text-4xl sm:text-5xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] via-[#37fffc] to-[#00ffee] bg-clip-text text-transparent group-hover:animate-pulse text-center group/tooltip cursor-help">
-                  {formatUSDC(totalInvestment)}
-                  <span className="text-[#00ffee]">*</span>
-                  <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatUSDC(totalInvestment)}</span>
-                  <span className="invisible group-hover/tooltip:visible absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-sm py-2 px-4 rounded-lg whitespace-nowrap border border-[#00ffee]/20">
-                    Data from database and static sources
-                  </span>
-                </p>
-              </a>
-              <a
-                href="https://dune.com/jsuh/legion"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative overflow-hidden bg-gradient-to-br from-black/40 via-black/30 to-black/20 rounded-xl border border-[rgba(0,255,238,0.2)] p-8 hover:border-[rgba(0,255,238,0.4)] transition-all duration-500 group hover:shadow-[0_0_50px_rgba(0,255,238,0.2)] cursor-pointer"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-[#00ffee]/5 via-transparent to-[#37fffc]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative flex items-center justify-center gap-3 mb-4">
-                  <LineChart className="w-5 h-5" />
-                  <span className="font-orbitron text-[#00ffee] text-lg text-center">Total Investors</span>
-                </div>
-                <p className="relative text-4xl sm:text-5xl font-bold font-orbitron bg-gradient-to-r from-[#00ffee] via-[#37fffc] to-[#00ffee] bg-clip-text text-transparent transform group-hover:scale-110 transition-transform duration-500 text-center group/tooltip cursor-help">
-                  {formatNumber(totalInvestors)}
-                  <span className="text-[#00ffee]">*</span>
-                  <span className="absolute -top-1 -left-1 blur-sm opacity-50">{formatNumber(totalInvestors)}</span>
-                  <span className="invisible group-hover/tooltip:visible absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-sm py-2 px-4 rounded-lg whitespace-nowrap border border-[#00ffee]/20">
-                    Data from database and static sources
-                  </span>
-                </p>
-              </a>
-            </div>
-          </div>
-
           <div className="mb-8">
-
-
-
             {/* Quick Stats */}
             <QuickStats
               totalInvestment={totalInvestment}

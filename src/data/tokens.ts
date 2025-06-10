@@ -288,9 +288,9 @@ export const tokens: Token[] = [
   {
     id: 'resolv',
     name: 'Resolv',
-    status: 'Pending TGE',
-    launchDate: 'TBD',
-    seedPrice: 'TBD',
+    status: 'Live',
+    launchDate: 'June 10th, 2025',
+    seedPrice: '$0.10',
     currentPrice: '--',
     roi: '--',
     investment: '--',

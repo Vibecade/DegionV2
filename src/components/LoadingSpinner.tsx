@@ -26,3 +26,5 @@ const LoadingSpinner = memo(({ size = 'md', className = '' }: LoadingSpinnerProp
       </div>
     </div>
   );
+}
+)

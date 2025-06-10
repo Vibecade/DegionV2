@@ -7,7 +7,6 @@ interface QuickStatsProps {
   totalInvestors: number;
   liveTokens: number;
   pendingTokens: number;
-  averageROI: number;
   lastUpdate?: string;
 }
 
@@ -16,7 +15,6 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
   totalInvestors,
   liveTokens,
   pendingTokens,
-  averageROI,
   lastUpdate
 }) => {
   const stats = [
@@ -52,14 +50,6 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
       bgColor: 'from-yellow-500/20 to-yellow-600/10',
       borderColor: 'border-yellow-500/30'
     },
-    {
-      icon: TrendingUp,
-      label: 'Avg ROI',
-      value: `${averageROI.toFixed(1)}%`,
-      color: averageROI >= 0 ? 'text-green-400' : 'text-red-400',
-      bgColor: averageROI >= 0 ? 'from-green-500/20 to-green-600/10' : 'from-red-500/20 to-red-600/10',
-      borderColor: averageROI >= 0 ? 'border-green-500/30' : 'border-red-500/30'
-    }
   ];
 
   return (

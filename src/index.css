@@ -83,7 +83,8 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
     rgba(0, 255, 238, 0.1) 100%);
   opacity: 0;
   transition: opacity 0.5s ease;
-  z-index: -1;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .grid-item::after {
@@ -106,7 +107,8 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
   opacity: 0;
   transition: all 0.8s ease;
   animation: liquidRotate 20s linear infinite;
-  z-index: -2;
+  z-index: 0;
+  pointer-events: none;
 }
 
 @keyframes liquidRotate {
@@ -161,7 +163,8 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
     rgba(255, 0, 240, 0.3));
   opacity: 0;
   transition: opacity 0.5s ease;
-  z-index: -1;
+  z-index: 0;
+  pointer-events: none;
   animation: logoGlow 3s ease-in-out infinite;
 }
 
@@ -254,6 +257,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
     transparent
   );
   transition: 0.8s ease;
+  pointer-events: none;
 }
 
 .badge::after {
@@ -267,6 +271,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
     rgba(255, 255, 255, 0.05) 100%);
   opacity: 0;
   transition: opacity 0.4s ease;
+  pointer-events: none;
 }
 
 .badge:hover::before {
@@ -463,7 +468,8 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
     transparent
   );
   transition: left 1s ease;
-  z-index: 1;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .glass-panel::after {
@@ -478,6 +484,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
   );
   opacity: 0;
   transition: opacity 0.5s ease;
+  pointer-events: none;
 }
 
 .glass-panel:hover::before {
@@ -709,6 +716,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
     transparent
   );
   transition: left 0.6s ease;
+  pointer-events: none;
 }
 
 .btn-primary::after {
@@ -722,6 +730,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
     rgba(255, 255, 255, 0.1) 100%);
   opacity: 0;
   transition: opacity 0.4s ease;
+  pointer-events: none;
 }
 
 .btn-primary:hover::before {
@@ -777,6 +786,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
     transparent
   );
   transition: left 0.6s ease;
+  pointer-events: none;
 }
 
 .btn-outline:hover::before {
@@ -856,7 +866,8 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
     rgba(255, 0, 240, 0.08) 100%);
   opacity: 0;
   transition: opacity 0.5s ease;
-  z-index: -1;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .hover-card:hover::before {
@@ -897,6 +908,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
     rgba(0, 255, 238, 0.05),
     transparent);
   transition: left 0.6s ease;
+  pointer-events: none;
 }
 
 .data-row:hover::before {

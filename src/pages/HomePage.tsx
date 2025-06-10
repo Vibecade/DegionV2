@@ -5,18 +5,14 @@ import { QuickStats } from '../components/QuickStats';
 import { SupportModal } from '../components/SupportModal';
 import { Footer } from '../components/Footer';
 import { LoadingSpinner } from '../components/LoadingSpinner';
-import { ToastProvider, useToast } from '../components/Toast';
-import { SearchWithSuggestions } from '../components/SearchWithSuggestions';
-import { QuickStatsSkeleton, ErrorState } from '../components/LoadingStates';
 import { fetchTokensFromDatabase, getTokensLastUpdate } from '../services/tokenService';
 import { fetchTokenSalesDetails } from '../services/tokenService';
 import { Token } from '../types';
-import { Heart, ExternalLink, TrendingUp, LineChart, RefreshCw } from 'lucide-react';
+import { Heart, ExternalLink, TrendingUp, LineChart } from 'lucide-react';
 import { formatUSDC, formatNumber } from '../utils/formatters';
 import { logError } from '../utils/errorLogger';
 
-const HomePageContent = () => {
-  const { addToast } = useToast();
+export const HomePage = () => {
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -28,7 +24,6 @@ const HomePageContent = () => {
   const [error, setError] = useState<string | null>(null);
   const [totalInvestment, setTotalInvestment] = useState(0);
   const [totalInvestors, setTotalInvestors] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Load tokens from database
   useEffect(() => {
@@ -61,29 +56,10 @@ const HomePageContent = () => {
         setTotalInvestors(totalParticipants);
         
         console.log(`✅ Loaded ${fetchedTokens.length} tokens`);
-        
-        // Show success toast
-        addToast({
-          type: 'success',
-          title: 'Data loaded successfully',
-          message: `${fetchedTokens.length} tokens loaded`,
-          duration: 3000
-        });
       } catch (error) {
         logError(error as Error, 'HomePage:loadTokens');
         setError('Failed to load tokens. Please try refreshing the page.');
         console.error('Failed to load tokens:', error);
-        
-        // Show error toast
-        addToast({
-          type: 'error',
-          title: 'Failed to load data',
-          message: 'Please check your connection and try again',
-          action: {
-            label: 'Retry',
-            onClick: () => window.location.reload()
-          }
-        });
       } finally {
         // Simulate loading time for better UX
         setTimeout(() => setIsLoading(false), 1000);
@@ -91,7 +67,7 @@ const HomePageContent = () => {
     };
 
     loadTokens();
-  }, [addToast]);
+  }, []);
 
   // Get last update time
   useEffect(() => {
@@ -196,43 +172,39 @@ const HomePageContent = () => {
 
   // Refresh tokens
   const refreshTokens = useCallback(async () => {
-    setIsRefreshing(true);
+    setIsLoading(true);
     try {
       const fetchedTokens = await fetchTokensFromDatabase();
       setTokens(fetchedTokens);
       const time = await getTokensLastUpdate();
       setLastUpdate(time);
-      
-      addToast({
-        type: 'success',
-        title: 'Data refreshed',
-        message: 'All token data has been updated',
-        duration: 3000
-      });
     } catch (error) {
       logError(error as Error, 'HomePage:refreshTokens');
       setError('Failed to refresh tokens');
-      
-      addToast({
-        type: 'error',
-        title: 'Refresh failed',
-        message: 'Could not update token data'
-      });
     } finally {
-      setIsRefreshing(false);
+      setIsLoading(false);
     }
-  }, [addToast]);
+  }, []);
 
   if (error) {
     return (
       <div className="relative min-h-screen">
         <div className="relative z-10 flex flex-col items-center pt-4">
           <main className="w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 glass-panel rounded-lg">
-            <ErrorState
-              title="Error Loading Data"
-              message={error}
-              onRetry={refreshTokens}
-            />
+            <div className="text-center py-12">
+              <div className="mb-4 text-red-400">
+                <ExternalLink className="w-12 h-12 mx-auto" />
+              </div>
+              <h1 className="text-2xl font-bold text-red-400 mb-4 font-orbitron">Error Loading Data</h1>
+              <p className="text-gray-400 mb-6">{error}</p>
+              <button
+                onClick={refreshTokens}
+                className="btn-primary"
+                disabled={isLoading}
+              >
+                {isLoading ? <LoadingSpinner size="sm" /> : 'Try Again'}
+              </button>
+            </div>
           </main>
         </div>
       </div>
@@ -258,28 +230,14 @@ const HomePageContent = () => {
           
           <div className="mb-8">
             {/* Quick Stats */}
-            {isLoading ? (
-              <QuickStatsSkeleton />
-            ) : (
-              <QuickStats
-                totalInvestment={totalInvestment}
-                totalInvestors={totalInvestors}
-                liveTokens={quickStats.liveTokens}
-                pendingTokens={quickStats.pendingTokens}
-                ICOSoon={quickStats.ICOSoon}
-                lastUpdate={lastUpdate}
-              />
-            )}
-
-            {/* Enhanced Search */}
-            <div className="mb-6">
-              <SearchWithSuggestions
-                tokens={tokens}
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                placeholder="Search tokens by name or symbol..."
-              />
-            </div>
+            <QuickStats
+              totalInvestment={totalInvestment}
+              totalInvestors={totalInvestors}
+              liveTokens={quickStats.liveTokens}
+              pendingTokens={quickStats.pendingTokens}
+              ICOSoon={quickStats.ICOSoon}
+              lastUpdate={lastUpdate}
+            />
 
             {/* Search and Filters */}
             <SearchAndFilters
@@ -291,7 +249,7 @@ const HomePageContent = () => {
               sortOrder={sortOrder}
               onSortChange={handleSortChange}
               onRefresh={refreshTokens}
-              isLoading={isRefreshing}
+              isLoading={isLoading}
               tokenCount={tokens.length}
               filteredCount={filteredTokens.length}
             />
@@ -338,9 +296,3 @@ const HomePageContent = () => {
     </div>
   );
 };
-
-export const HomePage = () => (
-  <ToastProvider>
-    <HomePageContent />
-  </ToastProvider>
-);

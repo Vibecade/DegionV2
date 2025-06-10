@@ -1,5 +1,5 @@
 import { Token } from '../types';
-import { supabase, isSupabaseAvailable } from './supabaseClient';
+import { supabase, isSupabaseAvailable, safeSupabaseOperation } from './supabaseClient';
 import { logError } from '../utils/errorLogger';
 
 // Cache for token data
@@ -23,15 +23,20 @@ function transformDatabaseToken(dbToken: any): Token {
   };
 }
 
+// Get static fallback data
+async function getStaticTokens(): Promise<Token[]> {
+  try {
+    const { tokens } = await import('../data/tokens');
+    return tokens;
+  } catch (error) {
+    logError(error as Error, 'getStaticTokens');
+    return [];
+  }
+}
+
 // Fetch all tokens from database
 export async function fetchTokensFromDatabase(): Promise<Token[]> {
   try {
-    if (!isSupabaseAvailable) {
-      console.warn('Supabase not available, falling back to static data');
-      const { tokens } = await import('../data/tokens');
-      return tokens;
-    }
-
     // Check cache first
     if (tokenCache && Date.now() - tokenCache.timestamp < CACHE_DURATION) {
       console.log('📦 Using cached token data');
@@ -39,19 +44,32 @@ export async function fetchTokensFromDatabase(): Promise<Token[]> {
     }
 
     console.log('🔄 Fetching tokens from database');
-    const { data, error } = await supabase
-      .from('token_info')
-      .select('*')
-      .order('name');
+    
+    // Get static data as fallback
+    const staticTokens = await getStaticTokens();
+    
+    // Try to fetch from Supabase with automatic fallback
+    const { data, error, usedFallback } = await safeSupabaseOperation(
+      () => supabase
+        .from('token_info')
+        .select('*')
+        .order('name'),
+      staticTokens
+    );
+
+    if (usedFallback) {
+      console.warn('🔌 Using static token data due to database connection issues');
+      return staticTokens;
+    }
 
     if (error) {
-      throw new Error(`Database error: ${error.message}`);
+      console.warn('Database error, falling back to static data:', error.message);
+      return staticTokens;
     }
 
     if (!data || data.length === 0) {
-      console.warn('No tokens found in database, falling back to static data');
-      const { tokens } = await import('../data/tokens');
-      return tokens;
+      console.warn('No tokens found in database, using static data');
+      return staticTokens;
     }
 
     // Transform database data to Token interface
@@ -71,40 +89,42 @@ export async function fetchTokensFromDatabase(): Promise<Token[]> {
     console.warn('Failed to fetch from database, falling back to static data');
     
     // Fallback to static data
-    try {
-      const { tokens } = await import('../data/tokens');
-      return tokens;
-    } catch (fallbackError) {
-      logError(fallbackError as Error, 'fetchTokensFromDatabase:fallback');
-      return [];
-    }
+    return await getStaticTokens();
   }
 }
 
 // Fetch single token details
 export async function fetchTokenDetails(tokenId: string): Promise<Token | null> {
   try {
-    if (!isSupabaseAvailable) {
-      console.warn('Supabase not available, falling back to static data');
-      const { tokens } = await import('../data/tokens');
-      return tokens.find(t => t.id.toLowerCase() === tokenId.toLowerCase()) || null;
+    console.log(`🔄 Fetching token details for ${tokenId}`);
+    
+    // Get static data as fallback
+    const staticTokens = await getStaticTokens();
+    const staticToken = staticTokens.find(t => t.id.toLowerCase() === tokenId.toLowerCase()) || null;
+    
+    // Try to fetch from Supabase with automatic fallback
+    const { data, error, usedFallback } = await safeSupabaseOperation(
+      () => supabase
+        .from('token_info')
+        .select('*')
+        .eq('token_id', tokenId)
+        .maybeSingle(),
+      staticToken
+    );
+
+    if (usedFallback) {
+      console.warn(`🔌 Using static data for token ${tokenId} due to database connection issues`);
+      return staticToken;
     }
 
-    console.log(`🔄 Fetching token details for ${tokenId}`);
-    const { data, error } = await supabase
-      .from('token_info')
-      .select('*')
-      .eq('token_id', tokenId)
-      .maybeSingle();
-
     if (error) {
-      throw new Error(`Database error: ${error.message}`);
+      console.warn(`Database error for token ${tokenId}, using static data:`, error.message);
+      return staticToken;
     }
 
     if (!data) {
-      console.warn(`Token ${tokenId} not found in database, checking static data`);
-      const { tokens } = await import('../data/tokens');
-      return tokens.find(t => t.id.toLowerCase() === tokenId.toLowerCase()) || null;
+      console.warn(`Token ${tokenId} not found in database, using static data`);
+      return staticToken;
     }
 
     const token = transformDatabaseToken(data);
@@ -115,43 +135,48 @@ export async function fetchTokenDetails(tokenId: string): Promise<Token | null> 
     logError(error as Error, 'fetchTokenDetails', { tokenId });
     
     // Fallback to static data
-    try {
-      const { tokens } = await import('../data/tokens');
-      return tokens.find(t => t.id.toLowerCase() === tokenId.toLowerCase()) || null;
-    } catch (fallbackError) {
-      logError(fallbackError as Error, 'fetchTokenDetails:fallback', { tokenId });
-      return null;
-    }
+    const staticTokens = await getStaticTokens();
+    return staticTokens.find(t => t.id.toLowerCase() === tokenId.toLowerCase()) || null;
   }
 }
 
 // Fetch token sales details
 export async function fetchTokenSalesDetails(tokenId: string): Promise<any | null> {
   try {
-    if (!isSupabaseAvailable) {
-      console.warn('Supabase not available, falling back to static sales data');
+    console.log(`🔄 Fetching sales details for ${tokenId}`);
+    
+    // Get static sales data as fallback
+    let staticSalesData = null;
+    try {
       const { salesData } = await import('../data/sales');
-      return salesData.find(sale => sale.name.toLowerCase() === tokenId.toLowerCase()) || null;
+      staticSalesData = salesData.find(sale => sale.name.toLowerCase() === tokenId.toLowerCase()) || null;
+    } catch (error) {
+      console.warn('No static sales data available');
+    }
+    
+    // Try to fetch from Supabase with automatic fallback
+    const { data, error, usedFallback } = await safeSupabaseOperation(
+      () => supabase
+        .from('token_sales_details')
+        .select('*')
+        .eq('token_id', tokenId)
+        .maybeSingle(),
+      staticSalesData
+    );
+
+    if (usedFallback) {
+      console.warn(`🔌 Using static sales data for token ${tokenId} due to database connection issues`);
+      return staticSalesData;
     }
 
-    console.log(`🔄 Fetching sales details for ${tokenId}`);
-    const { data, error } = await supabase
-      .from('token_sales_details')
-      .select('*')
-      .eq('token_id', tokenId)
-      .maybeSingle();
-
     if (error) {
-      console.warn(`Sales details error for ${tokenId}: ${error.message}`);
-      // Fallback to static data
-      const { salesData } = await import('../data/sales');
-      return salesData.find(sale => sale.name.toLowerCase() === tokenId.toLowerCase()) || null;
+      console.warn(`Sales details error for ${tokenId}, using static data:`, error.message);
+      return staticSalesData;
     }
 
     if (!data) {
-      console.warn(`Sales details not found for ${tokenId}, checking static data`);
-      const { salesData } = await import('../data/sales');
-      return salesData.find(sale => sale.name.toLowerCase() === tokenId.toLowerCase()) || null;
+      console.warn(`Sales details not found for ${tokenId}, using static data`);
+      return staticSalesData;
     }
 
     // Transform to match existing interface
@@ -190,17 +215,16 @@ export function clearTokenCache(): void {
 // Get last update time for tokens
 export async function getTokensLastUpdate(): Promise<string | null> {
   try {
-    if (!isSupabaseAvailable) {
-      return null;
-    }
+    const { data, error, usedFallback } = await safeSupabaseOperation(
+      () => supabase
+        .from('token_info')
+        .select('updated_at')
+        .order('updated_at', { ascending: false })
+        .limit(1),
+      null
+    );
 
-    const { data, error } = await supabase
-      .from('token_info')
-      .select('updated_at')
-      .order('updated_at', { ascending: false })
-      .limit(1);
-
-    if (error || !data || data.length === 0) {
+    if (usedFallback || error || !data || data.length === 0) {
       return null;
     }
 

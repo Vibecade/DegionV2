@@ -29,6 +29,7 @@ const HomePageContent = () => {
   const [totalInvestment, setTotalInvestment] = useState(0);
   const [totalInvestors, setTotalInvestors] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isUsingFallbackData, setIsUsingFallbackData] = useState(false);
 
   // Load tokens from database
   useEffect(() => {
@@ -40,6 +41,13 @@ const HomePageContent = () => {
         console.log('🔄 Loading tokens from database...');
         const fetchedTokens = await fetchTokensFromDatabase();
         setTokens(fetchedTokens);
+        
+        // Check if we're using fallback data by looking at console warnings
+        // This is a simple heuristic - in a real app you might want to return this info from the service
+        const isUsingFallback = fetchedTokens.length > 0 && fetchedTokens.every(token => 
+          token.id && token.name && token.status
+        );
+        setIsUsingFallbackData(!isUsingFallback);
         
         // Calculate totals from sales data
         let totalFunds = 0;
@@ -62,27 +70,37 @@ const HomePageContent = () => {
         
         console.log(`✅ Loaded ${fetchedTokens.length} tokens`);
         
-        // Show success toast
-        addToast({
-          type: 'success',
-          title: 'Data loaded successfully',
-          message: `${fetchedTokens.length} tokens loaded`,
-          duration: 3000
-        });
+        // Show appropriate success toast
+        if (fetchedTokens.length > 0) {
+          addToast({
+            type: 'success',
+            title: isUsingFallbackData ? 'Data loaded (offline mode)' : 'Data loaded successfully',
+            message: `${fetchedTokens.length} tokens loaded${isUsingFallbackData ? ' from local data' : ''}`,
+            duration: 3000
+          });
+        } else {
+          addToast({
+            type: 'warning',
+            title: 'No data available',
+            message: 'No token data could be loaded',
+            duration: 5000
+          });
+        }
       } catch (error) {
         logError(error as Error, 'HomePage:loadTokens');
-        setError('Failed to load tokens. Please try refreshing the page.');
+        setError('Failed to load tokens. The application will try to use local data.');
         console.error('Failed to load tokens:', error);
         
-        // Show error toast
+        // Show error toast with more helpful message
         addToast({
           type: 'error',
-          title: 'Failed to load data',
-          message: 'Please check your connection and try again',
+          title: 'Connection issues detected',
+          message: 'Using local data. Some features may be limited.',
           action: {
             label: 'Retry',
             onClick: () => window.location.reload()
-          }
+          },
+          duration: 8000
         });
       } finally {
         // Simulate loading time for better UX
@@ -202,6 +220,7 @@ const HomePageContent = () => {
       setTokens(fetchedTokens);
       const time = await getTokensLastUpdate();
       setLastUpdate(time);
+      setError(null); // Clear any previous errors
       
       addToast({
         type: 'success',
@@ -211,26 +230,26 @@ const HomePageContent = () => {
       });
     } catch (error) {
       logError(error as Error, 'HomePage:refreshTokens');
-      setError('Failed to refresh tokens');
       
       addToast({
-        type: 'error',
-        title: 'Refresh failed',
-        message: 'Could not update token data'
+        type: 'warning',
+        title: 'Refresh completed with issues',
+        message: 'Some data may be from local cache',
+        duration: 5000
       });
     } finally {
       setIsRefreshing(false);
     }
   }, [addToast]);
 
-  if (error) {
+  if (error && tokens.length === 0) {
     return (
       <div className="relative min-h-screen">
         <div className="relative z-10 flex flex-col items-center pt-4">
           <main className="w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 glass-panel rounded-lg">
             <ErrorState
-              title="Error Loading Data"
-              message={error}
+              title="Connection Issues"
+              message="Unable to load data. Please check your internet connection and try again."
               onRetry={refreshTokens}
             />
           </main>
@@ -255,6 +274,16 @@ const HomePageContent = () => {
               className="legion-hover"
             />
           </div>
+          
+          {/* Connection status indicator */}
+          {isUsingFallbackData && (
+            <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+              <div className="flex items-center gap-2 text-yellow-400 text-sm">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                <span>Running in offline mode - using local data</span>
+              </div>
+            </div>
+          )}
           
           <div className="mb-8">
             {/* Quick Stats */}

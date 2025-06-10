@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Token } from '../types';
 import { logError } from '../utils/errorLogger';
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, memo } from 'react';
 import { getFuelPrice, getSilencioPrice, getCornPrice, getGizaPrice, getSkatePrice } from '../services/tokenPrices';
 import { fetchTokenHolders, fetchTradingVolume } from '../services/duneApi';
 import { getTokenInfo } from '../services/tokenInfo';
@@ -14,7 +14,7 @@ interface TokenCardProps {
   token: Token;
 }
 
-export const TokenCard = ({ token }: TokenCardProps) => {
+const TokenCard = memo(({ token }: TokenCardProps) => {
   const {
     id,
     name,
@@ -139,7 +139,7 @@ export const TokenCard = ({ token }: TokenCardProps) => {
   useEffect(() => {
     if (['fuel', 'silencio', 'corn', 'giza', 'skate'].includes(id.toLowerCase())) {
       fetchPrice();
-      const interval = setInterval(fetchPrice, 30000);
+      const interval = setInterval(fetchPrice, 60000); // Reduced frequency
       return () => clearInterval(interval);
     }
   }, [id, fetchPrice]);
@@ -288,4 +288,3 @@ export const TokenCard = ({ token }: TokenCardProps) => {
       )}
     </Link>
   );
-};

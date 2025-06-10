@@ -14,6 +14,8 @@ export type TokenPriceError = {
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 const CACHE_KEY_PREFIX = 'token_price_';
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 1000;
 
 // Fallback prices when API is not available
 const FALLBACK_PRICES = {
@@ -172,6 +174,23 @@ async function storePrice(tokenId: string, price: number, roiValue: number) {
   }
 }
 
+// Retry mechanism for failed requests
+async function retryRequest<T>(
+  fn: () => Promise<T>,
+  retries: number = MAX_RETRIES,
+  delay: number = RETRY_DELAY
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries > 0) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return retryRequest(fn, retries - 1, delay * 2);
+    }
+    throw error;
+  }
+}
+
 // Try multiple proxy services for CORS bypass
 async function fetchWithCORSProxy(url: string): Promise<Response> {
   const proxyServices = [
@@ -186,7 +205,7 @@ async function fetchWithCORSProxy(url: string): Promise<Response> {
       const response = await fetch(proxyUrl);
       
       if (response.ok) {
-        const data = await response.json();
+        const data = await retryRequest(() => fetchTokenPrice(url, tokenId));
         
         // Handle different proxy response formats
         if (data.contents) {
@@ -213,7 +232,7 @@ async function fetchTokenPrice(url: string, tokenId: string): Promise<any> {
   try {
     // First try direct fetch (works in development)
     console.log(`🌐 Direct fetch for ${tokenId}`);
-    let response = await fetch(url);
+    let response = await retryRequest(() => fetch(url));
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);

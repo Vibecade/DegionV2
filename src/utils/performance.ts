@@ -18,7 +18,7 @@ export class LazyImageLoader {
         });
       },
       {
-        rootMargin: '50px 0px',
+        rootMargin: '100px 0px', // Increased for better UX
         threshold: 0.01
       }
     );
@@ -32,6 +32,14 @@ export class LazyImageLoader {
   private loadImage(img: HTMLImageElement): void {
     const src = img.dataset.src;
     if (src) {
+      // Preload the image
+      const preloadImg = new Image();
+      preloadImg.onload = () => {
+        img.src = src;
+        img.removeAttribute('data-src');
+        img.classList.add('loaded');
+      };
+      preloadImg.src = src;
       img.src = src;
       img.removeAttribute('data-src');
       this.observer.unobserve(img);
@@ -45,10 +53,29 @@ export class LazyImageLoader {
   }
 }
 
+// Request idle callback wrapper
+export const scheduleWork = (callback: () => void, options?: { timeout?: number }) => {
+  if ('requestIdleCallback' in window) {
+    return requestIdleCallback(callback, options);
+  } else {
+    // Fallback for browsers without requestIdleCallback
+    return setTimeout(callback, 0);
+  }
+};
+
+// Cancel scheduled work
+export const cancelWork = (id: number) => {
+  if ('cancelIdleCallback' in window) {
+    cancelIdleCallback(id);
+  } else {
+    clearTimeout(id);
+  }
+};
+
 // Debounce utility for performance optimization
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  wait: number,
+  wait: number = 300,
   immediate?: boolean
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout | null = null;
@@ -71,7 +98,7 @@ export function debounce<T extends (...args: any[]) => any>(
 // Throttle utility for performance optimization
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
-  limit: number
+  limit: number = 100
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
   

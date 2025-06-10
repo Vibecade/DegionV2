@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { TokenCard } from '../components/TokenCard';
 import { TokenCardSkeleton } from '../components/TokenCardSkeleton';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -9,6 +9,7 @@ import { Footer } from '../components/Footer';
 import { Heart, Search, Filter, RefreshCw, ExternalLink, TrendingUp, LineChart } from 'lucide-react';
 import { getLastUpdateTime } from '../services/tokenInfo';
 import { formatUSDC, formatNumber } from '../utils/formatters';
+import { debounce } from '../utils/performance';
 
 const DuneLink = ({ children }: { children: React.ReactNode }) => (
   <a
@@ -31,11 +32,15 @@ export const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'name' | 'status' | 'roi'>('status');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const totalInvestment = salesData.reduce((acc, sale) => acc + sale.fundsRaisedUSDC, 0);
-  const totalInvestors = salesData.reduce((acc, sale) => acc + sale.participants, 0);
+  
+  // Memoize expensive calculations
+  const { totalInvestment, totalInvestors } = useMemo(() => ({
+    totalInvestment: salesData.reduce((acc, sale) => acc + sale.fundsRaisedUSDC, 0),
+    totalInvestors: salesData.reduce((acc, sale) => acc + sale.participants, 0)
+  }), []);
 
   // Sort tokens by status priority
-  const sortedTokens = [...tokens].sort((a, b) => {
+  const sortedTokens = useMemo(() => [...tokens].sort((a, b) => {
     if (sortBy === 'name') {
       const result = a.name.localeCompare(b.name);
       return sortOrder === 'asc' ? result : -result;
@@ -83,7 +88,7 @@ export const HomePage = () => {
       // If priorities are the same, sort alphabetically by name
       return a.name.localeCompare(b.name);
     }
-  });
+  }), [sortBy, sortOrder]);
 
   useEffect(() => {
     const fetchLastUpdate = async () => {
@@ -97,21 +102,21 @@ export const HomePage = () => {
     fetchLastUpdate();
   }, []);
 
-  const filteredTokens = sortedTokens.filter(token => {
+  const filteredTokens = useMemo(() => sortedTokens.filter(token => {
     const matchesSearch = token.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          token.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || token.status.toLowerCase() === statusFilter.toLowerCase();
     return matchesSearch && matchesStatus;
-  });
+  }), [sortedTokens, searchTerm, statusFilter]);
 
-  const handleSortChange = (newSortBy: 'name' | 'status' | 'roi') => {
+  const handleSortChange = useCallback((newSortBy: 'name' | 'status' | 'roi') => {
     if (sortBy === newSortBy) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(newSortBy);
       setSortOrder('asc');
     }
-  };
+  }, [sortBy, sortOrder]);
 
   return (
     <div className="relative min-h-screen">
@@ -182,8 +187,7 @@ export const HomePage = () => {
                 <input
                   type="text"
                   placeholder="Search tokens..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={handleSearchChange}
                   className="w-full bg-black/30 border border-[rgba(0,255,238,0.2)] rounded-lg pl-10 pr-4 py-2 text-[#cfd0d1] focus:outline-none focus:border-[#00ffee] transition-colors"
                 />
               </div>

@@ -11,21 +11,32 @@ export default defineConfig({
   build: {
     sourcemap: true,
     target: 'es2015',
-    minify: 'esbuild',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     outDir: 'dist',
     assetsDir: 'assets',
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           charts: ['chart.js', 'react-chartjs-2'],
-          utils: ['src/utils/security.ts', 'src/utils/seo.ts', 'src/utils/accessibility.ts']
-        }
+          utils: ['src/utils/security.ts', 'src/utils/seo.ts', 'src/utils/accessibility.ts'],
+          supabase: ['@supabase/supabase-js'],
+        },
+        // Optimize chunk loading
+        experimentalMinChunkSize: 10000,
       }
     }
   },
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    include: ['react', 'react-dom', 'react-router-dom'],
+    exclude: ['lucide-react', '@supabase/supabase-js'],
   },
   server: {
     headers: {
@@ -41,6 +52,7 @@ export default defineConfig({
       'X-XSS-Protection': '1; mode=block',
       'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Cache-Control': 'public, max-age=31536000',
     },
   },
 });

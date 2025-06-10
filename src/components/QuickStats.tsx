@@ -7,6 +7,7 @@ interface QuickStatsProps {
   totalInvestors: number;
   liveTokens: number;
   pendingTokens: number;
+  ICOSoon: number;
   lastUpdate?: string;
 }
 
@@ -15,6 +16,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
   totalInvestors,
   liveTokens,
   pendingTokens,
+  ICOSoon
   lastUpdate
 }) => {
   const stats = [
@@ -49,6 +51,14 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
       color: 'text-yellow-400',
       bgColor: 'from-yellow-500/20 to-yellow-600/10',
       borderColor: 'border-yellow-500/30'
+    },
+       {
+      icon: Sleep,
+      label: 'ICO Soon',
+      value: icoSoon.toString(),
+      color: 'text-blue-400',
+      bgColor: 'from-blue-500/20 to-blue-600/10',
+      borderColor: 'border-blue-500/30'
     },
   ];
 

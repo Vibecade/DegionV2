@@ -432,3 +432,5 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
 export default TokenCard;
 
 export { TokenCard }
+
+export { TokenCard }

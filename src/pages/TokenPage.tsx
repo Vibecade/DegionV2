@@ -24,6 +24,8 @@ export const TokenPage = () => {
   const [currentPrice, setCurrentPrice] = useState('--');
   const [roi, setRoi] = useState('--');
   const [investment, setInvestment] = useState('--');
+  const [ath, setAth] = useState<string>('--');
+  const [atl, setAtl] = useState<string>('--');
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [saleData, setSaleData] = useState<any>(null);
@@ -123,6 +125,14 @@ export const TokenPage = () => {
         const roiValue = ((data.current_price - seedPriceNum) / seedPriceNum) * 100;
         setRoi(`${roiValue.toFixed(2)}%`);
         setInvestment(`$${data.roi_value.toFixed(2)}`);
+        
+        // Update ATH/ATL if available
+        if (data.ath && data.ath > 0) {
+          setAth(`$${data.ath.toFixed(6)}`);
+        }
+        if (data.atl && data.atl > 0) {
+          setAtl(`$${data.atl.toFixed(6)}`);
+        }
         
         setTimeout(() => setIsUpdating(false), 500);
       } catch (error) {
@@ -318,7 +328,7 @@ export const TokenPage = () => {
 
             <div className="glass-panel p-6 sm:p-8 rounded-lg">
               <h2 className="text-xl font-bold text-[#00ffee] mb-6 font-orbitron">Token Metrics</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div className="hover-card bg-black/20 p-4 rounded-lg border border-[rgba(0,255,238,0.1)]">
                   <div className="text-gray-400 text-sm mb-1">Seed Price</div>
                   <div className="text-xl font-semibold">{seedPrice}</div>
@@ -339,6 +349,22 @@ export const TokenPage = () => {
                   <div className="text-gray-400 text-sm mb-1">$1000 Investment Now Worth</div>
                   <div className={`text-xl font-semibold ${parseFloat(investment.replace(/\$/, '')) >= 1000 ? "text-green-500" : "text-red-500"} ${isUpdating ? 'price-update' : ''}`}>
                     {investment}
+                  </div>
+                </div>
+                
+                {/* ATH Card */}
+                <div className="hover-card bg-black/20 p-4 rounded-lg border border-[rgba(0,255,238,0.1)]">
+                  <div className="text-gray-400 text-sm mb-1">All-Time High</div>
+                  <div className={`text-xl font-semibold text-green-400 ${isUpdating ? 'price-update' : ''}`}>
+                    {ath}
+                  </div>
+                </div>
+                
+                {/* ATL Card */}
+                <div className="hover-card bg-black/20 p-4 rounded-lg border border-[rgba(0,255,238,0.1)]">
+                  <div className="text-gray-400 text-sm mb-1">All-Time Low</div>
+                  <div className={`text-xl font-semibold text-red-400 ${isUpdating ? 'price-update' : ''}`}>
+                    {atl}
                   </div>
                 </div>
               </div>

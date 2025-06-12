@@ -19,8 +19,8 @@ export type TokenPriceError = {
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 const CACHE_KEY_PREFIX = 'token_price_';
-const MAX_RETRIES = 5;
-const RETRY_DELAY = 2000;
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 1000;
 
 // Fallback prices when API is not available
 const FALLBACK_PRICES = {
@@ -193,15 +193,15 @@ async function storePrice(tokenId: string, price: number, roiValue: number, ath?
 // Retry mechanism for failed requests
 async function retryRequest<T>(
   fn: () => Promise<T>,
-  retries: number = MAX_RETRIES,
-  delay: number = RETRY_DELAY
+  retries: number = 1,
+  delay: number = 500
 ): Promise<T> {
   try {
     return await fn();
   } catch (error) {
     if (retries > 0) {
       await new Promise(resolve => setTimeout(resolve, delay));
-      return retryRequest(fn, retries - 1, delay * 2);
+      return retryRequest(fn, retries - 1, delay);
     }
     throw error;
   }
@@ -261,10 +261,14 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
     }
 
     // Try to get cached price from Supabase
-    const cachedPrice = await getStoredPrice(tokenId);
-    if (cachedPrice) {
-      setCache(tokenId, cachedPrice);
-      return cachedPrice;
+    try {
+      const cachedPrice = await getStoredPrice(tokenId);
+      if (cachedPrice) {
+        setCache(tokenId, cachedPrice);
+        return cachedPrice;
+      }
+    } catch (supabaseError) {
+      console.warn(`⚠️ Supabase cache failed for ${tokenId}:`, supabaseError);
     }
 
     // If no CoinGecko ID provided, use fallback
@@ -277,14 +281,25 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
     // Try to fetch fresh data from CoinGecko
     try {
       // First fetch basic price data
-      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coingeckoId}&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true&include_market_cap=true`;
-      const data = await fetchTokenPrice(url, tokenId);
+      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coingeckoId}&vs_currencies=usd`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const response = await fetch(url, { 
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
       
       let price = 0;
-      let ath = 0;
-      let atl = 0;
-      let athDate = '';
-      let atlDate = '';
       
       if (data && typeof data === 'object') {
         const tokenData = data[coingeckoId];
@@ -294,54 +309,23 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
         }
       }
       
-      // Fetch detailed data including ATH/ATL separately
-      if (price > 0) {
-        try {
-          console.log(`📊 Fetching detailed data for ${tokenId}...`);
-          const detailUrl = `https://api.coingecko.com/api/v3/coins/${coingeckoId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
-          const detailData = await fetchTokenPrice(detailUrl, `${tokenId}-detail`);
-          
-          if (detailData?.market_data) {
-            ath = detailData.market_data.ath?.usd || 0;
-            atl = detailData.market_data.atl?.usd || 0;
-            athDate = detailData.market_data.ath_date?.usd || '';
-            atlDate = detailData.market_data.atl_date?.usd || '';
-            console.log(`📊 Real ATH/ATL for ${tokenId}: ATH $${ath} (${athDate}), ATL $${atl} (${atlDate})`);
-          } else {
-            console.warn(`⚠️ No market data found for ${tokenId}`);
-            // Use fallback ATH/ATL if available
-            const fallback = FALLBACK_PRICES[tokenId as keyof typeof FALLBACK_PRICES];
-            if (fallback) {
-              ath = fallback.ath || 0;
-              atl = fallback.atl || 0;
-              console.log(`🔄 Using fallback ATH/ATL for ${tokenId}: ATH $${ath}, ATL $${atl}`);
-            }
-          }
-        } catch (detailError) {
-          console.warn(`⚠️ Failed to fetch detailed data for ${tokenId}:`, detailError);
-          // Use fallback ATH/ATL if available
-          const fallback = FALLBACK_PRICES[tokenId as keyof typeof FALLBACK_PRICES];
-          if (fallback) {
-            ath = fallback.ath || 0;
-            atl = fallback.atl || 0;
-            console.log(`🔄 Using fallback ATH/ATL for ${tokenId}: ATH $${ath}, ATL $${atl}`);
-          }
-        }
-      }
-      
       if (price > 0) {
         const roiValue = calculateRoi(price, seedPrice);
+        const fallback = FALLBACK_PRICES[tokenId as keyof typeof FALLBACK_PRICES];
+        
         const result = {
           current_price: price,
           roi_value: roiValue,
-          ath,
-          atl,
-          ath_date: athDate,
-          atl_date: atlDate
+          ath: fallback?.ath || 0,
+          atl: fallback?.atl || 0
         };
 
         // Store and cache the result
-        await storePrice(tokenId, price, roiValue, ath, atl, athDate, atlDate);
+        try {
+          await storePrice(tokenId, price, roiValue, result.ath, result.atl);
+        } catch (storeError) {
+          console.warn(`⚠️ Failed to store price for ${tokenId}:`, storeError);
+        }
         setCache(tokenId, result);
         return result;
       }

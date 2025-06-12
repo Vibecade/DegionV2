@@ -19,8 +19,8 @@ export type TokenPriceError = {
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 const CACHE_KEY_PREFIX = 'token_price_';
-const MAX_RETRIES = 2;
-const RETRY_DELAY = 1000;
+const MAX_RETRIES = 5;
+const RETRY_DELAY = 2000;
 
 // Fallback prices when API is not available
 const FALLBACK_PRICES = {

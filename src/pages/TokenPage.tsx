@@ -128,10 +128,12 @@ export const TokenPage = () => {
         
         // Update ATH/ATL if available
         if (data.ath && data.ath > 0) {
-          setAth(`$${data.ath.toFixed(6)}`);
+          const athDate = data.ath_date ? ` (${new Date(data.ath_date).toLocaleDateString()})` : '';
+          setAth(`$${data.ath.toFixed(6)}${athDate}`);
         }
         if (data.atl && data.atl > 0) {
-          setAtl(`$${data.atl.toFixed(6)}`);
+          const atlDate = data.atl_date ? ` (${new Date(data.atl_date).toLocaleDateString()})` : '';
+          setAtl(`$${data.atl.toFixed(6)}${atlDate}`);
         }
         
         setTimeout(() => setIsUpdating(false), 500);

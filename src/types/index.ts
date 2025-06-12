@@ -18,6 +18,11 @@ export interface Token {
 export interface TokenPrice {
   current_price: number;
   roi_value: number;
+  ath?: number;
+  atl?: number;
+  ath_date?: string;
+  atl_date?: string;
+  error?: string;
 }
 
 export interface TokenSentiment {

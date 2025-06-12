@@ -143,7 +143,9 @@ async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | nul
       current_price: Number(data.price),
       roi_value: Number(data.roi_value),
       ath: data.ath ? Number(data.ath) : undefined,
-      atl: data.atl ? Number(data.atl) : undefined
+      atl: data.atl ? Number(data.atl) : undefined,
+      ath_date: data.ath_date || undefined,
+      atl_date: data.atl_date || undefined
     };
   } catch (error) {
     console.error('Error in getStoredPrice:', error);
@@ -152,7 +154,7 @@ async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | nul
 }
 
 // Store price in Supabase
-async function storePrice(tokenId: string, price: number, roiValue: number, ath?: number, atl?: number) {
+async function storePrice(tokenId: string, price: number, roiValue: number, ath?: number, atl?: number, athDate?: string, atlDate?: string) {
   try {
     if (!isSupabaseAvailable) {
       console.warn(`⚠️ Cannot store price for ${tokenId} - Supabase not configured`);
@@ -168,6 +170,8 @@ async function storePrice(tokenId: string, price: number, roiValue: number, ath?
 
     if (ath !== undefined) updateData.ath = ath;
     if (atl !== undefined) updateData.atl = atl;
+    if (athDate) updateData.ath_date = athDate;
+    if (atlDate) updateData.atl_date = atlDate;
 
     const { error } = await supabase
       .from('token_prices')
@@ -179,7 +183,7 @@ async function storePrice(tokenId: string, price: number, roiValue: number, ath?
     if (error && error.code !== '23505') {
       console.error('Error storing price in Supabase:', error);
     } else {
-      console.log(`💾 Stored price data for ${tokenId} in Supabase`);
+      console.log(`💾 Stored price data for ${tokenId} in Supabase (ATH: $${ath}, ATL: $${atl})`);
     }
   } catch (error) {
     console.error('Error in storePrice:', error);
@@ -272,37 +276,55 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
 
     // Try to fetch fresh data from CoinGecko
     try {
-      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coingeckoId}&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true`;
+      // First fetch basic price data
+      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coingeckoId}&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true&include_market_cap=true`;
       const data = await fetchTokenPrice(url, tokenId);
       
       let price = 0;
       let ath = 0;
       let atl = 0;
+      let athDate = '';
+      let atlDate = '';
       
       if (data && typeof data === 'object') {
         const tokenData = data[coingeckoId];
         if (tokenData && typeof tokenData.usd === 'number') {
           price = tokenData.usd;
           console.log(`💲 Fresh price for ${tokenId}: $${price}`);
+        }
+      }
+      
+      // Fetch detailed data including ATH/ATL separately
+      if (price > 0) {
+        try {
+          console.log(`📊 Fetching detailed data for ${tokenId}...`);
+          const detailUrl = `https://api.coingecko.com/api/v3/coins/${coingeckoId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
+          const detailData = await fetchTokenPrice(detailUrl, `${tokenId}-detail`);
           
-          // Fetch detailed data including ATH/ATL
-          try {
-            const detailUrl = `https://api.coingecko.com/api/v3/coins/${coingeckoId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
-            const detailData = await fetchTokenPrice(detailUrl, `${tokenId}-detail`);
-            
-            if (detailData?.market_data) {
-              ath = detailData.market_data.ath?.usd || 0;
-              atl = detailData.market_data.atl?.usd || 0;
-              console.log(`📊 ATH/ATL for ${tokenId}: ATH $${ath}, ATL $${atl}`);
-            }
-          } catch (detailError) {
-            console.warn(`⚠️ Failed to fetch ATH/ATL for ${tokenId}:`, detailError);
+          if (detailData?.market_data) {
+            ath = detailData.market_data.ath?.usd || 0;
+            atl = detailData.market_data.atl?.usd || 0;
+            athDate = detailData.market_data.ath_date?.usd || '';
+            atlDate = detailData.market_data.atl_date?.usd || '';
+            console.log(`📊 Real ATH/ATL for ${tokenId}: ATH $${ath} (${athDate}), ATL $${atl} (${atlDate})`);
+          } else {
+            console.warn(`⚠️ No market data found for ${tokenId}`);
             // Use fallback ATH/ATL if available
             const fallback = FALLBACK_PRICES[tokenId as keyof typeof FALLBACK_PRICES];
             if (fallback) {
               ath = fallback.ath || 0;
               atl = fallback.atl || 0;
+              console.log(`🔄 Using fallback ATH/ATL for ${tokenId}: ATH $${ath}, ATL $${atl}`);
             }
+          }
+        } catch (detailError) {
+          console.warn(`⚠️ Failed to fetch detailed data for ${tokenId}:`, detailError);
+          // Use fallback ATH/ATL if available
+          const fallback = FALLBACK_PRICES[tokenId as keyof typeof FALLBACK_PRICES];
+          if (fallback) {
+            ath = fallback.ath || 0;
+            atl = fallback.atl || 0;
+            console.log(`🔄 Using fallback ATH/ATL for ${tokenId}: ATH $${ath}, ATL $${atl}`);
           }
         }
       }
@@ -313,11 +335,13 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
           current_price: price,
           roi_value: roiValue,
           ath,
-          atl
+          atl,
+          ath_date: athDate,
+          atl_date: atlDate
         };
 
         // Store and cache the result
-        await storePrice(tokenId, price, roiValue, ath, atl);
+        await storePrice(tokenId, price, roiValue, ath, atl, athDate, atlDate);
         setCache(tokenId, result);
         return result;
       }

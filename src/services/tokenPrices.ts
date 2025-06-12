@@ -5,6 +5,10 @@ import { logError } from '../utils/errorLogger';
 export interface TokenPriceResponse {
   current_price: number;
   roi_value: number;
+  ath?: number;
+  atl?: number;
+  ath_date?: string;
+  atl_date?: string;
   error?: string;
 }
 
@@ -20,12 +24,12 @@ const RETRY_DELAY = 1000;
 
 // Fallback prices when API is not available
 const FALLBACK_PRICES = {
-  fuel: { price: 0.05, seedPrice: 0.02 },
-  silencio: { price: 0.0006, seedPrice: 0.0006 },
-  corn: { price: 0.07, seedPrice: 0.07 },
-  giza: { price: 0.045, seedPrice: 0.045 },
-  skate: { price: 0.08, seedPrice: 0.08 },
-  resolv: { price: 0.10, seedPrice: 0.10 }
+  fuel: { price: 0.05, seedPrice: 0.02, ath: 0.08, atl: 0.015 },
+  silencio: { price: 0.0006, seedPrice: 0.0006, ath: 0.001, atl: 0.0003 },
+  corn: { price: 0.07, seedPrice: 0.07, ath: 0.12, atl: 0.05 },
+  giza: { price: 0.045, seedPrice: 0.045, ath: 0.08, atl: 0.03 },
+  skate: { price: 0.08, seedPrice: 0.08, ath: 0.12, atl: 0.06 },
+  resolv: { price: 0.10, seedPrice: 0.10, ath: 0.15, atl: 0.08 }
 };
 
 // Clear old cache on startup
@@ -111,7 +115,7 @@ async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | nul
 
     const { data, error } = await supabase
       .from('token_prices')
-      .select('price, roi_value, updated_at')
+      .select('price, roi_value, ath, atl, updated_at')
       .eq('token_id', tokenId)
       .maybeSingle();
 
@@ -137,7 +141,9 @@ async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | nul
     console.log(`🗄️ Using Supabase cached price for ${tokenId}`);
     return {
       current_price: Number(data.price),
-      roi_value: Number(data.roi_value)
+      roi_value: Number(data.roi_value),
+      ath: data.ath ? Number(data.ath) : undefined,
+      atl: data.atl ? Number(data.atl) : undefined
     };
   } catch (error) {
     console.error('Error in getStoredPrice:', error);
@@ -146,32 +152,34 @@ async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | nul
 }
 
 // Store price in Supabase
-async function storePrice(tokenId: string, price: number, roiValue: number) {
+async function storePrice(tokenId: string, price: number, roiValue: number, ath?: number, atl?: number) {
   try {
     if (!isSupabaseAvailable) {
       console.warn(`⚠️ Cannot store price for ${tokenId} - Supabase not configured`);
       return;
     }
 
+    const updateData: any = {
+      token_id: tokenId,
+      price,
+      roi_value: roiValue,
+      updated_at: new Date().toISOString()
+    };
+
+    if (ath !== undefined) updateData.ath = ath;
+    if (atl !== undefined) updateData.atl = atl;
+
     const { error } = await supabase
       .from('token_prices')
-      .upsert(
-        {
-          token_id: tokenId,
-          price,
-          roi_value: roiValue,
-          updated_at: new Date().toISOString()
-        },
-        {
-          onConflict: 'token_id',
-          ignoreDuplicates: false
-        }
-      );
+      .upsert(updateData, {
+        onConflict: 'token_id',
+        ignoreDuplicates: false
+      });
 
     if (error && error.code !== '23505') {
       console.error('Error storing price in Supabase:', error);
     } else {
-      console.log(`💾 Stored price for ${tokenId} in Supabase`);
+      console.log(`💾 Stored price data for ${tokenId} in Supabase`);
     }
   } catch (error) {
     console.error('Error in storePrice:', error);
@@ -215,14 +223,16 @@ async function fetchTokenPrice(url: string, tokenId: string): Promise<any> {
 function getFallbackPrice(tokenId: string): TokenPriceResponse {
   const fallback = FALLBACK_PRICES[tokenId as keyof typeof FALLBACK_PRICES];
   if (!fallback) {
-    return { current_price: 0, roi_value: 1000 };
+    return { current_price: 0, roi_value: 1000, ath: 0, atl: 0 };
   }
   
   const roiValue = calculateRoi(fallback.price, fallback.seedPrice);
   console.log(`🔄 Using fallback price for ${tokenId}: $${fallback.price}`);
   return {
     current_price: fallback.price,
-    roi_value: roiValue
+    roi_value: roiValue,
+    ath: fallback.ath,
+    atl: fallback.atl
   };
 }
 
@@ -262,15 +272,38 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
 
     // Try to fetch fresh data from CoinGecko
     try {
-      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coingeckoId}&vs_currencies=usd`;
+      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coingeckoId}&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true`;
       const data = await fetchTokenPrice(url, tokenId);
       
       let price = 0;
+      let ath = 0;
+      let atl = 0;
+      
       if (data && typeof data === 'object') {
         const tokenData = data[coingeckoId];
         if (tokenData && typeof tokenData.usd === 'number') {
           price = tokenData.usd;
           console.log(`💲 Fresh price for ${tokenId}: $${price}`);
+          
+          // Fetch detailed data including ATH/ATL
+          try {
+            const detailUrl = `https://api.coingecko.com/api/v3/coins/${coingeckoId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
+            const detailData = await fetchTokenPrice(detailUrl, `${tokenId}-detail`);
+            
+            if (detailData?.market_data) {
+              ath = detailData.market_data.ath?.usd || 0;
+              atl = detailData.market_data.atl?.usd || 0;
+              console.log(`📊 ATH/ATL for ${tokenId}: ATH $${ath}, ATL $${atl}`);
+            }
+          } catch (detailError) {
+            console.warn(`⚠️ Failed to fetch ATH/ATL for ${tokenId}:`, detailError);
+            // Use fallback ATH/ATL if available
+            const fallback = FALLBACK_PRICES[tokenId as keyof typeof FALLBACK_PRICES];
+            if (fallback) {
+              ath = fallback.ath || 0;
+              atl = fallback.atl || 0;
+            }
+          }
         }
       }
       
@@ -278,11 +311,13 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
         const roiValue = calculateRoi(price, seedPrice);
         const result = {
           current_price: price,
-          roi_value: roiValue
+          roi_value: roiValue,
+          ath,
+          atl
         };
 
         // Store and cache the result
-        await storePrice(tokenId, price, roiValue);
+        await storePrice(tokenId, price, roiValue, ath, atl);
         setCache(tokenId, result);
         return result;
       }

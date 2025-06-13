@@ -24,13 +24,70 @@ const RETRY_DELAY = 1000;
 
 // Fallback prices when API is not available
 const FALLBACK_PRICES = {
-  fuel: { price: 0.05, seedPrice: 0.02, ath: 0.08, atl: 0.015 },
-  silencio: { price: 0.0006, seedPrice: 0.0006, ath: 0.001, atl: 0.0003 },
-  corn: { price: 0.07, seedPrice: 0.07, ath: 0.12, atl: 0.05 },
-  giza: { price: 0.045, seedPrice: 0.045, ath: 0.08, atl: 0.03 },
-  skate: { price: 0.08, seedPrice: 0.08, ath: 0.12, atl: 0.06 },
-  resolv: { price: 0.10, seedPrice: 0.10, ath: 0.15, atl: 0.08 }
+  fuel: { price: 0.05, seedPrice: 0.02 },
+  silencio: { price: 0.0006, seedPrice: 0.0006 },
+  corn: { price: 0.07, seedPrice: 0.07 },
+  giza: { price: 0.045, seedPrice: 0.045 },
+  skate: { price: 0.08, seedPrice: 0.08 },
+  resolv: { price: 0.10, seedPrice: 0.10 }
 };
+
+// Cache for ATH/ATL data - persisted in localStorage
+const ATH_ATL_CACHE_KEY = 'ath_atl_cache';
+const ATH_ATL_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
+interface ATHATLData {
+  ath?: number;
+  atl?: number;
+  ath_date?: string;
+  atl_date?: string;
+  timestamp: number;
+}
+
+// Get cached ATH/ATL data
+function getCachedATHATL(tokenId: string): { ath?: number; atl?: number; ath_date?: string; atl_date?: string } | null {
+  try {
+    const cached = localStorage.getItem(`${ATH_ATL_CACHE_KEY}_${tokenId}`);
+    if (!cached) return null;
+    
+    const data: ATHATLData = JSON.parse(cached);
+    const now = Date.now();
+    
+    // ATH/ATL data is valid for 24 hours
+    if (now - data.timestamp > ATH_ATL_CACHE_DURATION) {
+      localStorage.removeItem(`${ATH_ATL_CACHE_KEY}_${tokenId}`);
+      return null;
+    }
+    
+    console.log(`📦 Using cached ATH/ATL for ${tokenId}`);
+    return {
+      ath: data.ath,
+      atl: data.atl,
+      ath_date: data.ath_date,
+      atl_date: data.atl_date
+    };
+  } catch (error) {
+    console.error('Error reading ATH/ATL cache:', error);
+    return null;
+  }
+}
+
+// Cache ATH/ATL data
+function cacheATHATL(tokenId: string, ath?: number, atl?: number, ath_date?: string, atl_date?: string): void {
+  try {
+    const data: ATHATLData = {
+      ath,
+      atl,
+      ath_date,
+      atl_date,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(`${ATH_ATL_CACHE_KEY}_${tokenId}`, JSON.stringify(data));
+    console.log(`💾 Cached ATH/ATL for ${tokenId}`, { ath, atl });
+  } catch (error) {
+    console.error('Error caching ATH/ATL data:', error);
+  }
+}
 
 // Clear old cache on startup
 function clearOldCache() {
@@ -227,16 +284,22 @@ async function fetchTokenPrice(url: string, tokenId: string): Promise<any> {
 function getFallbackPrice(tokenId: string): TokenPriceResponse {
   const fallback = FALLBACK_PRICES[tokenId as keyof typeof FALLBACK_PRICES];
   if (!fallback) {
-    return { current_price: 0, roi_value: 1000, ath: 0, atl: 0 };
+    return { current_price: 0, roi_value: 1000 };
   }
   
   const roiValue = calculateRoi(fallback.price, fallback.seedPrice);
+  
+  // Try to get cached ATH/ATL data
+  const cachedATHATL = getCachedATHATL(tokenId);
+  
   console.log(`🔄 Using fallback price for ${tokenId}: $${fallback.price}`);
   return {
     current_price: fallback.price,
     roi_value: roiValue,
-    ath: fallback.ath,
-    atl: fallback.atl
+    ath: cachedATHATL?.ath,
+    atl: cachedATHATL?.atl,
+    ath_date: cachedATHATL?.ath_date,
+    atl_date: cachedATHATL?.atl_date
   };
 }
 
@@ -311,18 +374,63 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
       
       if (price > 0) {
         const roiValue = calculateRoi(price, seedPrice);
-        const fallback = FALLBACK_PRICES[tokenId as keyof typeof FALLBACK_PRICES];
+        
+        // Try to fetch detailed data including ATH/ATL
+        let ath, atl, ath_date, atl_date;
+        
+        try {
+          // Fetch detailed market data for ATH/ATL
+          const detailUrl = `https://api.coingecko.com/api/v3/coins/${coingeckoId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
+          const detailController = new AbortController();
+          const detailTimeoutId = setTimeout(() => detailController.abort(), 3000); // 3 second timeout for detailed data
+          
+          const detailResponse = await fetch(detailUrl, { 
+            signal: detailController.signal,
+            headers: {
+              'Accept': 'application/json',
+            }
+          });
+          clearTimeout(detailTimeoutId);
+          
+          if (detailResponse.ok) {
+            const detailData = await detailResponse.json();
+            
+            if (detailData.market_data) {
+              ath = detailData.market_data.ath?.usd;
+              atl = detailData.market_data.atl?.usd;
+              ath_date = detailData.market_data.ath_date?.usd;
+              atl_date = detailData.market_data.atl_date?.usd;
+              
+              // Cache the ATH/ATL data
+              if (ath || atl) {
+                cacheATHATL(tokenId, ath, atl, ath_date, atl_date);
+              }
+            }
+          }
+        } catch (detailError) {
+          console.warn(`⚠️ Failed to fetch ATH/ATL for ${tokenId}, using cached data:`, detailError);
+          // Use cached data if available
+          const cachedATHATL = getCachedATHATL(tokenId);
+          if (cachedATHATL) {
+            ath = cachedATHATL.ath;
+            atl = cachedATHATL.atl;
+            ath_date = cachedATHATL.ath_date;
+            atl_date = cachedATHATL.atl_date;
+          }
+        }
         
         const result = {
           current_price: price,
           roi_value: roiValue,
-          ath: fallback?.ath || 0,
-          atl: fallback?.atl || 0
+          ath,
+          atl,
+          ath_date,
+          atl_date
         };
 
         // Store and cache the result
         try {
-          await storePrice(tokenId, price, roiValue, result.ath, result.atl);
+          await storePrice(tokenId, price, roiValue, result.ath, result.atl, result.ath_date, result.atl_date);
         } catch (storeError) {
           console.warn(`⚠️ Failed to store price for ${tokenId}:`, storeError);
         }

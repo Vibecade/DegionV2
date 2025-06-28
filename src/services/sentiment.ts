@@ -2,6 +2,7 @@ import { TokenSentiment } from '../types';
 import { RateLimiter } from '../utils/rateLimiter';
 import { supabase, isSupabaseAvailable } from './supabaseClient';
 import { validateInput } from '../utils/security';
+import { useNotifications } from '../components/NotificationSystem';
 
 // Create rate limiters
 const voteRateLimiter = new RateLimiter(3, 60 * 1000); // 3 votes per minute (more restrictive)
@@ -73,7 +74,11 @@ export async function getTokenSentiment(tokenId: string): Promise<TokenSentiment
   }
 }
 
-export async function submitVote(tokenId: string, sentiment: 'rocket' | 'poop'): Promise<boolean> {
+export async function submitVote(
+  tokenId: string, 
+  sentiment: 'rocket' | 'poop',
+  onOptimisticUpdate?: (newSentiment: TokenSentiment) => void
+): Promise<boolean> {
   try {
     // Validate inputs
     if (!validateInput.tokenId(tokenId)) {
@@ -96,6 +101,17 @@ export async function submitVote(tokenId: string, sentiment: 'rocket' | 'poop'):
       throw new Error('Rate limit exceeded. Please try again later.');
     }
 
+    // Perform optimistic update if callback provided
+    if (onOptimisticUpdate) {
+      // Get current sentiment to calculate optimistic update
+      const currentSentiment = await getTokenSentiment(tokenId);
+      const optimisticSentiment = {
+        ...currentSentiment,
+        [sentiment]: currentSentiment[sentiment] + 1
+      };
+      onOptimisticUpdate(optimisticSentiment);
+    }
+
     const { error } = await supabase
       .from('token_sentiment')
       .insert({
@@ -107,9 +123,19 @@ export async function submitVote(tokenId: string, sentiment: 'rocket' | 'poop'):
     if (error) {
       if (error.code === '23505') { // Unique violation
         console.log('User has already voted for this token');
+        // Revert optimistic update
+        if (onOptimisticUpdate) {
+          const currentSentiment = await getTokenSentiment(tokenId);
+          onOptimisticUpdate(currentSentiment);
+        }
         return false;
       } else {
         console.error('Error submitting vote:', error);
+        // Revert optimistic update
+        if (onOptimisticUpdate) {
+          const currentSentiment = await getTokenSentiment(tokenId);
+          onOptimisticUpdate(currentSentiment);
+        }
         return false;
       }
     }
@@ -117,6 +143,15 @@ export async function submitVote(tokenId: string, sentiment: 'rocket' | 'poop'):
     return true;
   } catch (error) {
     console.error('Error in submitVote:', error);
+    // Revert optimistic update on error
+    if (onOptimisticUpdate) {
+      try {
+        const currentSentiment = await getTokenSentiment(tokenId);
+        onOptimisticUpdate(currentSentiment);
+      } catch (revertError) {
+        console.error('Failed to revert optimistic update:', revertError);
+      }
+    }
     return false;
   }
 }

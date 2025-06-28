@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { SEOHead } from '../components/SEOHead';
 import { TokenSentiment, Token } from '../types';
 import { getTokenSentiment, submitVote } from '../services/sentiment';
+import { useOptimisticUpdates } from '../hooks/useOptimisticUpdates';
+import { useNotifications } from '../components/NotificationSystem';
 import { getTokenPrice } from '../services/tokenPrices';
 import { fetchTokenDetails, fetchTokenSalesDetails } from '../services/tokenService';
 import { seoUtils } from '../utils/seo';
@@ -15,9 +17,10 @@ import { formatUSDC, formatNumber } from '../utils/formatters';
 
 export const TokenPage = () => {
   const { tokenId } = useParams();
+  const { addNotification } = useNotifications();
   const announce = useAnnouncement();
   const [token, setToken] = useState<Token | null>(null);
-  const [sentiment, setSentiment] = useState<TokenSentiment>({ rocket: 0, poop: 0 });
+  const [baseSentiment, setBaseSentiment] = useState<TokenSentiment>({ rocket: 0, poop: 0 });
   const [isVoting, setIsVoting] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
   const [voteError, setVoteError] = useState('');
@@ -30,6 +33,22 @@ export const TokenPage = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [saleData, setSaleData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Optimistic sentiment updates
+  const {
+    data: sentiment,
+    isOptimistic: isSentimentOptimistic,
+    error: sentimentError,
+    updateOptimistically: updateSentimentOptimistically,
+    resetError: resetSentimentError
+  } = useOptimisticUpdates(
+    baseSentiment,
+    async (newSentiment: TokenSentiment) => {
+      // This function should return the actual server data
+      // In practice, we'll handle this in the vote submission
+      return newSentiment;
+    }
+  );
 
   // Generate SEO data
   const seoTitle = token ? `${token.name} (${token.id.toUpperCase()}) - Legion ICO Performance | Degion.xyz` : 'Token Not Found | Degion.xyz';
@@ -67,7 +86,7 @@ export const TokenPage = () => {
         // Load sentiment data
         try {
           const sentimentData = await getTokenSentiment(tokenId);
-          setSentiment(sentimentData);
+          setBaseSentiment(sentimentData);
         } catch (sentimentError) {
           console.warn(`Failed to fetch sentiment for ${tokenId}:`, sentimentError);
         }
@@ -151,7 +170,7 @@ export const TokenPage = () => {
     if (!tokenId) return;
     try {
       const data = await getTokenSentiment(tokenId);
-      setSentiment(data);
+      setBaseSentiment(data);
     } catch (error) {
       console.warn('Failed to load sentiment:', error);
     }
@@ -162,17 +181,50 @@ export const TokenPage = () => {
 
     setIsVoting(true);
     setVoteError('');
+    resetSentimentError();
+
+    // Calculate optimistic sentiment update
+    const optimisticSentiment = {
+      ...sentiment,
+      [type]: sentiment[type] + 1
+    };
 
     try {
-      const success = await submitVote(tokenId, type);
+      // Update UI optimistically
+      await updateSentimentOptimistically(optimisticSentiment);
+      
+      const success = await submitVote(tokenId, type, (newSentiment) => {
+        // This callback handles both optimistic updates and reverts
+        updateSentimentOptimistically(newSentiment);
+      });
+      
       if (success) {
         setHasVoted(true);
-        await loadSentiment();
+        // Refresh actual sentiment data
+        const actualSentiment = await getTokenSentiment(tokenId);
+        setBaseSentiment(actualSentiment);
+        await updateSentimentOptimistically(actualSentiment);
+        
+        addNotification({
+          type: 'success',
+          title: 'Vote Submitted',
+          message: `Your ${type === 'rocket' ? 'bullish' : 'bearish'} vote has been recorded!`
+        });
       } else {
         setVoteError('You have already voted for this token today');
+        addNotification({
+          type: 'warning',
+          title: 'Already Voted',
+          message: 'You have already voted for this token today'
+        });
       }
     } catch (error) {
       setVoteError('Failed to submit vote. Please try again later.');
+      addNotification({
+        type: 'error',
+        title: 'Vote Failed',
+        message: 'Failed to submit your vote. Please try again later.'
+      });
     } finally {
       setIsVoting(false);
     }
@@ -463,25 +515,54 @@ export const TokenPage = () => {
             <div className="glass-panel p-6 rounded-lg">
               <h2 className="text-xl font-bold text-[#00ffee] mb-6 font-orbitron">Community Sentiment</h2>
               
+              {/* Show optimistic state indicator */}
+              {isSentimentOptimistic && (
+                <div className="mb-4 p-2 bg-blue-500/20 border border-blue-500/30 rounded-lg text-blue-400 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                    Updating vote...
+                  </div>
+                </div>
+              )}
+              
+              {/* Show sentiment error */}
+              {sentimentError && (
+                <div className="mb-4 p-2 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                  {sentimentError}
+                  <button 
+                    onClick={resetSentimentError}
+                    className="ml-2 underline hover:no-underline"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
+              
               <div className="flex justify-center space-x-4 mb-6">
                 <button 
-                  className={`flex-1 py-3 px-4 rounded-lg text-white transition-all ${
+                  className={`flex-1 py-3 px-4 rounded-lg text-white transition-all relative ${
                     hasVoted ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
-                  } ${isVoting ? 'animate-pulse' : ''} bg-green-500/20 border border-green-500/30 hover:bg-green-500/30`}
+                  } ${isVoting || isSentimentOptimistic ? 'animate-pulse' : ''} bg-green-500/20 border border-green-500/30 hover:bg-green-500/30`}
                   onClick={() => handleVote('rocket')}
-                  disabled={hasVoted || isVoting}
+                  disabled={hasVoted || isVoting || isSentimentOptimistic}
                   title={hasVoted ? 'Already voted' : 'Vote Rocket'}
                 >
+                  {isSentimentOptimistic && (
+                    <div className="absolute inset-0 bg-green-500/10 rounded-lg animate-pulse"></div>
+                  )}
                   🚀 Bullish
                 </button>
                 <button 
-                  className={`flex-1 py-3 px-4 rounded-lg text-white transition-all ${
+                  className={`flex-1 py-3 px-4 rounded-lg text-white transition-all relative ${
                     hasVoted ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
-                  } ${isVoting ? 'animate-pulse' : ''} bg-red-500/20 border border-red-500/30 hover:bg-red-500/30`}
+                  } ${isVoting || isSentimentOptimistic ? 'animate-pulse' : ''} bg-red-500/20 border border-red-500/30 hover:bg-red-500/30`}
                   onClick={() => handleVote('poop')}
-                  disabled={hasVoted || isVoting}
+                  disabled={hasVoted || isVoting || isSentimentOptimistic}
                   title={hasVoted ? 'Already voted' : 'Vote Poop'}
                 >
+                  {isSentimentOptimistic && (
+                    <div className="absolute inset-0 bg-red-500/10 rounded-lg animate-pulse"></div>
+                  )}
                   💩 Bearish
                 </button>
               </div>
@@ -496,11 +577,15 @@ export const TokenPage = () => {
                 <div>
                   <div className="flex justify-between text-sm mb-2">
                     <span>🚀 Bullish ({sentiment.rocket} votes)</span>
-                    <span>{rocketPercentage.toFixed(1)}%</span>
+                    <span className={isSentimentOptimistic ? 'text-blue-400' : ''}>
+                      {rocketPercentage.toFixed(1)}%
+                    </span>
                   </div>
                   <div className="w-full bg-black/30 rounded-full h-2">
                     <div 
-                      className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                      className={`h-2 rounded-full transition-all duration-500 ${
+                        isSentimentOptimistic ? 'bg-green-400 animate-pulse' : 'bg-green-500'
+                      }`}
                       style={{ width: `${rocketPercentage}%` }}
                     ></div>
                   </div>
@@ -509,18 +594,29 @@ export const TokenPage = () => {
                 <div>
                   <div className="flex justify-between text-sm mb-2">
                     <span>💩 Bearish ({sentiment.poop} votes)</span>
-                    <span>{poopPercentage.toFixed(1)}%</span>
+                    <span className={isSentimentOptimistic ? 'text-blue-400' : ''}>
+                      {poopPercentage.toFixed(1)}%
+                    </span>
                   </div>
                   <div className="w-full bg-black/30 rounded-full h-2">
                     <div 
-                      className="bg-red-500 h-2 rounded-full transition-all duration-500"
+                      className={`h-2 rounded-full transition-all duration-500 ${
+                        isSentimentOptimistic ? 'bg-red-400 animate-pulse' : 'bg-red-500'
+                      }`}
                       style={{ width: `${poopPercentage}%` }}
                     ></div>
                   </div>
                 </div>
 
                 <div className="text-center text-sm text-gray-400 mt-4 p-2 bg-black/20 rounded-lg">
-                  {totalVotes} total votes in the last 24h
+                  <span className={isSentimentOptimistic ? 'text-blue-400' : ''}>
+                    {totalVotes} total votes in the last 24h
+                  </span>
+                  {isSentimentOptimistic && (
+                    <div className="text-xs text-blue-400 mt-1">
+                      (updating...)
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

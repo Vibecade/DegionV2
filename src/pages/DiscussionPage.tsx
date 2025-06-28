@@ -4,18 +4,21 @@ import { tokens } from '../data/tokens';
 import { SEOHead } from '../components/SEOHead';
 import { getDiscussions, createDiscussion, addComment } from '../services/discussion';
 import { useAnnouncement } from '../hooks/useAccessibility';
+import { useNotifications } from '../components/NotificationSystem';
 import { MessageSquarePlus, MessageCircle, ArrowLeft, ChevronRight } from 'lucide-react';
 
 export const DiscussionPage = () => {
   const { tokenId } = useParams();
   const token = tokens.find(t => t.id.toLowerCase() === tokenId?.toLowerCase());
   const announce = useAnnouncement();
+  const { addNotification } = useNotifications();
   const [discussions, setDiscussions] = useState<any[]>([]);
   const [newDiscussion, setNewDiscussion] = useState({ title: '', content: '' });
   const [newComment, setNewComment] = useState('');
   const [selectedDiscussion, setSelectedDiscussion] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [optimisticComments, setOptimisticComments] = useState<{ [discussionId: string]: any[] }>({});
 
   // Generate SEO data
   const seoTitle = token ? `${token.name} Discussions - Community Sentiment & Analysis | Degion.xyz` : 'Token Not Found | Degion.xyz';
@@ -46,13 +49,50 @@ export const DiscussionPage = () => {
     e.preventDefault();
     if (!tokenId || !newDiscussion.title || !newDiscussion.content) return;
 
+    // Create optimistic discussion
+    const optimisticDiscussion = {
+      id: `temp-${Date.now()}`,
+      token_id: tokenId,
+      title: newDiscussion.title,
+      content: newDiscussion.content,
+      author_ip: 'temp',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      comments: [],
+      isOptimistic: true
+    };
+
+    // Add optimistic discussion to UI
+    setDiscussions(prev => [optimisticDiscussion, ...prev]);
+    setNewDiscussion({ title: '', content: '' });
+    
+    addNotification({
+      type: 'info',
+      title: 'Creating Discussion',
+      message: 'Your discussion is being created...'
+    });
+
     try {
       await createDiscussion(tokenId, newDiscussion.title, newDiscussion.content);
-      setNewDiscussion({ title: '', content: '' });
       await loadDiscussions();
+      
+      addNotification({
+        type: 'success',
+        title: 'Discussion Created',
+        message: 'Your discussion has been created successfully!'
+      });
       announce('Discussion created successfully', 'polite');
     } catch (err) {
+      // Remove optimistic discussion on error
+      setDiscussions(prev => prev.filter(d => d.id !== optimisticDiscussion.id));
+      setNewDiscussion({ title: newDiscussion.title, content: newDiscussion.content });
+      
       setError('Failed to create discussion');
+      addNotification({
+        type: 'error',
+        title: 'Failed to Create Discussion',
+        message: 'There was an error creating your discussion. Please try again.'
+      });
       announce('Failed to create discussion', 'assertive');
     }
   };
@@ -60,14 +100,72 @@ export const DiscussionPage = () => {
   const handleAddComment = async (discussionId: string) => {
     if (!newComment) return;
 
+    // Create optimistic comment
+    const optimisticComment = {
+      id: `temp-${Date.now()}`,
+      discussion_id: discussionId,
+      content: newComment,
+      author_ip: 'temp',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      isOptimistic: true
+    };
+
+    // Add optimistic comment to UI
+    setOptimisticComments(prev => ({
+      ...prev,
+      [discussionId]: [...(prev[discussionId] || []), optimisticComment]
+    }));
+    
+    const commentText = newComment;
+    setNewComment('');
+    setSelectedDiscussion(null);
+    
+    addNotification({
+      type: 'info',
+      title: 'Adding Comment',
+      message: 'Your comment is being added...'
+    });
+
     try {
-      await addComment(discussionId, newComment);
-      setNewComment('');
-      setSelectedDiscussion(null);
+      await addComment(discussionId, commentText, (comment) => {
+        if (comment.shouldRemove) {
+          // Remove optimistic comment on error
+          setOptimisticComments(prev => ({
+            ...prev,
+            [discussionId]: (prev[discussionId] || []).filter(c => c.id !== comment.id)
+          }));
+        }
+      });
+      
+      // Clear optimistic comment and reload actual data
+      setOptimisticComments(prev => ({
+        ...prev,
+        [discussionId]: []
+      }));
       await loadDiscussions();
+      
+      addNotification({
+        type: 'success',
+        title: 'Comment Added',
+        message: 'Your comment has been added successfully!'
+      });
       announce('Comment added successfully', 'polite');
     } catch (err) {
+      // Remove optimistic comment and restore form
+      setOptimisticComments(prev => ({
+        ...prev,
+        [discussionId]: (prev[discussionId] || []).filter(c => c.id !== optimisticComment.id)
+      }));
+      setNewComment(commentText);
+      setSelectedDiscussion(discussionId);
+      
       setError('Failed to add comment');
+      addNotification({
+        type: 'error',
+        title: 'Failed to Add Comment',
+        message: 'There was an error adding your comment. Please try again.'
+      });
       announce('Failed to add comment', 'assertive');
     }
   };
@@ -173,8 +271,18 @@ export const DiscussionPage = () => {
             {discussions.map((discussion) => (
               <div
                 key={discussion.id}
-                className="glass-panel rounded-lg p-6 hover-card"
+                className={`glass-panel rounded-lg p-6 hover-card ${
+                  discussion.isOptimistic ? 'opacity-75 animate-pulse border-blue-500/30' : ''
+                }`}
               >
+                {discussion.isOptimistic && (
+                  <div className="mb-3 p-2 bg-blue-500/20 border border-blue-500/30 rounded text-blue-400 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                      Creating discussion...
+                    </div>
+                  </div>
+                )}
                 <h3 className="text-xl font-bold text-[#00ffee] mb-2 font-orbitron">{discussion.title}</h3>
                 <p className="text-gray-300 mb-4 bg-black/20 p-3 rounded-lg border border-[rgba(0,255,238,0.05)]">{discussion.content}</p>
                 <div className="text-sm text-gray-400 mb-4">
@@ -182,9 +290,11 @@ export const DiscussionPage = () => {
                 </div>
 
                 {/* Comments */}
-                {discussion.comments && discussion.comments.length > 0 && (
+                {(discussion.comments?.length > 0 || optimisticComments[discussion.id]?.length > 0) && (
                   <div className="ml-8 space-y-4 mb-4">
                     <h4 className="text-sm font-semibold text-gray-300 mb-2">Comments</h4>
+                    
+                    {/* Real comments */}
                     {discussion.comments.map((comment: any) => (
                       <div
                         key={comment.id}
@@ -193,6 +303,23 @@ export const DiscussionPage = () => {
                         <p className="text-gray-300">{comment.content}</p>
                         <div className="text-xs text-gray-400 mt-2">
                           {new Date(comment.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Optimistic comments */}
+                    {optimisticComments[discussion.id]?.map((comment: any) => (
+                      <div
+                        key={comment.id}
+                        className="bg-black/20 border border-blue-500/30 rounded-lg p-4 opacity-75 animate-pulse"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                          <span className="text-blue-400 text-xs">Adding comment...</span>
+                        </div>
+                        <p className="text-gray-300">{comment.content}</p>
+                        <div className="text-xs text-gray-400 mt-2">
+                          Just now
                         </div>
                       </div>
                     ))}

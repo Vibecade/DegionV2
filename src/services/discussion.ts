@@ -123,7 +123,11 @@ export async function createDiscussion(tokenId: string, title: string, content: 
   return data;
 }
 
-export async function addComment(discussionId: string, content: string) {
+export async function addComment(
+  discussionId: string, 
+  content: string,
+  onOptimisticUpdate?: (comment: any) => void
+) {
   // Validate inputs
   if (!discussionId || typeof discussionId !== 'string') {
     throw new Error('Invalid discussion ID');
@@ -151,21 +155,49 @@ export async function addComment(discussionId: string, content: string) {
     throw new Error('Comment content is required');
   }
 
-  const { data, error } = await supabase
-    .from('comments')
-    .insert({
-      discussion_id: discussionId,
-      content: sanitizedContent,
-      author_ip: authorIp
-    })
-    .select()
-    .single();
+  // Create optimistic comment
+  const optimisticComment = {
+    id: `temp-${Date.now()}`,
+    discussion_id: discussionId,
+    content: sanitizedContent,
+    author_ip: authorIp,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    isOptimistic: true
+  };
 
-  if (error) {
-    console.error('Error adding comment:', error);
-    throw error;
+  // Perform optimistic update
+  if (onOptimisticUpdate) {
+    onOptimisticUpdate(optimisticComment);
   }
 
-  console.log(`💬 Added comment to discussion ${discussionId}`);
-  return data;
+  try {
+    const { data, error } = await supabase
+      .from('comments')
+      .insert({
+        discussion_id: discussionId,
+        content: sanitizedContent,
+        author_ip: authorIp
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding comment:', error);
+      // Signal to remove optimistic comment
+      if (onOptimisticUpdate) {
+        onOptimisticUpdate({ ...optimisticComment, shouldRemove: true });
+      }
+      throw error;
+    }
+
+    console.log(`💬 Added comment to discussion ${discussionId}`);
+    return data;
+  } catch (error) {
+    // Remove optimistic comment on error
+    if (onOptimisticUpdate) {
+      onOptimisticUpdate({ ...optimisticComment, shouldRemove: true });
+    }
+    throw error;
+  }
 }

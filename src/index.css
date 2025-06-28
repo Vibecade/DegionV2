@@ -56,9 +56,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
 
 /* Enhanced Token card styles with liquid glass */
 .grid-item {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   backdrop-filter: blur(20px) saturate(180%);
   background: linear-gradient(135deg, 
@@ -74,6 +72,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
     inset 0 -1px 0 rgba(255, 255, 255, 0.05);
   will-change: transform;
   contain: layout style paint;
+  transform: translateZ(0); /* Force hardware acceleration */
 }
 
 .grid-item::before {
@@ -121,7 +120,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
 }
 
 .grid-item:hover {
-  transform: translateY(-12px) scale(1.03);
+  transform: translate3d(0, -8px, 0) scale(1.02);
   backdrop-filter: blur(25px) saturate(200%);
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.12) 0%,
@@ -147,8 +146,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
 
 /* Enhanced Token logo animation */
 .token-logo {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 
     0 0 20px rgba(255, 0, 240, 0.3),
     0 0 40px rgba(0, 255, 238, 0.1);
@@ -156,6 +154,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
   border-radius: 50%;
   overflow: hidden;
   will-change: transform;
+  transform: translateZ(0); /* Force hardware acceleration */
 }
 
 .token-logo::before {
@@ -190,7 +189,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
 }
 
 .grid-item:hover .token-logo {
-  transform: scale(1.2) rotate(8deg);
+  transform: translate3d(0, 0, 0) scale(1.15) rotate(6deg);
   box-shadow: 
     0 0 30px rgba(255, 0, 240, 0.5),
     0 0 60px rgba(0, 255, 238, 0.3),
@@ -453,11 +452,13 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
   border-radius: 20px;
   position: relative;
   overflow: hidden;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .glass-panel::before {
@@ -514,7 +515,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
     0 0 100px rgba(0, 255, 238, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-  transform: translateY(-4px);
+  transform: translate3d(0, -4px, 0);
 }
 
 /* Enhanced vesting styles with liquid glass */
@@ -870,7 +871,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
     rgba(0, 255, 238, 0.6) 0%, 
     rgba(55, 255, 252, 0.6) 100%);
   border-radius: 6px;
-  transition: background 0.4s ease;
+  transition: background 0.2s ease;
   box-shadow: 
     0 0 10px rgba(0, 255, 238, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -887,7 +888,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
 
 /* Enhanced Card hover effects */
 .hover-card {
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   backdrop-filter: blur(15px) saturate(150%);
   background: linear-gradient(135deg, 
@@ -897,6 +898,8 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
   box-shadow: 
     0 4px 16px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .hover-card::before {
@@ -919,7 +922,7 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
 }
 
 .hover-card:hover {
-  transform: translateY(-6px) scale(1.02);
+  transform: translate3d(0, -4px, 0) scale(1.01);
   backdrop-filter: blur(20px) saturate(180%);
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.12) 0%,
@@ -1107,15 +1110,24 @@ button, input, select, textarea, a {
   }
   
   .grid-item:hover {
-    transform: translateY(-6px) scale(1.01);
+    transform: translate3d(0, -4px, 0) scale(1.01);
   }
   
   .hover-card:hover {
-    transform: translateY(-4px) scale(1.01);
+    transform: translate3d(0, -2px, 0) scale(1.01);
   }
   
   .back-to-top-button {
     @apply bottom-4 right-4 p-3;
+  }
+  
+  /* Reduce animations on mobile for better performance */
+  .grid-item::after {
+    animation: none !important;
+  }
+  
+  .token-logo::before {
+    animation: none !important;
   }
 }
 
@@ -1194,6 +1206,15 @@ button, input, select, textarea, a {
   
   .grid-item::after {
     animation: none !important;
+  }
+  
+  /* Force hardware acceleration off for reduced motion */
+  .grid-item,
+  .token-logo,
+  .glass-panel,
+  .hover-card {
+    transform: none !important;
+    will-change: auto !important;
   }
 }
 

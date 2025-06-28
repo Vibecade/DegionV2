@@ -3,6 +3,7 @@ import { TokenCard } from './TokenCard';
 import { TokenCardSkeleton } from './TokenCardSkeleton';
 import { Token } from '../types';
 import { Search, Grid, List, BarChart3 } from 'lucide-react';
+import { scheduleWork } from '../utils/performance';
 
 interface TokenGridProps {
   tokens: Token[];
@@ -22,6 +23,7 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [itemsPerPage, setItemsPerPage] = useState(12);
   const [currentPage, setCurrentPage] = useState(1);
+  const [renderBatch, setRenderBatch] = useState(6); // Render tokens in batches
 
   // Filter tokens based on search and status
   const filteredTokens = useMemo(() => {
@@ -36,8 +38,34 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
   // Paginate tokens
   const paginatedTokens = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredTokens.slice(startIndex, startIndex + itemsPerPage);
+    const endIndex = startIndex + itemsPerPage;
+    return filteredTokens.slice(startIndex, endIndex);
   }, [filteredTokens, currentPage, itemsPerPage]);
+
+  // Batch render tokens for better performance
+  const visibleTokens = useMemo(() => {
+    return paginatedTokens.slice(0, renderBatch);
+  }, [paginatedTokens, renderBatch]);
+
+  // Progressively load more tokens
+  React.useEffect(() => {
+    if (renderBatch < paginatedTokens.length) {
+      const timeoutId = scheduleWork(() => {
+        setRenderBatch(prev => Math.min(prev + 3, paginatedTokens.length));
+      });
+      
+      return () => {
+        if (typeof timeoutId === 'number') {
+          clearTimeout(timeoutId);
+        }
+      };
+    }
+  }, [renderBatch, paginatedTokens.length]);
+
+  // Reset batch when tokens change
+  React.useEffect(() => {
+    setRenderBatch(6);
+  }, [paginatedTokens]);
 
   const totalPages = Math.ceil(filteredTokens.length / itemsPerPage);
 
@@ -149,12 +177,20 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
           : viewMode === 'list'
           ? 'grid-cols-1'
           : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
-      }`}>
-        {paginatedTokens.map((token, index) => (
+      } will-change-contents`}>
+        {visibleTokens.map((token, index) => (
           <div key={token.id} className="stagger-animation" style={{ animationDelay: `${index * 0.1}s` }}>
             <TokenCard token={token} viewMode={viewMode} />
           </div>
         ))}
+        {/* Show skeletons for remaining tokens being loaded */}
+        {renderBatch < paginatedTokens.length && 
+          Array.from({ length: Math.min(3, paginatedTokens.length - renderBatch) }).map((_, index) => (
+            <div key={`skeleton-${index}`} className="stagger-animation">
+              <TokenCardSkeleton />
+            </div>
+          ))
+        }
       </div>
 
       {/* Pagination */}

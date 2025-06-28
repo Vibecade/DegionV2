@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Token } from '../types';
 import { logError } from '../utils/errorLogger';
-import { useEffect, useState, useMemo, useCallback, memo } from 'react';
+import { useEffect, useState, useMemo, useCallback, memo, useRef } from 'react';
 import { getFuelPrice, getSilencioPrice, getCornPrice, getGizaPrice, getSkatePrice, getResolvPrice } from '../services/tokenPrices';
 import { fetchTokenHolders, fetchTradingVolume } from '../services/duneApi';
 import { getTokenInfo } from '../services/tokenInfo';
@@ -9,6 +9,7 @@ import { ArrowUpRight, Users, Wallet, LineChart, TrendingUp, Info } from 'lucide
 import { salesData } from '../data/sales';
 import { formatUSDC, formatNumber } from '../utils/formatters';
 import { VestingTimer } from './VestingTimer';
+import { lazyImageLoader } from '../utils/performance';
 
 interface TokenCardProps {
   token: Token;
@@ -16,6 +17,11 @@ interface TokenCardProps {
 }
 
 const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
+  const cardRef = useRef<HTMLAnchorElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+
   const {
     id,
     name,
@@ -53,6 +59,39 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
     [name]
   );
 
+  // Intersection observer for lazy loading and performance
+  useEffect(() => {
+    if (!cardRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsInView(true);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        rootMargin: '50px 0px',
+        threshold: 0.1
+      }
+    );
+
+    observer.observe(cardRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  // Optimize image loading
+  useEffect(() => {
+    if (imageRef.current && isInView) {
+      lazyImageLoader.observe(imageRef.current);
+    }
+  }, [isInView]);
+
   // Check if token is launching within 24 hours
   useEffect(() => {
     if (!currentLaunchDate || currentStatus !== 'Pending TGE') return;
@@ -66,6 +105,8 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
 
   // Update token data from Legion API
   useEffect(() => {
+    if (!isInView) return; // Only fetch data when card is in view
+
     const fetchTokenInfo = async () => {
       try {
         const tokenInfo = await getTokenInfo(id);
@@ -82,11 +123,12 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
     };
 
     fetchTokenInfo();
-  }, [id]);
+  }, [id, isInView]);
 
   // Fetch Dune Analytics data
   useEffect(() => {
-    if (saleData?.address) {
+    if (!isInView || !saleData?.address) return;
+
       const fetchDuneData = async () => {
         try {
           const [holdersCount, tradingVolume] = await Promise.all([
@@ -100,8 +142,7 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
         }
       };
       fetchDuneData();
-    }
-  }, [id, saleData]);
+  }, [id, saleData, isInView]);
 
   // Get live price data for tokens that are trading
   const fetchPrice = useCallback(async () => {
@@ -155,7 +196,7 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
 
   useEffect(() => {
     const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv'];
-    if (supportedTokens.includes(id.toLowerCase())) {
+    if (supportedTokens.includes(id.toLowerCase()) && isInView) {
       fetchPrice();
       // Stagger intervals to avoid hitting rate limits
       const baseInterval = 120000; // 2 minutes base
@@ -163,7 +204,7 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
       const interval = setInterval(fetchPrice, baseInterval + stagger);
       return () => clearInterval(interval);
     }
-  }, [id, fetchPrice]);
+  }, [id, fetchPrice, isInView]);
 
   const roiNum = parseFloat(roi);
   const roiColorClass = !isNaN(roiNum) 
@@ -179,11 +220,13 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
   if (viewMode === 'list') {
     return (
       <Link 
+        ref={cardRef}
         to={`/${id}`}
         aria-label={`View details for ${name}`}
-        className="grid-item flex items-center p-4 sm:p-6 bg-black/30 rounded-lg group transition-all duration-300 hover:scale-[1.01]"
+        className="grid-item flex items-center p-4 sm:p-6 bg-black/30 rounded-lg group transition-transform duration-200 will-change-transform hover:scale-[1.01]"
       >
         <img 
+          ref={imageRef}
           src={(() => {
             const tokenId = id.toLowerCase();
             if (tokenId === 'fragmetric') {
@@ -195,8 +238,9 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
             }
           })()}
           alt={`${name} Logo`}
-          className="token-logo w-12 h-12 rounded-full mr-4 transition-all duration-300"
+          className={`token-logo w-12 h-12 rounded-full mr-4 transition-transform duration-200 will-change-transform ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           loading="lazy"
+          onLoad={() => setImageLoaded(true)}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.onerror = null;
@@ -251,12 +295,14 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
   if (viewMode === 'compact') {
     return (
       <Link 
+        ref={cardRef}
         to={`/${id}`}
         aria-label={`View details for ${name}`}
-        className="grid-item flex flex-col p-3 bg-black/30 rounded-lg group transition-all duration-300 hover:scale-[1.02]"
+        className="grid-item flex flex-col p-3 bg-black/30 rounded-lg group transition-transform duration-200 will-change-transform hover:scale-[1.02]"
       >
         <div className="flex items-center mb-2">
           <img 
+            ref={imageRef}
             src={(() => {
               const tokenId = id.toLowerCase();
               if (tokenId === 'fragmetric') {
@@ -268,8 +314,9 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
               }
             })()}
             alt={`${name} Logo`}
-            className="token-logo w-8 h-8 rounded-full mr-2"
+            className={`token-logo w-8 h-8 rounded-full mr-2 transition-opacity duration-200 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
             loading="lazy"
+            onLoad={() => setImageLoaded(true)}
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.onerror = null;
@@ -322,12 +369,14 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
 
   return (
     <Link 
+      ref={cardRef}
       to={`/${id}`}
       aria-label={`View details for ${name}`}
-      className="grid-item flex flex-col items-center p-4 sm:p-6 bg-black/30 rounded-lg group transition-all duration-300 hover:scale-[1.02]"
+      className="grid-item flex flex-col items-center p-4 sm:p-6 bg-black/30 rounded-lg group transition-transform duration-200 will-change-transform hover:scale-[1.02]"
     >
       <div className="flex items-center mb-4 relative w-full">
         <img 
+          ref={imageRef}
           src={(() => {
             const tokenId = id.toLowerCase();
             if (tokenId === 'fragmetric') {
@@ -340,8 +389,9 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
             }
           })()}
           alt={`${name} Logo`}
-          className="token-logo w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] rounded-full mr-3 transition-all duration-300"
+          className={`token-logo w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] rounded-full mr-3 transition-transform duration-200 will-change-transform ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           loading="lazy"
+          onLoad={() => setImageLoaded(true)}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.onerror = null;

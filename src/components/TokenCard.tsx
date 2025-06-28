@@ -430,11 +430,13 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
         <img 
           ref={imageRef}
           src={isInView ? getTokenImageSrc(id) : undefined}
-          src={isInView ? getTokenImageSrc(id) : undefined}
           alt={`${name} Logo`}
           className={`token-logo w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] rounded-full mr-3 transition-all duration-300 will-change-transform ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
           } ${imageError ? 'bg-gray-700' : ''}`}
+          loading="lazy"
+          decoding="async"
+        />
         
         {/* Loading placeholder for grid view */}
         {!imageLoaded && (
@@ -443,8 +445,8 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
           </div>
         )}
         
-          loading="lazy"
-          decoding="async"
+        <div className="flex-1 min-w-0">
+          <span className="text-lg sm:text-xl font-semibold text-[#cfd0d1] block truncate font-orbitron">
             {name} ({id.toUpperCase()})
           </span>
           <span className={`badge ${

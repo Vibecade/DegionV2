@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Token } from '../types';
 import { logError } from '../utils/errorLogger';
 import { useEffect, useState, useMemo, useCallback, memo, useRef } from 'react';
-import { getFuelPrice, getSilencioPrice, getCornPrice, getGizaPrice, getSkatePrice, getResolvPrice } from '../services/tokenPrices';
+import { getFuelPrice, getSilencioPrice, getCornPrice, getGizaPrice, getSkatePrice, getResolvPrice, clearAllPriceCaches } from '../services/tokenPrices';
 import { fetchTokenHolders, fetchTradingVolume } from '../services/duneApi';
 import { getTokenInfo } from '../services/tokenInfo';
 import { ArrowUpRight, Users, Wallet, LineChart, TrendingUp, Info } from 'lucide-react';
@@ -165,6 +165,12 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
     const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv', 'session'];
     if (!supportedTokens.includes(id.toLowerCase())) {
       return;
+    }
+    
+    // For debugging corn specifically
+    if (id.toLowerCase() === 'corn') {
+      console.log('🌽 Clearing corn cache before fetch...');
+      clearAllPriceCaches();
     }
     
     setIsLoading(true);

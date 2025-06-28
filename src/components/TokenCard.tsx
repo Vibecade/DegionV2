@@ -125,7 +125,11 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
         if (tokenInfo) {
           if (tokenInfo.status) setCurrentStatus(tokenInfo.status);
           if (tokenInfo.launchDate) setCurrentLaunchDate(tokenInfo.launchDate);
-          if (tokenInfo.vestingEnd) setCurrentVestingEnd(tokenInfo.vestingEnd);
+            case 'corn': 
+              console.log(`🌽 Fetching Corn price data...`);
+              const cornData = await getCornPrice();
+              console.log(`🌽 Corn price response:`, cornData);
+              return cornData;
         }
       } catch (error) {
         handleError(error as Error, 'loadData');

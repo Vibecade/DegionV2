@@ -407,16 +407,23 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
               cacheATHATL(tokenId, ath, atl, ath_date, atl_date);
             }
           }
+        console.log(`🔍 Fetching from URL: ${url}`);
         } catch (detailError) {
           console.warn(`⚠️ Failed to fetch ATH/ATL for ${tokenId} (${coingeckoId}):`, detailError);
           // Use cached data if available
           const cachedATHATL = getCachedATHATL(tokenId);
           if (cachedATHATL) {
+          console.log(`🔍 Full API response for ${tokenId}:`, JSON.stringify(data, null, 2));
             ath = cachedATHATL.ath;
+          console.log(`🔍 Token data for ${coingeckoId}:`, tokenData);
             atl = cachedATHATL.atl;
             ath_date = cachedATHATL.ath_date;
             atl_date = cachedATHATL.atl_date;
+          } else {
+            console.warn(`⚠️ Invalid token data structure for ${tokenId}:`, tokenData);
           }
+        } else {
+          console.warn(`⚠️ Invalid API response for ${tokenId}:`, data);
         }
         
         const result = {
@@ -462,6 +469,8 @@ export async function getSilencioPrice(): Promise<TokenPriceResponse> {
 }
 
 export async function getCornPrice(): Promise<TokenPriceResponse> {
+  // Clear any cached data for corn to force fresh fetch
+  secureStorage.removeItem(getCacheKey('corn'));
   return getTokenPrice('corn', 0.07, 'corn-3');
 }
 
@@ -479,4 +488,14 @@ export async function getResolvPrice(): Promise<TokenPriceResponse> {
 
 export async function getSessionPrice(): Promise<TokenPriceResponse> {
   return getTokenPrice('session', 0.20, 'session');
+}
+
+// Debug function to clear all price caches
+export function clearAllPriceCaches(): void {
+  const tokens = ['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv', 'session'];
+  tokens.forEach(tokenId => {
+    secureStorage.removeItem(getCacheKey(tokenId));
+    secureStorage.removeItem(`${ATH_ATL_CACHE_KEY}_${tokenId}`);
+  });
+  console.log('🗑️ Cleared all price caches');
 }

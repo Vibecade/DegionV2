@@ -462,7 +462,7 @@ export async function getSilencioPrice(): Promise<TokenPriceResponse> {
 }
 
 export async function getCornPrice(): Promise<TokenPriceResponse> {
-  return getTokenPrice('corn', 0.07, 'corn');
+  return getTokenPrice('corn', 0.07, 'corn-3');
 }
 
 export async function getGizaPrice(): Promise<TokenPriceResponse> {

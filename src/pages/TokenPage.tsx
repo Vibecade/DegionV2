@@ -128,7 +128,7 @@ export const TokenPage = () => {
         const coingeckoIds: { [key: string]: string } = {
           fuel: 'fuel-network',
           silencio: 'silencio',
-          corn: 'corn',
+          corn: 'corn-3',
           giza: 'giza',
           skate: 'skate',
           resolv: 'resolv',

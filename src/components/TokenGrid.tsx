@@ -16,9 +16,9 @@ type ViewMode = 'grid' | 'list' | 'compact';
 
 // Item heights for different view modes
 const ITEM_HEIGHTS = {
-  grid: 450,
-  list: 140,
-  compact: 200
+  grid: 600,  // Increased significantly for grid cards
+  list: 180,  // Increased for list items
+  compact: 280  // Increased for compact cards
 };
 
 // Calculate how many items per row based on view mode
@@ -71,7 +71,7 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
       <div 
         style={{
           ...style,
-          padding: '12px',
+          padding: '16px 12px',  // More vertical padding
           boxSizing: 'border-box'
         }} 
         className={`grid gap-4 sm:gap-6 ${

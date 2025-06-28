@@ -406,6 +406,8 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
             if (ath || atl) {
               cacheATHATL(tokenId, ath, atl, ath_date, atl_date);
             }
+          }
+        }
         
         const result = {
           current_price: price,

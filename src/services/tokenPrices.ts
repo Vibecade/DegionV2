@@ -406,7 +406,7 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
             if (ath || atl) {
               cacheATHATL(tokenId, ath, atl, ath_date, atl_date);
             }
-        } catch (detailError) {
+                  } catch (detailError) {
           console.warn(`⚠️ Failed to fetch ATH/ATL for ${tokenId} (${coingeckoId}):`, detailError);
           // Use cached data if available
           const cachedATHATL = getCachedATHATL(tokenId);
@@ -416,6 +416,7 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
             ath_date = cachedATHATL.ath_date;
             atl_date = cachedATHATL.atl_date;
           }
+        }
         }
         
         const result = {

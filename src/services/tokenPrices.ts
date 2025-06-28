@@ -34,7 +34,7 @@ let isProcessingQueue = false;
 const FALLBACK_PRICES = {
   fuel: { price: 0.05, seedPrice: 0.02 },
   silencio: { price: 0.0006, seedPrice: 0.0006 },
-  corn: { price: 0.07, seedPrice: 0.07 },
+  corn: { price: 0.065, seedPrice: 0.07 },
   giza: { price: 0.045, seedPrice: 0.045 },
   skate: { price: 0.08, seedPrice: 0.08 },
   resolv: { price: 0.10, seedPrice: 0.10 },
@@ -262,7 +262,7 @@ async function retryRequest<T>(
 // Fetch token price from CoinGecko API
 async function fetchTokenPrice(url: string, tokenId: string, timeout: number = 8000): Promise<any> {
   try {
-    console.log(`🌐 Fetching price for ${tokenId}`);
+    console.log(`🌐 Fetching price for ${tokenId} from: ${url}`);
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -287,10 +287,12 @@ async function fetchTokenPrice(url: string, tokenId: string, timeout: number = 8
       if (response.status >= 500) {
         throw new Error(`Server error (${response.status})`);
       }
-      throw new Error(`HTTP ${response.status}`);
+      throw new Error(`HTTP ${response.status} - ${response.statusText}`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log(`📊 API Response for ${tokenId}:`, data);
+    return data;
   } catch (error) {
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
@@ -368,7 +370,7 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
     // Try to fetch fresh data from CoinGecko
     try {
       // First fetch basic price data
-      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coingeckoId}&vs_currencies=usd`;
+      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coingeckoId}&vs_currencies=usd&include_24hr_change=true`;
       
       const data = await queueApiCall(() => fetchTokenPrice(url, tokenId, 5000));
       
@@ -378,7 +380,7 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
         const tokenData = data[coingeckoId];
         if (tokenData && typeof tokenData.usd === 'number') {
           price = tokenData.usd;
-          console.log(`💲 Fresh price for ${tokenId}: $${price}`);
+          console.log(`💲 Fresh price for ${tokenId} (${coingeckoId}): $${price}`);
         }
       }
       
@@ -406,7 +408,7 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
             }
           }
         } catch (detailError) {
-          console.warn(`⚠️ Failed to fetch ATH/ATL for ${tokenId}, using cached data`);
+          console.warn(`⚠️ Failed to fetch ATH/ATL for ${tokenId} (${coingeckoId}):`, detailError);
           // Use cached data if available
           const cachedATHATL = getCachedATHATL(tokenId);
           if (cachedATHATL) {
@@ -436,7 +438,7 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
         return result;
       }
     } catch (fetchError) {
-      console.warn(`⚠️ Failed to fetch fresh price for ${tokenId}:`, fetchError);
+      console.warn(`⚠️ Failed to fetch fresh price for ${tokenId} (${coingeckoId}):`, fetchError);
     }
 
     // If all else fails, use fallback price
@@ -460,7 +462,7 @@ export async function getSilencioPrice(): Promise<TokenPriceResponse> {
 }
 
 export async function getCornPrice(): Promise<TokenPriceResponse> {
-  return getTokenPrice('corn', 0.07, 'corn-3');
+  return getTokenPrice('corn', 0.07, 'corn');
 }
 
 export async function getGizaPrice(): Promise<TokenPriceResponse> {
@@ -476,5 +478,5 @@ export async function getResolvPrice(): Promise<TokenPriceResponse> {
 }
 
 export async function getSessionPrice(): Promise<TokenPriceResponse> {
-  return getTokenPrice('session', 0.20, 'session-token');
+  return getTokenPrice('session', 0.20, 'session');
 }

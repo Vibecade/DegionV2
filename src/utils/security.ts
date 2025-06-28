@@ -38,12 +38,14 @@ export class ClientRateLimit {
 export const validateInput = {
   // Validate email format
   email: (email: string): boolean => {
+    if (!email || typeof email !== 'string') return false;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email) && email.length <= 254;
   },
 
   // Validate URL format
   url: (url: string): boolean => {
+    if (!url || typeof url !== 'string') return false;
     try {
       const urlObj = new URL(url);
       return ['http:', 'https:'].includes(urlObj.protocol);
@@ -54,22 +56,26 @@ export const validateInput = {
 
   // Validate token ID (alphanumeric, hyphens, underscores only)
   tokenId: (tokenId: string): boolean => {
+    if (!tokenId || typeof tokenId !== 'string') return false;
     const tokenRegex = /^[a-zA-Z0-9_-]+$/;
     return tokenRegex.test(tokenId) && tokenId.length <= 50;
   },
 
   // Validate discussion title
   discussionTitle: (title: string): boolean => {
+    if (!title || typeof title !== 'string') return false;
     return title.trim().length >= 3 && title.length <= 200;
   },
 
   // Validate discussion content
   discussionContent: (content: string): boolean => {
+    if (!content || typeof content !== 'string') return false;
     return content.trim().length >= 10 && content.length <= 5000;
   },
 
   // Validate comment content
   commentContent: (content: string): boolean => {
+    if (!content || typeof content !== 'string') return false;
     return content.trim().length >= 1 && content.length <= 1000;
   }
 };
@@ -78,6 +84,10 @@ export const validateInput = {
 export const CSP = {
   // Generate nonce for inline scripts
   generateNonce: (): string => {
+    if (!crypto || !crypto.getRandomValues) {
+      // Fallback for older browsers
+      return Math.random().toString(36).substring(2, 15);
+    }
     const array = new Uint8Array(16);
     crypto.getRandomValues(array);
     return btoa(String.fromCharCode(...array));
@@ -85,6 +95,8 @@ export const CSP = {
 
   // Validate external URLs against allowlist
   isAllowedDomain: (url: string): boolean => {
+    if (!url || typeof url !== 'string') return false;
+    
     const allowedDomains = [
       'api.coingecko.com',
       'fonts.googleapis.com',
@@ -114,6 +126,10 @@ export const secureStorage = {
   // Set item with expiration
   setItem: (key: string, value: any, expirationMs?: number): void => {
     try {
+      if (!key || typeof key !== 'string') {
+        throw new Error('Invalid storage key');
+      }
+      
       const item = {
         value,
         timestamp: Date.now(),
@@ -128,6 +144,10 @@ export const secureStorage = {
   // Get item with expiration check
   getItem: (key: string): any => {
     try {
+      if (!key || typeof key !== 'string') {
+        return null;
+      }
+      
       const stored = localStorage.getItem(key);
       if (!stored) return null;
 
@@ -149,6 +169,9 @@ export const secureStorage = {
   // Remove item
   removeItem: (key: string): void => {
     try {
+      if (!key || typeof key !== 'string') {
+        return;
+      }
       localStorage.removeItem(key);
     } catch (error) {
       console.warn('Failed to remove item:', error);
@@ -158,6 +181,8 @@ export const secureStorage = {
   // Clear expired items
   clearExpired: (): void => {
     try {
+      if (!localStorage) return;
+      
       const keys = Object.keys(localStorage);
       keys.forEach(key => {
         const stored = localStorage.getItem(key);

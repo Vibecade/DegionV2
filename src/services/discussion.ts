@@ -1,10 +1,12 @@
 import { RateLimiter } from '../utils/rateLimiter';
 import DOMPurify from 'isomorphic-dompurify';
 import { supabase, isSupabaseAvailable } from './supabaseClient';
+import { validateInput } from '../utils/security';
 
 // Create rate limiters
-const discussionRateLimiter = new RateLimiter(3, 5 * 60 * 1000); // 3 discussions per 5 minutes
-const commentRateLimiter = new RateLimiter(5, 60 * 1000); // 5 comments per minute
+const discussionRateLimiter = new RateLimiter(2, 10 * 60 * 1000); // 2 discussions per 10 minutes
+const commentRateLimiter = new RateLimiter(3, 60 * 1000); // 3 comments per minute
+const fetchRateLimiter = new RateLimiter(20, 60 * 1000); // 20 fetches per minute
 
 // Get client IP and hash it
 async function getAuthorHash(): Promise<string> {
@@ -29,8 +31,22 @@ function hashIP(ip: string): string {
 }
 
 export async function getDiscussions(tokenId: string) {
+  // Validate input
+  if (!validateInput.tokenId(tokenId)) {
+    console.error('Invalid token ID for discussions');
+    return [];
+  }
+  
   if (!isSupabaseAvailable) {
     console.warn('Discussion feature not available - Supabase not configured');
+    return [];
+  }
+
+  const authorIp = await getAuthorHash();
+  
+  // Check rate limit
+  if (!fetchRateLimiter.tryRequest(authorIp)) {
+    console.warn('Discussion fetch rate limit exceeded');
     return [];
   }
 
@@ -55,6 +71,19 @@ export async function getDiscussions(tokenId: string) {
 }
 
 export async function createDiscussion(tokenId: string, title: string, content: string) {
+  // Validate inputs
+  if (!validateInput.tokenId(tokenId)) {
+    throw new Error('Invalid token ID');
+  }
+  
+  if (!validateInput.discussionTitle(title)) {
+    throw new Error('Invalid discussion title');
+  }
+  
+  if (!validateInput.discussionContent(content)) {
+    throw new Error('Invalid discussion content');
+  }
+  
   if (!isSupabaseAvailable) {
     throw new Error('Discussion feature not available. Please try again later.');
   }
@@ -95,6 +124,15 @@ export async function createDiscussion(tokenId: string, title: string, content: 
 }
 
 export async function addComment(discussionId: string, content: string) {
+  // Validate inputs
+  if (!discussionId || typeof discussionId !== 'string') {
+    throw new Error('Invalid discussion ID');
+  }
+  
+  if (!validateInput.commentContent(content)) {
+    throw new Error('Invalid comment content');
+  }
+  
   if (!isSupabaseAvailable) {
     throw new Error('Comment feature not available. Please try again later.');
   }

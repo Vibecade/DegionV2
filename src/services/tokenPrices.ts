@@ -1,6 +1,7 @@
 import { TokenPriceResponse } from '../types';
 import { supabase, isSupabaseAvailable } from './supabaseClient';
 import { logError } from '../utils/errorLogger';
+import { secureStorage } from '../utils/security';
 
 export interface TokenPriceResponse {
   current_price: number;
@@ -17,10 +18,17 @@ export type TokenPriceError = {
   code: string;
 };
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
-const CACHE_KEY_PREFIX = 'token_price_';
+const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes for price data
+const SUPABASE_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes for Supabase cache
+const CACHE_KEY_PREFIX = 'secure_token_price_';
 const MAX_RETRIES = 2;
 const RETRY_DELAY = 1000;
+const API_RATE_LIMIT_DELAY = 1000; // 1 second between API calls
+
+// Rate limiting for API calls
+let lastApiCall = 0;
+const apiCallQueue: Array<() => Promise<any>> = [];
+let isProcessingQueue = false;
 
 // Fallback prices when API is not available
 const FALLBACK_PRICES = {
@@ -32,7 +40,7 @@ const FALLBACK_PRICES = {
   resolv: { price: 0.10, seedPrice: 0.10 }
 };
 
-// Cache for ATH/ATL data - persisted in localStorage
+// Secure cache for ATH/ATL data
 const ATH_ATL_CACHE_KEY = 'ath_atl_cache';
 const ATH_ATL_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -47,24 +55,15 @@ interface ATHATLData {
 // Get cached ATH/ATL data
 function getCachedATHATL(tokenId: string): { ath?: number; atl?: number; ath_date?: string; atl_date?: string } | null {
   try {
-    const cached = localStorage.getItem(`${ATH_ATL_CACHE_KEY}_${tokenId}`);
+    const cached = secureStorage.getItem(`${ATH_ATL_CACHE_KEY}_${tokenId}`);
     if (!cached) return null;
-    
-    const data: ATHATLData = JSON.parse(cached);
-    const now = Date.now();
-    
-    // ATH/ATL data is valid for 24 hours
-    if (now - data.timestamp > ATH_ATL_CACHE_DURATION) {
-      localStorage.removeItem(`${ATH_ATL_CACHE_KEY}_${tokenId}`);
-      return null;
-    }
     
     console.log(`📦 Using cached ATH/ATL for ${tokenId}`);
     return {
-      ath: data.ath,
-      atl: data.atl,
-      ath_date: data.ath_date,
-      atl_date: data.atl_date
+      ath: cached.ath,
+      atl: cached.atl,
+      ath_date: cached.ath_date,
+      atl_date: cached.atl_date
     };
   } catch (error) {
     console.error('Error reading ATH/ATL cache:', error);
@@ -75,47 +74,57 @@ function getCachedATHATL(tokenId: string): { ath?: number; atl?: number; ath_dat
 // Cache ATH/ATL data
 function cacheATHATL(tokenId: string, ath?: number, atl?: number, ath_date?: string, atl_date?: string): void {
   try {
-    const data: ATHATLData = {
+    const data = {
       ath,
       atl,
       ath_date,
-      atl_date,
-      timestamp: Date.now()
+      atl_date
     };
-    localStorage.setItem(`${ATH_ATL_CACHE_KEY}_${tokenId}`, JSON.stringify(data));
+    secureStorage.setItem(`${ATH_ATL_CACHE_KEY}_${tokenId}`, data, ATH_ATL_CACHE_DURATION);
     console.log(`💾 Cached ATH/ATL for ${tokenId}`, { ath, atl });
   } catch (error) {
     console.error('Error caching ATH/ATL data:', error);
   }
 }
 
-// Clear old cache on startup
-function clearOldCache() {
-  try {
-    const keys = Object.keys(localStorage);
-    keys.forEach(key => {
-      if (key.startsWith(CACHE_KEY_PREFIX)) {
-        const cached = localStorage.getItem(key);
-        if (cached) {
-          try {
-            const { timestamp } = JSON.parse(cached);
-            const now = Date.now();
-            if (now - timestamp > CACHE_DURATION) {
-              localStorage.removeItem(key);
-            }
-          } catch (e) {
-            localStorage.removeItem(key);
-          }
-        }
+// Rate-limited API call queue
+async function queueApiCall<T>(apiCall: () => Promise<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    apiCallQueue.push(async () => {
+      try {
+        const result = await apiCall();
+        resolve(result);
+      } catch (error) {
+        reject(error);
       }
     });
-  } catch (error) {
-    console.error('Error clearing old cache:', error);
-  }
+    
+    processApiQueue();
+  });
 }
 
-// Clear old cache on module load
-clearOldCache();
+async function processApiQueue() {
+  if (isProcessingQueue || apiCallQueue.length === 0) return;
+  
+  isProcessingQueue = true;
+  
+  while (apiCallQueue.length > 0) {
+    const now = Date.now();
+    const timeSinceLastCall = now - lastApiCall;
+    
+    if (timeSinceLastCall < API_RATE_LIMIT_DELAY) {
+      await new Promise(resolve => setTimeout(resolve, API_RATE_LIMIT_DELAY - timeSinceLastCall));
+    }
+    
+    const apiCall = apiCallQueue.shift();
+    if (apiCall) {
+      lastApiCall = Date.now();
+      await apiCall();
+    }
+  }
+  
+  isProcessingQueue = false;
+}
 
 interface CacheItem {
   data: TokenPriceResponse;
@@ -128,21 +137,11 @@ function getCacheKey(tokenId: string): string {
 
 function getFromCache(tokenId: string): TokenPriceResponse | null {
   try {
-    const cacheKey = getCacheKey(tokenId);
-    const cached = localStorage.getItem(cacheKey);
-    
+    const cached = secureStorage.getItem(getCacheKey(tokenId));
     if (!cached) return null;
     
-    const { data, timestamp }: CacheItem = JSON.parse(cached);
-    const now = Date.now();
-    
-    if (now - timestamp > CACHE_DURATION) {
-      localStorage.removeItem(cacheKey);
-      return null;
-    }
-    
     console.log(`📦 Using cached price for ${tokenId}`);
-    return data;
+    return cached;
   } catch (error) {
     console.error('Cache error:', error);
     return null;
@@ -151,12 +150,7 @@ function getFromCache(tokenId: string): TokenPriceResponse | null {
 
 function setCache(tokenId: string, data: TokenPriceResponse): void {
   try {
-    const cacheKey = getCacheKey(tokenId);
-    const cacheItem: CacheItem = {
-      data,
-      timestamp: Date.now()
-    };
-    localStorage.setItem(cacheKey, JSON.stringify(cacheItem));
+    secureStorage.setItem(getCacheKey(tokenId), data, CACHE_DURATION);
     console.log(`💾 Cached price for ${tokenId}`);
   } catch (error) {
     console.error('Cache error:', error);
@@ -189,8 +183,8 @@ async function getStoredPrice(tokenId: string): Promise<TokenPriceResponse | nul
     const updated = new Date(data.updated_at);
     const age = now.getTime() - updated.getTime();
 
-    // Use longer cache for stored prices (30 minutes)
-    if (age > 30 * 60 * 1000) {
+    // Use longer cache for stored prices
+    if (age > SUPABASE_CACHE_DURATION) {
       console.log(`⏰ Supabase cache expired for ${tokenId}`);
       return null;
     }
@@ -265,12 +259,29 @@ async function retryRequest<T>(
 }
 
 // Fetch token price from CoinGecko API
-async function fetchTokenPrice(url: string, tokenId: string): Promise<any> {
+async function fetchTokenPrice(url: string, tokenId: string, timeout: number = 8000): Promise<any> {
   try {
     console.log(`🌐 Fetching price for ${tokenId}`);
-    const response = await retryRequest(() => fetch(url));
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    const response = await retryRequest(() => 
+      fetch(url, { 
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Degion.xyz/1.0'
+        }
+      })
+    );
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error(`Rate limited (${response.status})`);
+      }
       throw new Error(`HTTP ${response.status}`);
     }
     
@@ -345,22 +356,8 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
     try {
       // First fetch basic price data
       const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coingeckoId}&vs_currencies=usd`;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
       
-      const response = await fetch(url, { 
-        signal: controller.signal,
-        headers: {
-          'Accept': 'application/json',
-        }
-      });
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      
-      const data = await response.json();
+      const data = await queueApiCall(() => fetchTokenPrice(url, tokenId, 5000));
       
       let price = 0;
       
@@ -381,30 +378,18 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
         try {
           // Fetch detailed market data for ATH/ATL
           const detailUrl = `https://api.coingecko.com/api/v3/coins/${coingeckoId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
-          const detailController = new AbortController();
-          const detailTimeoutId = setTimeout(() => detailController.abort(), 3000); // 3 second timeout for detailed data
           
-          const detailResponse = await fetch(detailUrl, { 
-            signal: detailController.signal,
-            headers: {
-              'Accept': 'application/json',
-            }
-          });
-          clearTimeout(detailTimeoutId);
-          
-          if (detailResponse.ok) {
-            const detailData = await detailResponse.json();
+          const detailData = await queueApiCall(() => fetchTokenPrice(detailUrl, `${tokenId}-detail`, 3000));
             
-            if (detailData.market_data) {
-              ath = detailData.market_data.ath?.usd;
-              atl = detailData.market_data.atl?.usd;
-              ath_date = detailData.market_data.ath_date?.usd;
-              atl_date = detailData.market_data.atl_date?.usd;
-              
-              // Cache the ATH/ATL data
-              if (ath || atl) {
-                cacheATHATL(tokenId, ath, atl, ath_date, atl_date);
-              }
+          if (detailData.market_data) {
+            ath = detailData.market_data.ath?.usd;
+            atl = detailData.market_data.atl?.usd;
+            ath_date = detailData.market_data.ath_date?.usd;
+            atl_date = detailData.market_data.atl_date?.usd;
+            
+            // Cache the ATH/ATL data
+            if (ath || atl) {
+              cacheATHATL(tokenId, ath, atl, ath_date, atl_date);
             }
           }
         } catch (detailError) {

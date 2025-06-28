@@ -1,9 +1,11 @@
 import { TokenSentiment } from '../types';
 import { RateLimiter } from '../utils/rateLimiter';
 import { supabase, isSupabaseAvailable } from './supabaseClient';
+import { validateInput } from '../utils/security';
 
 // Create rate limiters
-const voteRateLimiter = new RateLimiter(5, 60 * 1000); // 5 votes per minute
+const voteRateLimiter = new RateLimiter(3, 60 * 1000); // 3 votes per minute (more restrictive)
+const sentimentRateLimiter = new RateLimiter(10, 60 * 1000); // 10 sentiment fetches per minute
 
 // Simple hash function for IP addresses
 function hashIP(ip: string): string {
@@ -30,8 +32,21 @@ async function getAuthorHash(): Promise<string> {
 
 export async function getTokenSentiment(tokenId: string): Promise<TokenSentiment> {
   try {
+    // Validate input
+    if (!validateInput.tokenId(tokenId)) {
+      throw new Error('Invalid token ID');
+    }
+    
     if (!isSupabaseAvailable) {
       console.warn('Sentiment feature not available - Supabase not configured');
+      return { rocket: 0, poop: 0 };
+    }
+
+    const authorHash = await getAuthorHash();
+    
+    // Check rate limit for sentiment fetching
+    if (!sentimentRateLimiter.tryRequest(authorHash)) {
+      console.warn('Sentiment fetch rate limit exceeded');
       return { rocket: 0, poop: 0 };
     }
 
@@ -60,6 +75,15 @@ export async function getTokenSentiment(tokenId: string): Promise<TokenSentiment
 
 export async function submitVote(tokenId: string, sentiment: 'rocket' | 'poop'): Promise<boolean> {
   try {
+    // Validate inputs
+    if (!validateInput.tokenId(tokenId)) {
+      throw new Error('Invalid token ID');
+    }
+    
+    if (!['rocket', 'poop'].includes(sentiment)) {
+      throw new Error('Invalid sentiment value');
+    }
+    
     if (!isSupabaseAvailable) {
       console.warn('Voting feature not available - Supabase not configured');
       return false;

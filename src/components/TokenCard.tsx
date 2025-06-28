@@ -105,11 +105,14 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
 
   // Get live price data for tokens that are trading
   const fetchPrice = useCallback(async () => {
-    if (!['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv'].includes(id.toLowerCase())) {
+    const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv'];
+    if (!supportedTokens.includes(id.toLowerCase())) {
       return;
     }
     
     setIsLoading(true);
+    setError(null);
+    
     try {
       const data = await (async () => {
         switch (id.toLowerCase()) {
@@ -131,17 +134,33 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
       setInvestment(`$${data.roi_value.toFixed(2)}`);
       setTimeout(() => setIsUpdating(false), 500);
     } catch (error) {
-      // Silently handle price fetch errors - fallback prices will be used
-      console.warn(`Price fetch failed for ${id}, using fallback`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Only log rate limit errors as warnings, others as errors
+      if (errorMessage.includes('429') || errorMessage.includes('Rate limited')) {
+        console.warn(`Rate limited for ${id}, using cached/fallback data`);
+      } else {
+        console.error(`Price fetch failed for ${id}:`, errorMessage);
+        logError(error as Error, 'TokenCard:fetchPrice', { tokenId: id });
+      }
+      
+      // Don't set error state for rate limits, only for actual failures
+      if (!errorMessage.includes('429') && !errorMessage.includes('Rate limited')) {
+        setError('Failed to load current price data');
+      }
     } finally {
       setIsLoading(false);
     }
   }, [id, seedPrice]);
 
   useEffect(() => {
-    if (['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv'].includes(id.toLowerCase())) {
+    const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv'];
+    if (supportedTokens.includes(id.toLowerCase())) {
       fetchPrice();
-      const interval = setInterval(fetchPrice, 60000); // Reduced frequency
+      // Stagger intervals to avoid hitting rate limits
+      const baseInterval = 120000; // 2 minutes base
+      const stagger = supportedTokens.indexOf(id.toLowerCase()) * 10000; // 10 second stagger
+      const interval = setInterval(fetchPrice, baseInterval + stagger);
       return () => clearInterval(interval);
     }
   }, [id, fetchPrice]);

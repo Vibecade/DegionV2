@@ -16,9 +16,9 @@ type ViewMode = 'grid' | 'list' | 'compact';
 
 // Item heights for different view modes
 const ITEM_HEIGHTS = {
-  grid: 420,
-  list: 120,
-  compact: 180
+  grid: 450,
+  list: 140,
+  compact: 200
 };
 
 // Calculate how many items per row based on view mode
@@ -69,8 +69,12 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
 
     return (
       <div 
-        style={style} 
-        className={`grid gap-4 sm:gap-6 px-2 ${
+        style={{
+          ...style,
+          padding: '12px',
+          boxSizing: 'border-box'
+        }} 
+        className={`grid gap-4 sm:gap-6 ${
           viewMode === 'grid' 
             ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
             : viewMode === 'list'
@@ -174,13 +178,17 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
       </div>
 
       {/* Virtualized Token List */}
-      <div className="bg-black/10 rounded-lg border border-[rgba(0,255,238,0.1)] overflow-hidden">
+      <div className="bg-black/10 rounded-lg border border-[rgba(0,255,238,0.1)] overflow-hidden" style={{ minHeight: '400px' }}>
         <List
           height={listHeight}
           itemCount={virtualItemCount}
           itemSize={itemHeight}
           width="100%"
-          className="scrollbar-thin scrollbar-thumb-[#00ffee]/30 scrollbar-track-transparent"
+          overscanCount={2}
+          style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(0, 255, 238, 0.3) transparent'
+          }}
         >
           {renderVirtualItem}
         </List>

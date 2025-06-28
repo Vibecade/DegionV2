@@ -37,7 +37,8 @@ const FALLBACK_PRICES = {
   corn: { price: 0.07, seedPrice: 0.07 },
   giza: { price: 0.045, seedPrice: 0.045 },
   skate: { price: 0.08, seedPrice: 0.08 },
-  resolv: { price: 0.10, seedPrice: 0.10 }
+  resolv: { price: 0.10, seedPrice: 0.10 },
+  session: { price: 0.20, seedPrice: 0.20 }
 };
 
 // Secure cache for ATH/ATL data
@@ -472,4 +473,8 @@ export async function getSkatePrice(): Promise<TokenPriceResponse> {
 
 export async function getResolvPrice(): Promise<TokenPriceResponse> {
   return getTokenPrice('resolv', 0.10, 'resolv');
+}
+
+export async function getSessionPrice(): Promise<TokenPriceResponse> {
+  return getTokenPrice('session', 0.20, 'session-token');
 }

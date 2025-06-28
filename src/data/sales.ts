@@ -88,5 +88,13 @@ export const salesData: TokenSale[] = [
     fundsRaisedUSDC: 583551.2,
     participants: 78,
     transactions: 78
+  },
+  {
+    name: 'Session',
+    address: '0x0',
+    network: 'ethereum',
+    fundsRaisedUSDC: 169490,
+    participants: 48,
+    transactions: 48
   }
 ];

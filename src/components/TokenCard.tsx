@@ -158,7 +158,7 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
 
   // Get live price data for tokens that are trading
   const fetchPrice = useCallback(async () => {
-    const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv'];
+    const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv', 'session'];
     if (!supportedTokens.includes(id.toLowerCase())) {
       return;
     }
@@ -175,6 +175,7 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
           case 'giza': return await getGizaPrice();
           case 'skate': return await getSkatePrice();
           case 'resolv': return await getResolvPrice();
+          case 'session': return await getSessionPrice();
           default: throw new Error('Unsupported token');
         }
       })();

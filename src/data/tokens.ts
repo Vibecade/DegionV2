@@ -272,12 +272,12 @@ export const tokens: Token[] = [
   {
     id: 'session',
     name: 'Session',
-    status: 'Pending TGE',
-    launchDate: 'TBD',
-    seedPrice: 'TBD',
-    currentPrice: '--',
-    roi: '--',
-    investment: '--',
+    status: 'Live',
+    launchDate: '2025-01-06',
+    seedPrice: '$0.20',
+    currentPrice: '$0.20',
+    roi: '0.00%',
+    investment: '$1000.00',
     vestingEnd: '12-month lockup, then 12-month monthly linear unlock',
     description: 'Session is building secure, private, decentralized messaging infrastructure.',
     links: {

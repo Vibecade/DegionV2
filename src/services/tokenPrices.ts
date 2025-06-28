@@ -406,24 +406,16 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
             if (ath || atl) {
               cacheATHATL(tokenId, ath, atl, ath_date, atl_date);
             }
-          }
-        console.log(`🔍 Fetching from URL: ${url}`);
         } catch (detailError) {
           console.warn(`⚠️ Failed to fetch ATH/ATL for ${tokenId} (${coingeckoId}):`, detailError);
           // Use cached data if available
           const cachedATHATL = getCachedATHATL(tokenId);
           if (cachedATHATL) {
-          console.log(`🔍 Full API response for ${tokenId}:`, JSON.stringify(data, null, 2));
             ath = cachedATHATL.ath;
-          console.log(`🔍 Token data for ${coingeckoId}:`, tokenData);
             atl = cachedATHATL.atl;
             ath_date = cachedATHATL.ath_date;
             atl_date = cachedATHATL.atl_date;
-          } else {
-            console.warn(`⚠️ Invalid token data structure for ${tokenId}:`, tokenData);
           }
-        } else {
-          console.warn(`⚠️ Invalid API response for ${tokenId}:`, data);
         }
         
         const result = {

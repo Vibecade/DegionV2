@@ -3,7 +3,7 @@ import { FixedSizeList as List } from 'react-window';
 import { TokenCard } from './TokenCard';
 import { TokenCardSkeleton } from './TokenCardSkeleton';
 import { Token } from '../types';
-import { Search, Grid, List, BarChart3 } from 'lucide-react';
+import { Search, Grid, List as ListIcon, BarChart3 } from 'lucide-react';
 
 interface TokenGridProps {
   tokens: Token[];
@@ -157,7 +157,7 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
             }`}
             title="List view"
           >
-            <List className="w-4 h-4" />
+            <ListIcon className="w-4 h-4" />
           </button>
           <button
             onClick={() => setViewMode('compact')}

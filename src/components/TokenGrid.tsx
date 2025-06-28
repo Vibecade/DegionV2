@@ -16,7 +16,7 @@ type ViewMode = 'grid' | 'list' | 'compact';
 
 // Item heights for different view modes
 const ITEM_HEIGHTS = {
-  grid: 600,  // Increased significantly for grid cards
+  grid: 650,  // Further increased to accommodate longer token names and content
   list: 180,  // Increased for list items
   compact: 280  // Increased for compact cards
 };

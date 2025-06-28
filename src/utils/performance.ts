@@ -6,6 +6,7 @@
 export class LazyImageLoader {
   private observer: IntersectionObserver;
   private images: Set<HTMLImageElement> = new Set();
+  private preloadedImages: Set<string> = new Set();
 
   constructor() {
     this.observer = new IntersectionObserver(
@@ -18,7 +19,7 @@ export class LazyImageLoader {
         });
       },
       {
-        rootMargin: '50px 0px', // Reduced for better performance
+        rootMargin: '100px 0px', // Increased for better UX with optimized images
         threshold: 0.01
       }
     );
@@ -26,7 +27,23 @@ export class LazyImageLoader {
 
   observe(img: HTMLImageElement): void {
     this.images.add(img);
-    this.observer.observe(img);
+    
+    // Check if image is already preloaded
+    if (this.preloadedImages.has(img.src)) {
+      this.loadImage(img);
+    } else {
+      this.observer.observe(img);
+    }
+  }
+
+  preloadImage(src: string): void {
+    if (this.preloadedImages.has(src)) return;
+    
+    const img = new Image();
+    img.onload = () => {
+      this.preloadedImages.add(src);
+    };
+    img.src = src;
   }
 
   private loadImage(img: HTMLImageElement): void {

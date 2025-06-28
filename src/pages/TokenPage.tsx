@@ -12,6 +12,7 @@ import { useAnnouncement } from '../hooks/useAccessibility';
 import { logError } from '../utils/errorLogger';
 import { MessageSquare, ArrowLeft, ExternalLink, Wallet, Users, ArrowUpRight, ChevronRight } from 'lucide-react';
 import TradingViewWidget from '../components/TradingViewWidget';
+import { OptimizedImage } from '../components/OptimizedImage';
 import { Footer } from '../components/Footer';
 import { formatUSDC, formatNumber } from '../utils/formatters';
 
@@ -336,7 +337,7 @@ export const TokenPage = () => {
           <div className="lg:col-span-2 space-y-6 sm:space-y-8">
             <div className="glass-panel p-6 sm:p-8 rounded-lg">
               <div className="flex items-center mb-6">
-                <img 
+                <OptimizedImage
                   src={(() => {
                     const tokenIdLower = token.id.toLowerCase();
                     if (tokenIdLower === 'fragmetric') {
@@ -348,19 +349,11 @@ export const TokenPage = () => {
                     }
                   })()}
                   alt={`${name} Logo`}
+                  width={64}
+                  height={64}
                   className="w-16 h-16 rounded-full mr-4 animate-float"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.onerror = null;
-                    if (token.id.toLowerCase() === 'arcium') {
-                      target.src = '/ca6520f2-0b43-465d-bd4d-2d6c45de2f70.jpg';
-                      target.onError = () => {
-                        target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
-                      };
-                    } else {
-                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
-                    }
-                  }}
+                  priority={true}
+                  fallbackSrc={token.id.toLowerCase() === 'arcium' ? '/ca6520f2-0b43-465d-bd4d-2d6c45de2f70.jpg' : ''}
                 />
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-bold text-[#00ffee] title-glow mb-2 font-orbitron">{name}</h1>

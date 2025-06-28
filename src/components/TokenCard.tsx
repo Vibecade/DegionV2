@@ -10,6 +10,7 @@ import { salesData } from '../data/sales';
 import { formatUSDC, formatNumber } from '../utils/formatters';
 import { VestingTimer } from './VestingTimer';
 import { lazyImageLoader } from '../utils/performance';
+import { OptimizedImage } from './OptimizedImage';
 
 interface TokenCardProps {
   token: Token;
@@ -19,7 +20,6 @@ interface TokenCardProps {
 
 const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => {
   const cardRef = useRef<HTMLAnchorElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
 
@@ -87,11 +87,23 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
   }, []);
 
   // Optimize image loading
-  useEffect(() => {
-    if (imageRef.current && isInView) {
-      lazyImageLoader.observe(imageRef.current);
+  const getTokenImageSrc = (tokenId: string): string => {
+    const tokenIdLower = tokenId.toLowerCase();
+    if (tokenIdLower === 'fragmetric') {
+      return 'https://raw.githubusercontent.com/Sadpepedev/TheLegionProject/main/images/logos/Fragmetric.png';
+    } else if (tokenIdLower === 'arcium') {
+      return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenIdLower}.png`;
+    } else {
+      return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenIdLower}.png`;
     }
-  }, [isInView]);
+  };
+
+  const getTokenFallbackSrc = (tokenId: string): string => {
+    if (tokenId.toLowerCase() === 'arcium') {
+      return '/ca6520f2-0b43-465d-bd4d-2d6c45de2f70.jpg';
+    }
+    return '';
+  };
 
   // Check if token is launching within 24 hours
   useEffect(() => {
@@ -227,34 +239,15 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
         aria-label={`View details for ${name}`}
         className="grid-item flex items-center p-4 sm:p-6 bg-black/30 rounded-lg group transition-transform duration-200 will-change-transform hover:scale-[1.01]"
       >
-        <img 
-          ref={imageRef}
-          src={(() => {
-            const tokenId = id.toLowerCase();
-            if (tokenId === 'fragmetric') {
-              return 'https://raw.githubusercontent.com/Sadpepedev/TheLegionProject/main/images/logos/Fragmetric.png';
-            } else if (tokenId === 'arcium') {
-              return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenId}.png`;
-            } else {
-              return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenId}.png`;
-            }
-          })()}
+        <OptimizedImage
+          src={getTokenImageSrc(id)}
           alt={`${name} Logo`}
-          className={`token-logo w-12 h-12 rounded-full mr-4 transition-transform duration-200 will-change-transform ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          width={48}
+          height={48}
+          className="token-logo w-12 h-12 rounded-full mr-4 transition-transform duration-200 will-change-transform"
           loading="lazy"
+          fallbackSrc={getTokenFallbackSrc(id)}
           onLoad={() => setImageLoaded(true)}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.onerror = null;
-            if (id.toLowerCase() === 'arcium') {
-              target.src = '/ca6520f2-0b43-465d-bd4d-2d6c45de2f70.jpg';
-              target.onError = () => {
-                target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
-              };
-            } else {
-              target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
-            }
-          }}
         />
         
         <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
@@ -305,34 +298,15 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
         className="grid-item flex flex-col p-3 bg-black/30 rounded-lg group transition-transform duration-200 will-change-transform hover:scale-[1.02]"
       >
         <div className="flex items-center mb-2">
-          <img 
-            ref={imageRef}
-            src={(() => {
-              const tokenId = id.toLowerCase();
-              if (tokenId === 'fragmetric') {
-                return 'https://raw.githubusercontent.com/Sadpepedev/TheLegionProject/main/images/logos/Fragmetric.png';
-              } else if (tokenId === 'arcium') {
-                return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenId}.png`;
-              } else {
-                return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenId}.png`;
-              }
-            })()}
+          <OptimizedImage
+            src={getTokenImageSrc(id)}
             alt={`${name} Logo`}
-            className={`token-logo w-8 h-8 rounded-full mr-2 transition-opacity duration-200 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            width={32}
+            height={32}
+            className="token-logo w-8 h-8 rounded-full mr-2 transition-opacity duration-200"
             loading="lazy"
+            fallbackSrc={getTokenFallbackSrc(id)}
             onLoad={() => setImageLoaded(true)}
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.onerror = null;
-              if (id.toLowerCase() === 'arcium') {
-                target.src = '/ca6520f2-0b43-465d-bd4d-2d6c45de2f70.jpg';
-                target.onError = () => {
-                  target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
-                };
-              } else {
-                target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
-              }
-            }}
           />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold text-[#cfd0d1] truncate">{name}</div>
@@ -383,38 +357,16 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
       className="grid-item flex flex-col items-center p-4 sm:p-6 bg-black/30 rounded-lg group transition-transform duration-200 will-change-transform hover:scale-[1.02]"
     >
       <div className="flex items-center mb-4 relative w-full">
-        <img 
-          ref={imageRef}
-          src={(() => {
-            const tokenId = id.toLowerCase();
-            if (tokenId === 'fragmetric') {
-              return 'https://raw.githubusercontent.com/Sadpepedev/TheLegionProject/main/images/logos/Fragmetric.png';
-            } else if (tokenId === 'arcium') {
-              // Try the standard path first, then fallback will handle it
-              return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenId}.png`;
-            } else {
-              return `https://sadpepedev.github.io/TheLegionProject/images/logos/${tokenId}.png`;
-            }
-          })()}
+        <OptimizedImage
+          src={getTokenImageSrc(id)}
           alt={`${name} Logo`}
-          className={`token-logo w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] rounded-full mr-3 transition-transform duration-200 will-change-transform ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          width={50}
+          height={50}
+          className="token-logo w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] rounded-full mr-3 transition-transform duration-200 will-change-transform"
           loading="lazy"
+          priority={isInView} // Prioritize images that are in view
+          fallbackSrc={getTokenFallbackSrc(id)}
           onLoad={() => setImageLoaded(true)}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.onerror = null;
-            // For Arcium specifically, try the downloaded image first
-            if (id.toLowerCase() === 'arcium') {
-              target.src = '/ca6520f2-0b43-465d-bd4d-2d6c45de2f70.jpg';
-              target.onError = () => {
-                // Final fallback to generic crypto logo
-                target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ii8+Cjwvc3ZnPgo8L3N2Zz4K';
-              };
-            } else {
-              // Generic fallback for other tokens
-              target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ii8+Cjwvc3ZnPgo8L3N2Zz4K';
-            }
-          }}
         />
         <div className="flex-1 min-w-0">
           <span className="text-lg sm:text-xl font-semibold text-[#cfd0d1] block truncate font-orbitron">

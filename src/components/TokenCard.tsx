@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Token } from '../types';
 import { logError } from '../utils/errorLogger';
-import { useEffect, useState, useMemo, useCallback, memo, useRef } from 'react';
+import { useEffect, useState, useMemo, useCallback, memo, useRef, useLayoutEffect } from 'react';
 import { getFuelPrice, getSilencioPrice, getCornPrice, getGizaPrice, getSkatePrice, getResolvPrice, clearAllPriceCaches } from '../services/tokenPrices';
 import { fetchTokenHolders, fetchTradingVolume } from '../services/duneApi';
 import { getTokenInfo } from '../services/tokenInfo';
@@ -19,7 +19,9 @@ interface TokenCardProps {
 
 const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => {
   const cardRef = useRef<HTMLAnchorElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [isInView, setIsInView] = useState(false);
 
   const {
@@ -58,6 +60,52 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
     salesData.find(sale => sale.name.toLowerCase() === name.toLowerCase()),
     [name]
   );
+
+  // Enhanced image loading with lazy loading utility
+  useLayoutEffect(() => {
+    if (!imageRef.current || !isInView) return;
+
+    const img = imageRef.current;
+    const imageSrc = getTokenImageSrc(token.id);
+    
+    // Set up the image for lazy loading
+    img.dataset.src = imageSrc;
+    
+    // Use the lazy image loader utility
+    lazyImageLoader.observe(img);
+    
+    // Handle image load success
+    const handleImageLoad = () => {
+      setImageLoaded(true);
+      setImageError(false);
+    };
+    
+    // Handle image load error with fallback
+    const handleImageError = () => {
+      setImageError(true);
+      const fallbackSrc = getTokenFallbackSrc(token.id);
+      if (fallbackSrc && img.src !== fallbackSrc) {
+        img.src = fallbackSrc;
+        img.onerror = () => {
+          // Final fallback to default icon
+          img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
+          setImageLoaded(true);
+        };
+      } else {
+        // Use default icon if no fallback available
+        img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
+        setImageLoaded(true);
+      }
+    };
+    
+    img.addEventListener('load', handleImageLoad);
+    img.addEventListener('error', handleImageError);
+    
+    return () => {
+      img.removeEventListener('load', handleImageLoad);
+      img.removeEventListener('error', handleImageError);
+    };
+  }, [isInView, token.id]);
 
   // Intersection observer for lazy loading and performance
   useEffect(() => {
@@ -245,25 +293,22 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
         className="grid-item flex items-center p-4 sm:p-6 bg-black/30 rounded-lg group transition-transform duration-200 will-change-transform hover:scale-[1.01]"
       >
         <img 
-          src={getTokenImageSrc(id)}
+          ref={imageRef}
+          src={isInView ? getTokenImageSrc(id) : undefined}
           alt={`${name} Logo`}
-          className="token-logo w-12 h-12 rounded-full mr-4 transition-transform duration-200 will-change-transform"
+          className={`token-logo w-12 h-12 rounded-full mr-4 transition-all duration-300 will-change-transform ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          } ${imageError ? 'bg-gray-700' : ''}`}
           loading="lazy"
-          onLoad={() => setImageLoaded(true)}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.onerror = null;
-            const fallback = getTokenFallbackSrc(id);
-            if (fallback) {
-              target.src = fallback;
-              target.onError = () => {
-                target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
-              };
-            } else {
-              target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
-            }
-          }}
+          decoding="async"
         />
+        
+        {/* Loading placeholder */}
+        {!imageLoaded && (
+          <div className="absolute top-0 left-0 w-12 h-12 rounded-full bg-gray-700/50 animate-pulse mr-4 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-[#00ffee]/30"></div>
+          </div>
+        )}
         
         <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
           <div className="md:col-span-2">
@@ -383,27 +428,23 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
     >
       <div className="flex items-center mb-4 relative w-full">
         <img 
-          src={getTokenImageSrc(id)}
+          ref={imageRef}
+          src={isInView ? getTokenImageSrc(id) : undefined}
+          src={isInView ? getTokenImageSrc(id) : undefined}
           alt={`${name} Logo`}
-          className="token-logo w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] rounded-full mr-3 transition-transform duration-200 will-change-transform"
+          className={`token-logo w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] rounded-full mr-3 transition-all duration-300 will-change-transform ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          } ${imageError ? 'bg-gray-700' : ''}`}
+        
+        {/* Loading placeholder for grid view */}
+        {!imageLoaded && (
+          <div className="absolute top-0 left-0 w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] rounded-full bg-gray-700/50 animate-pulse mr-3 flex items-center justify-center">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#00ffee]/30"></div>
+          </div>
+        )}
+        
           loading="lazy"
-          onLoad={() => setImageLoaded(true)}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.onerror = null;
-            const fallback = getTokenFallbackSrc(id);
-            if (fallback) {
-              target.src = fallback;
-              target.onError = () => {
-                target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
-              };
-            } else {
-              target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiMwMGZmZWUiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPgo8cGF0aCBkPSJtMyA5IDktOSA5IDltLTkgOXY5Ci8+Cjwvc3ZnPgo8L3N2Zz4K';
-            }
-          }}
-        />
-        <div className="flex-1 min-w-0">
-          <span className="text-lg sm:text-xl font-semibold text-[#cfd0d1] block truncate font-orbitron">
+          decoding="async"
             {name} ({id.toUpperCase()})
           </span>
           <span className={`badge ${

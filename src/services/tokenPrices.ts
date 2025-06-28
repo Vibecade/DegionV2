@@ -271,7 +271,8 @@ async function fetchTokenPrice(url: string, tokenId: string, timeout: number = 8
         signal: controller.signal,
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'Degion.xyz/1.0'
+          'User-Agent': 'Degion.xyz/1.0',
+          'Cache-Control': 'no-cache'
         }
       })
     );
@@ -282,12 +283,23 @@ async function fetchTokenPrice(url: string, tokenId: string, timeout: number = 8
       if (response.status === 429) {
         throw new Error(`Rate limited (${response.status})`);
       }
+      if (response.status >= 500) {
+        throw new Error(`Server error (${response.status})`);
+      }
       throw new Error(`HTTP ${response.status}`);
     }
     
     return await response.json();
   } catch (error) {
-    console.error(`❌ Fetch failed for ${tokenId}:`, error);
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.warn(`⏰ Request timeout for ${tokenId}`);
+      } else if (error.message.includes('Failed to fetch')) {
+        console.warn(`🌐 Network error for ${tokenId} - check connection or try disabling ad-blockers`);
+      } else {
+        console.warn(`⚠️ API error for ${tokenId}: ${error.message}`);
+      }
+    }
     throw error;
   }
 }
@@ -379,7 +391,7 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
           // Fetch detailed market data for ATH/ATL
           const detailUrl = `https://api.coingecko.com/api/v3/coins/${coingeckoId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
           
-          const detailData = await queueApiCall(() => fetchTokenPrice(detailUrl, `${tokenId}-detail`, 3000));
+          const detailData = await queueApiCall(() => fetchTokenPrice(detailUrl, `${tokenId}-detail`, 5000));
             
           if (detailData.market_data) {
             ath = detailData.market_data.ath?.usd;
@@ -393,7 +405,7 @@ export async function getTokenPrice(tokenId: string, seedPrice: number, coingeck
             }
           }
         } catch (detailError) {
-          console.warn(`⚠️ Failed to fetch ATH/ATL for ${tokenId}, using cached data:`, detailError);
+          console.warn(`⚠️ Failed to fetch ATH/ATL for ${tokenId}, using cached data`);
           // Use cached data if available
           const cachedATHATL = getCachedATHATL(tokenId);
           if (cachedATHATL) {

@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
+import { FixedSizeList as List } from 'react-window';
 import { TokenCard } from './TokenCard';
 import { TokenCardSkeleton } from './TokenCardSkeleton';
 import { Token } from '../types';
 import { Search, Grid, List, BarChart3 } from 'lucide-react';
-import { scheduleWork } from '../utils/performance';
 
 interface TokenGridProps {
   tokens: Token[];
@@ -14,6 +14,27 @@ interface TokenGridProps {
 
 type ViewMode = 'grid' | 'list' | 'compact';
 
+// Item heights for different view modes
+const ITEM_HEIGHTS = {
+  grid: 420,
+  list: 120,
+  compact: 180
+};
+
+// Calculate how many items per row based on view mode
+const getItemsPerRow = (viewMode: ViewMode): number => {
+  switch (viewMode) {
+    case 'grid':
+      return window.innerWidth >= 1024 ? 3 : window.innerWidth >= 640 ? 2 : 1;
+    case 'list':
+      return 1;
+    case 'compact':
+      return window.innerWidth >= 1024 ? 4 : window.innerWidth >= 640 ? 2 : 1;
+    default:
+      return 1;
+  }
+};
+
 export const TokenGrid: React.FC<TokenGridProps> = ({
   tokens,
   isLoading,
@@ -21,9 +42,6 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
   statusFilter
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [itemsPerPage, setItemsPerPage] = useState(12);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [renderBatch, setRenderBatch] = useState(6); // Render tokens in batches
 
   // Filter tokens based on search and status
   const filteredTokens = useMemo(() => {
@@ -35,44 +53,41 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
     });
   }, [tokens, searchTerm, statusFilter]);
 
-  // Paginate tokens
-  const paginatedTokens = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredTokens.slice(startIndex, endIndex);
-  }, [filteredTokens, currentPage, itemsPerPage]);
+  // Calculate virtual list properties
+  const itemsPerRow = getItemsPerRow(viewMode);
+  const itemHeight = ITEM_HEIGHTS[viewMode];
+  const virtualItemCount = Math.ceil(filteredTokens.length / itemsPerRow);
+  
+  // Virtual list height - show up to 6 rows initially, with a max height
+  const listHeight = Math.min(itemHeight * 6, window.innerHeight * 0.7);
 
-  // Batch render tokens for better performance
-  const visibleTokens = useMemo(() => {
-    return paginatedTokens.slice(0, renderBatch);
-  }, [paginatedTokens, renderBatch]);
+  // Render function for virtual list items
+  const renderVirtualItem = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+    const startIndex = index * itemsPerRow;
+    const endIndex = Math.min(startIndex + itemsPerRow, filteredTokens.length);
+    const rowTokens = filteredTokens.slice(startIndex, endIndex);
 
-  // Progressively load more tokens
-  React.useEffect(() => {
-    if (renderBatch < paginatedTokens.length) {
-      const timeoutId = scheduleWork(() => {
-        setRenderBatch(prev => Math.min(prev + 3, paginatedTokens.length));
-      });
-      
-      return () => {
-        if (typeof timeoutId === 'number') {
-          clearTimeout(timeoutId);
-        }
-      };
-    }
-  }, [renderBatch, paginatedTokens.length]);
-
-  // Reset batch when tokens change
-  React.useEffect(() => {
-    setRenderBatch(6);
-  }, [paginatedTokens]);
-
-  const totalPages = Math.ceil(filteredTokens.length / itemsPerPage);
-
-  // Reset to first page when filters change
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter]);
+    return (
+      <div 
+        style={style} 
+        className={`grid gap-4 sm:gap-6 px-2 ${
+          viewMode === 'grid' 
+            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
+            : viewMode === 'list'
+            ? 'grid-cols-1'
+            : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+        }`}
+      >
+        {rowTokens.map((token) => (
+          <TokenCard 
+            key={token.id} 
+            token={token} 
+            viewMode={viewMode}
+          />
+        ))}
+      </div>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -83,7 +98,7 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
           ? 'grid-cols-1'
           : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
       }`}>
-        {[...Array(itemsPerPage)].map((_, index) => (
+        {[...Array(12)].map((_, index) => (
           <TokenCardSkeleton key={index} />
         ))}
       </div>
@@ -118,18 +133,6 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
           <span className="text-sm text-gray-400">
             {filteredTokens.length} token{filteredTokens.length !== 1 ? 's' : ''}
           </span>
-          
-          {/* Items per page */}
-          <select
-            value={itemsPerPage}
-            onChange={(e) => setItemsPerPage(Number(e.target.value))}
-            className="bg-black/30 border border-[rgba(0,255,238,0.2)] rounded-lg px-3 py-1 text-sm text-[#cfd0d1] focus:outline-none focus:border-[#00ffee]"
-          >
-            <option value={6}>6 per page</option>
-            <option value={12}>12 per page</option>
-            <option value={24}>24 per page</option>
-            <option value={filteredTokens.length}>Show all</option>
-          </select>
         </div>
 
         {/* View Mode Toggle */}
@@ -170,77 +173,23 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
         </div>
       </div>
 
-      {/* Token Grid */}
-      <div className={`grid gap-4 sm:gap-6 ${
-        viewMode === 'grid' 
-          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
-          : viewMode === 'list'
-          ? 'grid-cols-1'
-          : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
-      } will-change-contents`}>
-        {visibleTokens.map((token, index) => (
-          <div key={token.id} className="stagger-animation" style={{ animationDelay: `${index * 0.1}s` }}>
-            <TokenCard token={token} viewMode={viewMode} />
-          </div>
-        ))}
-        {/* Show skeletons for remaining tokens being loaded */}
-        {renderBatch < paginatedTokens.length && 
-          Array.from({ length: Math.min(3, paginatedTokens.length - renderBatch) }).map((_, index) => (
-            <div key={`skeleton-${index}`} className="stagger-animation">
-              <TokenCardSkeleton />
-            </div>
-          ))
-        }
+      {/* Virtualized Token List */}
+      <div className="bg-black/10 rounded-lg border border-[rgba(0,255,238,0.1)] overflow-hidden">
+        <List
+          height={listHeight}
+          itemCount={virtualItemCount}
+          itemSize={itemHeight}
+          width="100%"
+          className="scrollbar-thin scrollbar-thumb-[#00ffee]/30 scrollbar-track-transparent"
+        >
+          {renderVirtualItem}
+        </List>
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center space-x-2 mt-8">
-          <button
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 bg-black/30 border border-[rgba(0,255,238,0.2)] rounded-lg text-gray-400 hover:text-[#00ffee] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-          >
-            Previous
-          </button>
-          
-          {/* Page Numbers */}
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            let pageNum;
-            if (totalPages <= 5) {
-              pageNum = i + 1;
-            } else if (currentPage <= 3) {
-              pageNum = i + 1;
-            } else if (currentPage >= totalPages - 2) {
-              pageNum = totalPages - 4 + i;
-            } else {
-              pageNum = currentPage - 2 + i;
-            }
-            
-            return (
-              <button
-                key={pageNum}
-                onClick={() => setCurrentPage(pageNum)}
-                className={`px-4 py-2 rounded-lg transition-all duration-300 ${
-                  currentPage === pageNum
-                    ? 'bg-[#00ffee] text-black font-semibold'
-                    : 'bg-black/30 border border-[rgba(0,255,238,0.2)] text-gray-400 hover:text-[#00ffee]'
-                }`}
-              >
-                {pageNum}
-              </button>
-            );
-          })}
-          
-          <button
-            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-black/30 border border-[rgba(0,255,238,0.2)] rounded-lg text-gray-400 hover:text-[#00ffee] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      
+      {/* Show total count */}
+      <div className="text-center text-sm text-gray-400 mt-4">
+        Showing all {filteredTokens.length} tokens with smooth scrolling
+      </div>
     </div>
   );
 };

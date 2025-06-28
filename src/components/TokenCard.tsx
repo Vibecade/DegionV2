@@ -14,9 +14,10 @@ import { lazyImageLoader } from '../utils/performance';
 interface TokenCardProps {
   token: Token;
   viewMode?: 'grid' | 'list' | 'compact';
+  style?: React.CSSProperties;
 }
 
-const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
+const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => {
   const cardRef = useRef<HTMLAnchorElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -219,6 +220,7 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
   // Different layouts based on view mode
   if (viewMode === 'list') {
     return (
+      <div style={style}>
       <Link 
         ref={cardRef}
         to={`/${id}`}
@@ -289,11 +291,13 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
           </div>
         </div>
       </Link>
+      </div>
     );
   }
 
   if (viewMode === 'compact') {
     return (
+      <div style={style}>
       <Link 
         ref={cardRef}
         to={`/${id}`}
@@ -355,19 +359,23 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
           </div>
         </div>
       </Link>
+      </div>
     );
   }
 
   // Default grid view
   if (error) {
     return (
+      <div style={style}>
       <div className="grid-item flex flex-col items-center p-4 sm:p-6 bg-black/30 rounded-lg">
         <p className="text-red-400">{error}</p>
+      </div>
       </div>
     );
   }
 
   return (
+    <div style={style}>
     <Link 
       ref={cardRef}
       to={`/${id}`}
@@ -495,6 +503,7 @@ const TokenCard = memo(({ token, viewMode = 'grid' }: TokenCardProps) => {
         </div>
       )}
     </Link>
+    </div>
   );
 });
 

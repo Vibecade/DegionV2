@@ -26,7 +26,7 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           charts: ['chart.js', 'react-chartjs-2'],
-          utils: ['src/utils/security.ts', 'src/utils/seo.ts', 'src/utils/accessibility.ts', 'src/utils/imageOptimization.ts'],
+          utils: ['src/utils/security.ts', 'src/utils/seo.ts', 'src/utils/accessibility.ts'],
           supabase: ['@supabase/supabase-js'],
         },
         // Optimize chunk loading

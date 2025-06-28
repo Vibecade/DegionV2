@@ -1,30 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
-import { formatSupport } from './utils/imageOptimization';
 import './index.css';
-
-// Initialize image format support detection
-(async () => {
-  try {
-    const [webpSupported, avifSupported] = await Promise.all([
-      formatSupport.supportsFormat('webp'),
-      formatSupport.supportsFormat('avif')
-    ]);
-    
-    // Add classes to document for CSS feature detection
-    if (webpSupported) {
-      document.documentElement.classList.add('webp-supported');
-    }
-    if (avifSupported) {
-      document.documentElement.classList.add('avif-supported');
-    }
-    
-    console.log('🖼️ Image format support:', { webp: webpSupported, avif: avifSupported });
-  } catch (error) {
-    console.warn('Failed to detect image format support:', error);
-  }
-})();
 
 // Add error handling for deployment
 window.addEventListener('error', (event) => {

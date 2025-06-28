@@ -2,12 +2,18 @@ import { useEffect, useRef } from 'react';
 
 export const TronGrid = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationFrameRef = useRef<number>();
+  const isVisibleRef = useRef(true);
 
   useEffect(() => {
     if (!canvasRef.current) return;
     
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d')!;
+    
+    // Optimize canvas for performance
+    ctx.imageSmoothingEnabled = false;
+    canvas.style.willChange = 'auto'; // Don't force repaints
     
     const setCanvasSize = () => {
       canvas.width = window.innerWidth;
@@ -16,6 +22,12 @@ export const TronGrid = () => {
     
     setCanvasSize();
     window.addEventListener('resize', setCanvasSize);
+
+    // Visibility API to pause animation when tab is not visible
+    const handleVisibilityChange = () => {
+      isVisibleRef.current = !document.hidden;
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     class Particle {
       x: number;
@@ -31,11 +43,11 @@ export const TronGrid = () => {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
         this.size = Math.random() * 0.8 + 0.2;
-        this.speedX = (Math.random() - 0.5) * 0.3;
-        this.speedY = (Math.random() - 0.5) * 0.3;
+        this.speedX = (Math.random() - 0.5) * 0.2; // Reduced speed for better performance
+        this.speedY = (Math.random() - 0.5) * 0.2;
         this.opacity = Math.random() * 0.5 + 0.2;
         this.color = this.getRandomColor();
-        this.connection = 180; // Increased connection radius for more web-like effect
+        this.connection = 120; // Reduced connection radius for better performance
       }
 
       getRandomColor() {
@@ -72,7 +84,7 @@ export const TronGrid = () => {
     }
 
     const particles: Particle[] = [];
-    const particleCount = Math.min(60, (canvas.width * canvas.height) / 40000);
+    const particleCount = Math.min(30, (canvas.width * canvas.height) / 60000); // Reduced particle count
     
     for (let i = 0; i < particleCount; i++) {
       particles.push(new Particle());
@@ -95,28 +107,18 @@ export const TronGrid = () => {
             ctx.lineTo(particles[j].x, particles[j].y);
             ctx.stroke();
 
-            // Add additional connection points for web effect
-            if (distance < maxDistance * 0.5 && Math.random() > 0.8) {
-              const midX = (particles[i].x + particles[j].x) / 2;
-              const midY = (particles[i].y + particles[j].y) / 2;
-              const offset = 20;
-              const controlX = midX + (Math.random() - 0.5) * offset;
-              const controlY = midY + (Math.random() - 0.5) * offset;
-              
-              ctx.beginPath();
-              ctx.strokeStyle = particles[i].color.replace('alpha', (opacity * 0.5).toString());
-              ctx.lineWidth = 0.2;
-              ctx.moveTo(particles[i].x, particles[i].y);
-              ctx.quadraticCurveTo(controlX, controlY, particles[j].x, particles[j].y);
-              ctx.stroke();
-            }
+            // Removed additional connection points for better performance
           }
         }
       }
     };
 
-    let animationFrameId: number;
     const animate = () => {
+      if (!isVisibleRef.current) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // Create gradient background
@@ -135,7 +137,7 @@ export const TronGrid = () => {
       // Connect particles
       connectParticles();
 
-      animationFrameId = requestAnimationFrame(animate);
+      animationFrameRef.current = requestAnimationFrame(animate);
     };
 
     animate();
@@ -151,24 +153,28 @@ export const TronGrid = () => {
         const dy = y - particle.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        if (distance < 150) {
+        if (distance < 100) { // Reduced interaction radius
           particle.opacity = 0.9;
           particle.size = 1.2;
-          particle.connection = 220;
+          particle.connection = 150;
         } else {
           particle.opacity = Math.random() * 0.5 + 0.2;
           particle.size = Math.random() * 0.8 + 0.2;
-          particle.connection = 180;
+          particle.connection = 120;
         }
       });
     };
 
-    canvas.addEventListener('mousemove', handleMouseMove);
+    // Use passive listener for better performance
+    canvas.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     return () => {
       window.removeEventListener('resize', setCanvasSize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       canvas.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
   }, []);
 

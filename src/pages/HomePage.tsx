@@ -61,8 +61,8 @@ export const HomePage = () => {
         setError('Failed to load tokens. Please try refreshing the page.');
         console.error('Failed to load tokens:', error);
       } finally {
-        // Simulate loading time for better UX
-        setTimeout(() => setIsLoading(false), 1000);
+        // Reduced loading time for better performance
+        setTimeout(() => setIsLoading(false), 300);
       }
     };
 

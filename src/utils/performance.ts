@@ -18,7 +18,7 @@ export class LazyImageLoader {
         });
       },
       {
-        rootMargin: '100px 0px', // Increased for better UX
+        rootMargin: '50px 0px', // Reduced for better performance
         threshold: 0.01
       }
     );
@@ -32,16 +32,9 @@ export class LazyImageLoader {
   private loadImage(img: HTMLImageElement): void {
     const src = img.dataset.src;
     if (src) {
-      // Preload the image
-      const preloadImg = new Image();
-      preloadImg.onload = () => {
-        img.src = src;
-        img.removeAttribute('data-src');
-        img.classList.add('loaded');
-      };
-      preloadImg.src = src;
       img.src = src;
       img.removeAttribute('data-src');
+      img.classList.add('loaded');
       this.observer.unobserve(img);
       this.images.delete(img);
     }
@@ -56,7 +49,7 @@ export class LazyImageLoader {
 // Request idle callback wrapper
 export const scheduleWork = (callback: () => void, options?: { timeout?: number }) => {
   if ('requestIdleCallback' in window) {
-    return requestIdleCallback(callback, options);
+    return (window as any).requestIdleCallback(callback, options);
   } else {
     // Fallback for browsers without requestIdleCallback
     return setTimeout(callback, 0);
@@ -66,7 +59,7 @@ export const scheduleWork = (callback: () => void, options?: { timeout?: number 
 // Cancel scheduled work
 export const cancelWork = (id: number) => {
   if ('cancelIdleCallback' in window) {
-    cancelIdleCallback(id);
+    (window as any).cancelIdleCallback(id);
   } else {
     clearTimeout(id);
   }
@@ -75,7 +68,7 @@ export const cancelWork = (id: number) => {
 // Debounce utility for performance optimization
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  wait: number = 300,
+  wait: number = 150, // Reduced for better responsiveness
   immediate?: boolean
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout | null = null;
@@ -98,7 +91,7 @@ export function debounce<T extends (...args: any[]) => any>(
 // Throttle utility for performance optimization
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
-  limit: number = 100
+  limit: number = 16 // ~60fps for smooth scrolling
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
   
@@ -275,6 +268,80 @@ export const performanceMetrics = {
     });
   }
 };
+
+// Scroll performance optimization
+export const scrollOptimizer = {
+  // Passive event listeners for better scroll performance
+  addPassiveListener: (element: Element, event: string, handler: EventListener) => {
+    element.addEventListener(event, handler, { passive: true });
+  },
+
+  // Throttled scroll handler
+  createScrollHandler: (callback: () => void, throttleMs: number = 16) => {
+    return throttle(callback, throttleMs);
+  },
+
+  // Optimize scroll container
+  optimizeScrollContainer: (element: HTMLElement) => {
+    element.style.willChange = 'scroll-position';
+    element.style.transform = 'translateZ(0)'; // Force hardware acceleration
+    element.style.backfaceVisibility = 'hidden';
+  },
+
+  // Clean up scroll optimizations
+  cleanupScrollContainer: (element: HTMLElement) => {
+    element.style.willChange = 'auto';
+    element.style.transform = '';
+    element.style.backfaceVisibility = '';
+  }
+};
+
+// Virtual scrolling for large lists
+export class VirtualScroller {
+  private container: HTMLElement;
+  private itemHeight: number;
+  private visibleCount: number;
+  private totalCount: number;
+  private scrollTop: number = 0;
+  private renderCallback: (startIndex: number, endIndex: number) => void;
+
+  constructor(
+    container: HTMLElement,
+    itemHeight: number,
+    visibleCount: number,
+    totalCount: number,
+    renderCallback: (startIndex: number, endIndex: number) => void
+  ) {
+    this.container = container;
+    this.itemHeight = itemHeight;
+    this.visibleCount = visibleCount;
+    this.totalCount = totalCount;
+    this.renderCallback = renderCallback;
+
+    this.setupScrollListener();
+  }
+
+  private setupScrollListener() {
+    const handleScroll = throttle(() => {
+      this.scrollTop = this.container.scrollTop;
+      this.updateVisibleItems();
+    }, 16);
+
+    scrollOptimizer.addPassiveListener(this.container, 'scroll', handleScroll);
+  }
+
+  private updateVisibleItems() {
+    const startIndex = Math.floor(this.scrollTop / this.itemHeight);
+    const endIndex = Math.min(startIndex + this.visibleCount + 1, this.totalCount);
+    
+    this.renderCallback(startIndex, endIndex);
+  }
+
+  updateTotalCount(newCount: number) {
+    this.totalCount = newCount;
+    this.updateVisibleItems();
+  }
+}
 
 // Export singleton instances
 export const lazyImageLoader = new LazyImageLoader();

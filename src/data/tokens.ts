@@ -100,13 +100,13 @@ export const tokens: Token[] = [
   {
     id: 'fragmetric',
     name: 'Fragmetric',
-    status: 'Pending TGE',
-    launchDate: 'TBD',
-    seedPrice: 'TBD',
+    status: 'Live',
+    launchDate: '2024-07-01',
+    seedPrice: '$0.125',
     currentPrice: '--',
     roi: '--',
     investment: '--',
-    vestingEnd: '10% at TGE, 12-month lockup, then 24-month linear unlock',
+    vestingEnd: '10% at TGE, 12-month cliff, then 24-month linear vest',
     description: 'Fragmetric is revolutionizing on-chain data analytics.',
     links: {
       website: 'https://fragmetric.xyz/',

@@ -3,6 +3,7 @@ import { Token } from '../types';
 import { logError } from '../utils/errorLogger';
 import { useEffect, useState, useMemo, useCallback, memo, useRef, useLayoutEffect } from 'react';
 import { getFuelPrice, getSilencioPrice, getCornPrice, getGizaPrice, getSkatePrice, getResolvPrice, clearAllPriceCaches } from '../services/tokenPrices';
+import { getFragmetricPrice } from '../services/tokenPrices';
 import { fetchTokenHolders, fetchTradingVolume } from '../services/duneApi';
 import { getTokenInfo } from '../services/tokenInfo';
 import { ArrowUpRight, Users, Wallet, LineChart, TrendingUp, Info } from 'lucide-react';
@@ -205,7 +206,7 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
 
   // Get live price data for tokens that are trading
   const fetchPrice = useCallback(async () => {
-    const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv', 'session'];
+    const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv', 'session', 'fragmetric'];
     if (!supportedTokens.includes(id.toLowerCase())) {
       return;
     }
@@ -229,6 +230,7 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
           case 'skate': return await getSkatePrice();
           case 'resolv': return await getResolvPrice();
           case 'session': return await getSessionPrice();
+          case 'fragmetric': return await getFragmetricPrice();
           default: throw new Error('Unsupported token');
         }
       })();
@@ -261,7 +263,7 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
   }, [id, seedPrice]);
 
   useEffect(() => {
-    const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv'];
+    const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv', 'fragmetric'];
     if (supportedTokens.includes(id.toLowerCase()) && isInView) {
       fetchPrice();
       // Stagger intervals to avoid hitting rate limits

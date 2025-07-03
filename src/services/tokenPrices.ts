@@ -38,7 +38,8 @@ const FALLBACK_PRICES = {
   giza: { price: 0.045, seedPrice: 0.045 },
   skate: { price: 0.08, seedPrice: 0.08 },
   resolv: { price: 0.10, seedPrice: 0.10 },
-  session: { price: 0.20, seedPrice: 0.20 }
+  session: { price: 0.20, seedPrice: 0.20 },
+  fragmetric: { price: 0.125, seedPrice: 0.125 }
 };
 
 // Secure cache for ATH/ATL data
@@ -481,6 +482,10 @@ export async function getResolvPrice(): Promise<TokenPriceResponse> {
 
 export async function getSessionPrice(): Promise<TokenPriceResponse> {
   return getTokenPrice('session', 0.20, 'session');
+}
+
+export async function getFragmetricPrice(): Promise<TokenPriceResponse> {
+  return getTokenPrice('fragmetric', 0.125, 'fragmetric');
 }
 
 // Debug function to clear all price caches

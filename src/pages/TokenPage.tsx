@@ -114,7 +114,7 @@ export const TokenPage = () => {
   useEffect(() => {
     if (!token || !tokenId) return;
 
-    const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv', 'session'];
+    const supportedTokens = ['fuel', 'silencio', 'corn', 'giza', 'skate', 'resolv', 'session', 'fragmetric'];
     if (!supportedTokens.includes(tokenId.toLowerCase())) {
       return;
     }
@@ -132,7 +132,8 @@ export const TokenPage = () => {
           giza: 'giza',
           skate: 'skate',
           resolv: 'resolv',
-          session: 'session'
+          session: 'session',
+          fragmetric: 'fragmetric'
         };
 
         const coingeckoId = coingeckoIds[tokenId.toLowerCase()];
@@ -245,6 +246,8 @@ export const TokenPage = () => {
         return 'UNISWAP3ETH:SKATEUSDC_4A480F.USD';
       case 'resolv':
         return 'MEXC:RESOLVUSDT';
+      case 'fragmetric':
+        return 'MEXC:FRAGUSDT';
       default:
         return '';
     }

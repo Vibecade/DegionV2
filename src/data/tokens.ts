@@ -101,7 +101,7 @@ export const tokens: Token[] = [
     id: 'fragmetric',
     name: 'Fragmetric',
     status: 'Live',
-    launchDate: '2024-07-01',
+    launchDate: '2025-07-01',
     seedPrice: '$0.125',
     currentPrice: '--',
     roi: '--',

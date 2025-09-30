@@ -243,7 +243,7 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
                         <div className="flex-1 w-full bg-gradient-to-r from-red-900/30 via-orange-900/30 to-yellow-900/30 rounded-xl border border-orange-500/40 p-4">
                           <div className="flex items-center justify-center mb-6">
                             <div className="animate-bounce text-lg mr-2">🔥</div>
-                            <h3 className="text-sm font-bold bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent font-orbitron text-center">
+                            <h3 className="text-xs font-bold bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent font-orbitron text-center">
                               YIELDBASIS METRICS
                             </h3>
                             <div className="animate-bounce text-lg ml-2">🔥</div>
@@ -252,29 +252,29 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
                           {/* Compact metrics grid */}
                           <div className="grid grid-cols-2 gap-3">
                             <div className="bg-black/40 rounded-lg px-3 py-3 border border-red-500/30 flex flex-col justify-center items-center text-center">
-                              <div className="text-lg font-bold text-red-400 animate-pulse mb-1">61,040</div>
-                              <div className="text-xs text-gray-300 break-words whitespace-normal leading-tight">
+                              <div className="text-base font-bold text-red-400 animate-pulse mb-1">61,040</div>
+                              <div className="text-[10px] text-gray-300 break-words whitespace-normal leading-tight">
                                 Total Addresses
                               </div>
                             </div>
                             
                             <div className="bg-black/40 rounded-lg px-3 py-3 border border-orange-500/30 flex flex-col justify-center items-center text-center">
-                              <div className="text-lg font-bold text-orange-400 animate-pulse mb-1">$196M+</div>
-                              <div className="text-xs text-gray-300 break-words whitespace-normal leading-tight">
+                              <div className="text-base font-bold text-orange-400 animate-pulse mb-1">$196M+</div>
+                              <div className="text-[10px] text-gray-300 break-words whitespace-normal leading-tight">
                                 Total Committed
                               </div>
                             </div>
                             
                             <div className="bg-black/40 rounded-lg px-3 py-3 border border-yellow-500/30 flex flex-col justify-center items-center text-center">
-                              <div className="text-lg font-bold text-yellow-400 animate-pulse mb-1">79x</div>
-                              <div className="text-xs text-gray-300 break-words whitespace-normal leading-tight">
+                              <div className="text-base font-bold text-yellow-400 animate-pulse mb-1">79x</div>
+                              <div className="text-[10px] text-gray-300 break-words whitespace-normal leading-tight">
                                 Overallocated
                               </div>
                             </div>
                             
                             <div className="bg-black/40 rounded-lg px-3 py-3 border border-green-500/30 flex flex-col justify-center items-center text-center">
-                              <div className="text-lg font-bold text-green-400 animate-pulse mb-1">$2.5M</div>
-                              <div className="text-xs text-gray-300 break-words whitespace-normal leading-tight">
+                              <div className="text-base font-bold text-green-400 animate-pulse mb-1">$2.5M</div>
+                              <div className="text-[10px] text-gray-300 break-words whitespace-normal leading-tight">
                                 Hard Cap
                               </div>
                             </div>
@@ -283,7 +283,7 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
                           <div className="mt-4 text-center">
                             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-2 rounded-full text-xs font-bold animate-pulse">
                               <span className="animate-bounce">⚡</span>
-                              <span className="break-words whitespace-normal">MASSIVE HYPE</span>
+                              <span className="text-[10px] break-words whitespace-normal">MASSIVE HYPE</span>
                               <span className="animate-bounce">⚡</span>
                             </div>
                           </div>

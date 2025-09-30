@@ -138,7 +138,7 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
   const getTokenImageSrc = (tokenId: string): string => {
     const tokenIdLower = tokenId.toLowerCase();
     if (tokenIdLower === 'yieldbasis') {
-      return 'https://pbs.twimg.com/profile_images/1856040142462976000/YieldBasis_400x400.jpg';
+      return '/Screenshot 2025-09-30 at 9.37.00 PM.png';
     } else if (tokenIdLower === 'fragmetric') {
       return 'https://raw.githubusercontent.com/Sadpepedev/TheLegionProject/main/images/logos/Fragmetric.png';
     } else if (tokenIdLower === 'arcium') {

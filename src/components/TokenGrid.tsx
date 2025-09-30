@@ -3,7 +3,7 @@ import { FixedSizeList as List } from 'react-window';
 import { TokenCard } from './TokenCard';
 import { TokenCardSkeleton } from './TokenCardSkeleton';
 import { Token } from '../types';
-import { Search, Grid, List as ListIcon, BarChart3 } from 'lucide-react';
+import { Search, Grid, List as ListIcon, BarChart3, Rocket, Clock } from 'lucide-react';
 
 interface TokenGridProps {
   tokens: Token[];
@@ -53,10 +53,21 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
     });
   }, [tokens, searchTerm, statusFilter]);
 
+  // Separate launching soon tokens for special highlighting
+  const launchingSoonTokens = useMemo(() => 
+    filteredTokens.filter(token => token.status === 'Launching Soon'),
+    [filteredTokens]
+  );
+
+  const otherTokens = useMemo(() => 
+    filteredTokens.filter(token => token.status !== 'Launching Soon'),
+    [filteredTokens]
+  );
+
   // Calculate virtual list properties
   const itemsPerRow = getItemsPerRow(viewMode);
   const itemHeight = ITEM_HEIGHTS[viewMode];
-  const virtualItemCount = Math.ceil(filteredTokens.length / itemsPerRow);
+  const virtualItemCount = Math.ceil(otherTokens.length / itemsPerRow);
   
   // Virtual list height - show up to 6 rows initially, with a max height
   const listHeight = Math.min(itemHeight * 6, window.innerHeight * 0.7);
@@ -64,8 +75,8 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
   // Render function for virtual list items
   const renderVirtualItem = ({ index, style }: { index: number; style: React.CSSProperties }) => {
     const startIndex = index * itemsPerRow;
-    const endIndex = Math.min(startIndex + itemsPerRow, filteredTokens.length);
-    const rowTokens = filteredTokens.slice(startIndex, endIndex);
+    const endIndex = Math.min(startIndex + itemsPerRow, otherTokens.length);
+    const rowTokens = otherTokens.slice(startIndex, endIndex);
 
     return (
       <div 
@@ -135,7 +146,12 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-400">
-            {filteredTokens.length} token{filteredTokens.length !== 1 ? 's' : ''}
+            {filteredTokens.length} token{filteredTokens.length !== 1 ? 's' : ''} 
+            {launchingSoonTokens.length > 0 && (
+              <span className="ml-2 text-[#00ffee]">
+                ({launchingSoonTokens.length} launching soon)
+              </span>
+            )}
           </span>
         </div>
 
@@ -177,26 +193,87 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
         </div>
       </div>
 
+      {/* Launching Soon Highlight Section */}
+      {launchingSoonTokens.length > 0 && (
+        <div className="mb-8">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-900/30 via-purple-800/20 to-purple-900/30 border-2 border-purple-500/40 p-6 backdrop-blur-sm">
+            {/* Animated background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-transparent to-purple-500/10 animate-pulse"></div>
+            
+            {/* Glow effect */}
+            <div className="absolute inset-0 rounded-2xl shadow-[0_0_50px_rgba(168,85,247,0.3)] animate-pulse"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-center mb-6">
+                <div className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600/30 to-purple-500/30 rounded-full border border-purple-400/50 backdrop-blur-sm">
+                  <Rocket className="w-6 h-6 text-purple-300 animate-bounce" />
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-300 to-purple-100 bg-clip-text text-transparent font-orbitron">
+                    Launching Soon
+                  </h2>
+                  <Clock className="w-6 h-6 text-purple-300 animate-pulse" />
+                </div>
+              </div>
+              
+              <div className={`grid gap-6 ${
+                viewMode === 'grid' 
+                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
+                  : viewMode === 'list'
+                  ? 'grid-cols-1'
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+              }`}>
+                {launchingSoonTokens.map((token) => (
+                  <div key={token.id} className="relative">
+                    {/* Special glow for launching soon tokens */}
+                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/50 to-pink-500/50 rounded-lg blur opacity-75 animate-pulse"></div>
+                    <div className="relative">
+                      <TokenCard 
+                        token={token} 
+                        viewMode={viewMode}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="text-center mt-4">
+                <p className="text-purple-200 text-sm font-medium">
+                  🚀 These tokens are launching soon - don't miss out!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Virtualized Token List */}
-      <div className="bg-black/10 rounded-lg border border-[rgba(0,255,238,0.1)] overflow-hidden" style={{ minHeight: '400px' }}>
-        <List
-          height={listHeight}
-          itemCount={virtualItemCount}
-          itemSize={itemHeight}
-          width="100%"
-          overscanCount={2}
-          style={{
-            scrollbarWidth: 'thin',
-            scrollbarColor: 'rgba(0, 255, 238, 0.3) transparent'
-          }}
-        >
-          {renderVirtualItem}
-        </List>
-      </div>
+      {otherTokens.length > 0 && (
+        <div className="bg-black/10 rounded-lg border border-[rgba(0,255,238,0.1)] overflow-hidden" style={{ minHeight: '400px' }}>
+          <List
+            height={listHeight}
+            itemCount={virtualItemCount}
+            itemSize={itemHeight}
+            width="100%"
+            overscanCount={2}
+            style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(0, 255, 238, 0.3) transparent'
+            }}
+          >
+            {renderVirtualItem}
+          </List>
+        </div>
+      )}
       
       {/* Show total count */}
       <div className="text-center text-sm text-gray-400 mt-4">
-        Showing all {filteredTokens.length} tokens with smooth scrolling
+        {launchingSoonTokens.length > 0 && (
+          <span className="text-purple-300 font-medium">
+            {launchingSoonTokens.length} launching soon • 
+          </span>
+        )}
+        <span className="ml-1">
+          {otherTokens.length} other tokens with smooth scrolling
+        </span>
       </div>
     </div>
   );

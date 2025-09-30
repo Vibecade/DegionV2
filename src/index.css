@@ -429,6 +429,26 @@ h1, h2, h3, h4, h5, h6, .font-orbitron {
   }
 }
 
+/* Enhanced launching soon animations */
+@keyframes launchingSoonGlow {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(168, 85, 247, 0.4),
+      0 0 40px rgba(168, 85, 247, 0.2),
+      inset 0 0 20px rgba(168, 85, 247, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(168, 85, 247, 0.6),
+      0 0 60px rgba(168, 85, 247, 0.4),
+      inset 0 0 30px rgba(168, 85, 247, 0.2);
+  }
+}
+
+.launching-soon-highlight {
+  animation: launchingSoonGlow 3s ease-in-out infinite;
+}
+
 .badge-cancelled {
   @apply bg-red-950/20 text-red-400;
   border-color: rgba(239, 68, 68, 0.3);

@@ -317,4 +317,21 @@ export const tokens: Token[] = [
       twitter: 'https://x.com/ArciumHQ'
     }
   },
+  {
+    id: 'yieldbasis',
+    name: 'YieldBasis',
+    status: 'Pending TGE',
+    launchDate: 'October 2025',
+    seedPrice: 'TBD',
+    currentPrice: '--',
+    roi: '--',
+    investment: '--',
+    vestingEnd: '100% at TGE',
+    description: 'Turning crypto into productive assets using original Automatic Market Making without impermanent loss.',
+    links: {
+      website: 'https://yieldbasis.com/',
+      twitter: 'https://x.com/yieldbasis',
+      discord: 'https://discord.com/invite/yieldbasis'
+    }
+  },
 ];

@@ -45,8 +45,8 @@ const DUNE_API_BASE_URL = "https://api.dune.com/api/v1/query";
 const KNOWN_TOKENS = [
   "fuel", "silencio", "almanak", "pulse", "enclave", "enclavemoney", 
   "fragmetric", "corn", "giza", "nil", "eoracle", "intuition", 
-  "inferencelabs", "hyperlane", "electron", "litprotocol", "skate", 
-  "session", "resolv", "arcium"
+  "inferencelabs", "hyperlane", "electron", "litprotocol", "skate",
+  "session", "resolv", "arcium", "yieldbasis"
 ];
 
 // Convert Legion stage to our status format

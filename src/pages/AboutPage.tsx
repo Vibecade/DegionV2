@@ -4,7 +4,7 @@ import { SEOHead } from '../components/SEOHead';
 import { Footer } from '../components/Footer';
 import { ArrowLeft, Target, TrendingUp, Users, Shield, Database, Zap } from 'lucide-react';
 
-export const AboutPage = () => {
+const AboutPage = () => {
   return (
     <div className="min-h-screen bg-[#09131b] text-[#cfd0d1] p-4 sm:p-8">
       <SEOHead 
@@ -161,3 +161,5 @@ export const AboutPage = () => {
     </div>
   );
 };
+
+export { AboutPage };

@@ -28,6 +28,12 @@ export default defineConfig({
           charts: ['chart.js', 'react-chartjs-2'],
           utils: ['src/utils/security.ts', 'src/utils/seo.ts', 'src/utils/accessibility.ts'],
           supabase: ['@supabase/supabase-js'],
+          pages: [
+            'src/pages/HomePage.tsx',
+            'src/pages/TokenPage.tsx', 
+            'src/pages/DiscussionPage.tsx',
+            'src/pages/AboutPage.tsx'
+          ]
         },
         // Optimize chunk loading
         experimentalMinChunkSize: 10000,

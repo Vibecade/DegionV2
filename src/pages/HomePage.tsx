@@ -12,7 +12,7 @@ import { Heart, ExternalLink, TrendingUp, LineChart } from 'lucide-react';
 import { formatUSDC, formatNumber } from '../utils/formatters';
 import { logError } from '../utils/errorLogger';
 
-export const HomePage = () => {
+const HomePage = () => {
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -296,3 +296,5 @@ export const HomePage = () => {
     </div>
   );
 };
+
+export { HomePage };

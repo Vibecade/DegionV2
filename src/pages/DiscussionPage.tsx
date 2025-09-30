@@ -7,7 +7,7 @@ import { useAnnouncement } from '../hooks/useAccessibility';
 import { useNotifications } from '../components/NotificationSystem';
 import { MessageSquarePlus, MessageCircle, ArrowLeft, ChevronRight } from 'lucide-react';
 
-export const DiscussionPage = () => {
+const DiscussionPage = () => {
   const { tokenId } = useParams();
   const token = tokens.find(t => t.id.toLowerCase() === tokenId?.toLowerCase());
   const announce = useAnnouncement();
@@ -369,3 +369,5 @@ export const DiscussionPage = () => {
     </div>
   );
 };
+
+export { DiscussionPage };

@@ -15,7 +15,7 @@ import TradingViewWidget from '../components/TradingViewWidget';
 import { Footer } from '../components/Footer';
 import { formatUSDC, formatNumber } from '../utils/formatters';
 
-export const TokenPage = () => {
+const TokenPage = () => {
   const { tokenId } = useParams();
   const { addNotification } = useNotifications();
   const announce = useAnnouncement();
@@ -642,3 +642,5 @@ export const TokenPage = () => {
     </div>
   );
 };
+
+export { TokenPage };

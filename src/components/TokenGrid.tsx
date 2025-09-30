@@ -3,7 +3,7 @@ import { FixedSizeList as List } from 'react-window';
 import { TokenCard } from './TokenCard';
 import { TokenCardSkeleton } from './TokenCardSkeleton';
 import { Token } from '../types';
-import { Search, Grid, List as ListIcon, BarChart3, Rocket, Clock } from 'lucide-react';
+import { Search, Grid2x2 as Grid, List as ListIcon, BarChart3, Rocket, Clock } from 'lucide-react';
 
 interface TokenGridProps {
   tokens: Token[];

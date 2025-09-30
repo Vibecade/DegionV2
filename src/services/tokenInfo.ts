@@ -5,7 +5,20 @@ import { supabase, isSupabaseAvailable } from './supabaseClient';
 export async function getTokenInfo(tokenId: string): Promise<Partial<Token> | null> {
   try {
     if (!isSupabaseAvailable) {
-      console.warn('Token info feature not available - Supabase not configured');
+      console.log('📱 Using offline mode - Supabase not configured');
+      return null;
+    }
+
+    // Test Supabase connectivity before making the call
+    try {
+      // Simple connectivity test
+      const testResponse = await supabase.from('token_info').select('count').limit(0);
+      if (testResponse.error && testResponse.error.message.includes('Failed to fetch')) {
+        console.warn('🔌 Supabase connectivity issue, falling back to offline mode');
+        return null;
+      }
+    } catch (connectivityError) {
+      console.warn('🔌 Supabase connectivity test failed, falling back to offline mode');
       return null;
     }
 
@@ -16,7 +29,11 @@ export async function getTokenInfo(tokenId: string): Promise<Partial<Token> | nu
       .maybeSingle();
 
     if (error) {
-      console.error('Error fetching token info:', error);
+      if (error.message.includes('Failed to fetch')) {
+        console.warn('🔌 Network error fetching token info, using offline mode');
+      } else {
+        console.error('Error fetching token info:', error);
+      }
       return null;
     }
 
@@ -36,7 +53,19 @@ export async function getTokenInfo(tokenId: string): Promise<Partial<Token> | nu
 export async function getAllTokenInfo(): Promise<Record<string, Partial<Token>> | null> {
   try {
     if (!isSupabaseAvailable) {
-      console.warn('Token info feature not available - Supabase not configured');
+      console.log('📱 Using offline mode - Supabase not configured');
+      return null;
+    }
+
+    // Test Supabase connectivity before making the call
+    try {
+      const testResponse = await supabase.from('token_info').select('count').limit(0);
+      if (testResponse.error && testResponse.error.message.includes('Failed to fetch')) {
+        console.warn('🔌 Supabase connectivity issue, falling back to offline mode');
+        return null;
+      }
+    } catch (connectivityError) {
+      console.warn('🔌 Supabase connectivity test failed, falling back to offline mode');
       return null;
     }
 
@@ -45,7 +74,11 @@ export async function getAllTokenInfo(): Promise<Record<string, Partial<Token>> 
       .select('token_id, data');
 
     if (error) {
-      console.error('Error fetching all token info:', error);
+      if (error.message.includes('Failed to fetch')) {
+        console.warn('🔌 Network error fetching all token info, using offline mode');
+      } else {
+        console.error('Error fetching all token info:', error);
+      }
       return null;
     }
 
@@ -74,13 +107,30 @@ export async function getLastUpdateTime(): Promise<string | null> {
       return null;
     }
 
+    // Test connectivity first
+    try {
+      const testResponse = await supabase.from('token_info').select('count').limit(0);
+      if (testResponse.error && testResponse.error.message.includes('Failed to fetch')) {
+        return null;
+      }
+    } catch (connectivityError) {
+      return null;
+    }
+
     const { data, error } = await supabase
       .from('token_info')
       .select('updated_at')
       .order('updated_at', { ascending: false })
       .limit(1);
 
-    if (error || !data || data.length === 0) {
+    if (error) {
+      if (!error.message.includes('Failed to fetch')) {
+        console.error('Error getting last update time:', error);
+      }
+      return null;
+    }
+    
+    if (!data || data.length === 0) {
       return null;
     }
 

@@ -27,7 +27,7 @@ function transformDatabaseToken(dbToken: any): Token {
 export async function fetchTokensFromDatabase(): Promise<Token[]> {
   try {
     if (!isSupabaseAvailable) {
-      console.warn('Supabase not available, falling back to static data');
+      console.log('📱 Using offline mode - Supabase not configured, loading static data');
       const { tokens } = await import('../data/tokens');
       return tokens;
     }
@@ -38,14 +38,34 @@ export async function fetchTokensFromDatabase(): Promise<Token[]> {
       return tokenCache.data;
     }
 
-    console.log('🔄 Fetching tokens from database');
+    // Test Supabase connectivity before making the call
+    try {
+      const testResponse = await supabase.from('token_info').select('count').limit(0);
+      if (testResponse.error && testResponse.error.message.includes('Failed to fetch')) {
+        console.warn('🔌 Supabase connectivity issue, falling back to static data');
+        const { tokens } = await import('../data/tokens');
+        return tokens;
+      }
+    } catch (connectivityError) {
+      console.warn('🔌 Supabase connectivity test failed, falling back to static data');
+      const { tokens } = await import('../data/tokens');
+      return tokens;
+    }
+
+    console.log('🔄 Fetching tokens from Supabase database');
     const { data, error } = await supabase
       .from('token_info')
       .select('*')
       .order('name');
 
     if (error) {
-      throw new Error(`Database error: ${error.message}`);
+      if (error.message.includes('Failed to fetch')) {
+        console.warn('🔌 Network error fetching from database, falling back to static data');
+        const { tokens } = await import('../data/tokens');
+        return tokens;
+      } else {
+        throw new Error(`Database error: ${error.message}`);
+      }
     }
 
     if (!data || data.length === 0) {
@@ -85,12 +105,26 @@ export async function fetchTokensFromDatabase(): Promise<Token[]> {
 export async function fetchTokenDetails(tokenId: string): Promise<Token | null> {
   try {
     if (!isSupabaseAvailable) {
-      console.warn('Supabase not available, falling back to static data');
+      console.log('📱 Using offline mode - falling back to static data');
       const { tokens } = await import('../data/tokens');
       return tokens.find(t => t.id.toLowerCase() === tokenId.toLowerCase()) || null;
     }
 
-    console.log(`🔄 Fetching token details for ${tokenId}`);
+    // Test connectivity first
+    try {
+      const testResponse = await supabase.from('token_info').select('count').limit(0);
+      if (testResponse.error && testResponse.error.message.includes('Failed to fetch')) {
+        console.warn('🔌 Supabase connectivity issue, falling back to static data');
+        const { tokens } = await import('../data/tokens');
+        return tokens.find(t => t.id.toLowerCase() === tokenId.toLowerCase()) || null;
+      }
+    } catch (connectivityError) {
+      console.warn('🔌 Supabase connectivity test failed, falling back to static data');
+      const { tokens } = await import('../data/tokens');
+      return tokens.find(t => t.id.toLowerCase() === tokenId.toLowerCase()) || null;
+    }
+
+    console.log(`🔄 Fetching token details for ${tokenId} from Supabase`);
     const { data, error } = await supabase
       .from('token_info')
       .select('*')
@@ -98,7 +132,13 @@ export async function fetchTokenDetails(tokenId: string): Promise<Token | null> 
       .maybeSingle();
 
     if (error) {
-      throw new Error(`Database error: ${error.message}`);
+      if (error.message.includes('Failed to fetch')) {
+        console.warn(`🔌 Network error fetching ${tokenId}, falling back to static data`);
+        const { tokens } = await import('../data/tokens');
+        return tokens.find(t => t.id.toLowerCase() === tokenId.toLowerCase()) || null;
+      } else {
+        throw new Error(`Database error: ${error.message}`);
+      }
     }
 
     if (!data) {
@@ -129,12 +169,26 @@ export async function fetchTokenDetails(tokenId: string): Promise<Token | null> 
 export async function fetchTokenSalesDetails(tokenId: string): Promise<any | null> {
   try {
     if (!isSupabaseAvailable) {
-      console.warn('Supabase not available, falling back to static sales data');
+      console.log('📱 Using offline mode - falling back to static sales data');
       const { salesData } = await import('../data/sales');
       return salesData.find(sale => sale.name.toLowerCase() === tokenId.toLowerCase()) || null;
     }
 
-    console.log(`🔄 Fetching sales details for ${tokenId}`);
+    // Test connectivity first
+    try {
+      const testResponse = await supabase.from('token_sales_details').select('count').limit(0);
+      if (testResponse.error && testResponse.error.message.includes('Failed to fetch')) {
+        console.warn('🔌 Supabase connectivity issue, falling back to static sales data');
+        const { salesData } = await import('../data/sales');
+        return salesData.find(sale => sale.name.toLowerCase() === tokenId.toLowerCase()) || null;
+      }
+    } catch (connectivityError) {
+      console.warn('🔌 Supabase connectivity test failed, falling back to static sales data');
+      const { salesData } = await import('../data/sales');
+      return salesData.find(sale => sale.name.toLowerCase() === tokenId.toLowerCase()) || null;
+    }
+
+    console.log(`🔄 Fetching sales details for ${tokenId} from Supabase`);
     const { data, error } = await supabase
       .from('token_sales_details')
       .select('*')
@@ -142,9 +196,12 @@ export async function fetchTokenSalesDetails(tokenId: string): Promise<any | nul
       .maybeSingle();
 
     if (error) {
-      console.warn(`Sales details error for ${tokenId}: ${error.message}`);
-      // Fallback to static data
-      const { salesData } = await import('../data/sales');
+      if (error.message.includes('Failed to fetch')) {
+        console.warn(`🔌 Network error fetching sales details for ${tokenId}, falling back to static data`);
+      } else {
+        console.warn(`Sales details error for ${tokenId}: ${error.message}`);
+      }
+      const { salesData } = await('../data/sales');
       return salesData.find(sale => sale.name.toLowerCase() === tokenId.toLowerCase()) || null;
     }
 
@@ -194,13 +251,30 @@ export async function getTokensLastUpdate(): Promise<string | null> {
       return null;
     }
 
+    // Test connectivity first
+    try {
+      const testResponse = await supabase.from('token_info').select('count').limit(0);
+      if (testResponse.error && testResponse.error.message.includes('Failed to fetch')) {
+        return null;
+      }
+    } catch (connectivityError) {
+      return null;
+    }
+
     const { data, error } = await supabase
       .from('token_info')
       .select('updated_at')
       .order('updated_at', { ascending: false })
       .limit(1);
 
-    if (error || !data || data.length === 0) {
+    if (error) {
+      if (!error.message.includes('Failed to fetch')) {
+        logError(error as Error, 'getTokensLastUpdate');
+      }
+      return null;
+    }
+    
+    if (!data || data.length === 0) {
       return null;
     }
 

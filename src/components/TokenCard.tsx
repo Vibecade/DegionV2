@@ -176,7 +176,10 @@ const TokenCard = memo(({ token, viewMode = 'grid', style }: TokenCardProps) => 
           if (tokenInfo.launchDate) setCurrentLaunchDate(tokenInfo.launchDate);
         }
       } catch (error) {
-        handleError(error as Error, 'loadData');
+        // Only log non-network errors to avoid spam
+        if (error instanceof Error && !error.message.includes('Failed to fetch')) {
+          handleError(error as Error, 'loadData');
+        }
       } finally {
         setIsLoading(false);
       }

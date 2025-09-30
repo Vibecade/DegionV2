@@ -327,7 +327,7 @@ export const tokens: Token[] = [
     roi: '--',
     investment: '--',
     vestingEnd: '100% at TGE',
-    description: 'Turning crypto into productive assets using original Automatic Market Making without impermanent loss.',
+    description: 'Turning crypto into productive assets using original Automatic Market Making without impermanent loss. 🔥 MASSIVE HYPE: 61,040 total addresses committed over $196M USDC (79x overlocated!) with a $2.5M hard cap.',
     links: {
       website: 'https://yieldbasis.com/',
       twitter: 'https://x.com/yieldbasis',

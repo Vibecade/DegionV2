@@ -1,6 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2.38.4";
 
 // Environment variables will be available in production
+const duneApiKey = Deno.env.get("DUNE_API_KEY") || "";
+const duneHoldersQueryId = Deno.env.get("DUNE_HOLDERS_QUERY_ID") || "";
+const duneVolumeQueryId = Deno.env.get("DUNE_VOLUME_QUERY_ID") || "";
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const legionBearerToken = Deno.env.get("LEGION_BEARER_TOKEN") || "";
@@ -30,10 +33,13 @@ interface ProjectUpdate {
   seedPrice: string;
   description: string;
   vestingEnd?: string;
+  holdersCount?: number;
+  volume24h?: number;
 }
 
 // Constants
 const API_URL = "https://legion.cc/api/v1/rounds";
+const DUNE_API_BASE_URL = "https://api.dune.com/api/v1/query";
 
 // Updated KNOWN_TOKENS array with all expected tokens
 const KNOWN_TOKENS = [
@@ -166,6 +172,87 @@ function getCurrentUTCDate(): string {
   return new Date().toISOString();
 }
 
+// Helper function to execute a Dune query
+async function executeDuneQuery(queryId: string, params: Record<string, any>): Promise<any[] | null> {
+  if (!duneApiKey || !queryId) {
+    console.warn("Dune API key or query ID not configured");
+    return null;
+  }
+
+  const headers = {
+    "X-Dune-Api-Key": duneApiKey,
+    "Content-Type": "application/json",
+  };
+
+  try {
+    console.log(`🔄 Executing Dune query ${queryId} with params:`, params);
+    
+    // Step 1: Execute the query
+    const executeResponse = await fetch(`${DUNE_API_BASE_URL}/${queryId}/execute`, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({ query_parameters: params }),
+    });
+
+    if (!executeResponse.ok) {
+      const errorText = await executeResponse.text();
+      throw new Error(`Dune query execution failed: ${executeResponse.status} ${errorText}`);
+    }
+
+    const executeData = await executeResponse.json();
+    const executionId = executeData.execution_id;
+
+    if (!executionId) {
+      throw new Error("Failed to get Dune execution ID");
+    }
+
+    console.log(`⏳ Polling for Dune query results (execution ID: ${executionId})`);
+
+    // Step 2: Poll for results
+    let status = "pending";
+    let resultData: any = null;
+    const MAX_POLLING_ATTEMPTS = 15; // Increased attempts for longer queries
+    let attempts = 0;
+
+    while (status !== "completed" && status !== "failed" && attempts < MAX_POLLING_ATTEMPTS) {
+      await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait 3 seconds between polls
+      
+      const statusResponse = await fetch(`${DUNE_API_BASE_URL}/${queryId}/results/${executionId}`, {
+        headers: headers,
+      });
+
+      if (!statusResponse.ok) {
+        const errorText = await statusResponse.text();
+        throw new Error(`Dune query status check failed: ${statusResponse.status} ${errorText}`);
+      }
+
+      const statusJson = await statusResponse.json();
+      status = statusJson.state;
+      
+      if (status === "completed") {
+        resultData = statusJson.result?.rows;
+      }
+      
+      attempts++;
+      console.log(`📊 Dune query ${queryId} status: ${status} (attempt ${attempts}/${MAX_POLLING_ATTEMPTS})`);
+    }
+
+    if (status === "completed" && resultData) {
+      console.log(`✅ Dune query ${queryId} completed successfully with ${resultData.length} rows`);
+      return resultData;
+    } else if (status === "failed") {
+      console.error(`❌ Dune query ${queryId} failed`);
+      return null;
+    } else {
+      console.warn(`⏰ Dune query ${queryId} timed out. Status: ${status}`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`❌ Error executing Dune query ${queryId}:`, error);
+    return null;
+  }
+}
+
 // Main function to fetch and process Legion data
 async function fetchLegionData(): Promise<LegionProject[]> {
   try {
@@ -245,6 +332,45 @@ async function updateDatabase(projects: LegionProject[]): Promise<void> {
       // Prepare the vesting description
       const vestingEnd = formatVestingEnd(project.vest, project.cliff, project.lock);
       
+      // Initialize Dune data variables
+      let holdersCount = 0;
+      let volume24h = 0;
+
+      // Fetch Dune data if contract address is available
+      if (project.contract && duneHoldersQueryId && duneVolumeQueryId) {
+        console.log(`🔍 Fetching Dune data for ${tokenId} (contract: ${project.contract})`);
+        
+        const duneParams = { 
+          contract_address: project.contract.toLowerCase() // Ensure lowercase for consistency
+        };
+        
+        // Fetch token holders count
+        try {
+          const holdersResult = await executeDuneQuery(duneHoldersQueryId, duneParams);
+          if (holdersResult && holdersResult.length > 0) {
+            // Assuming the Dune query returns a row with a 'holders' or 'holder_count' column
+            holdersCount = holdersResult[0].holders || holdersResult[0].holder_count || 0;
+            console.log(`👥 Holders count for ${tokenId}: ${holdersCount}`);
+          }
+        } catch (error) {
+          console.warn(`⚠️ Failed to fetch holders data for ${tokenId}:`, error);
+        }
+
+        // Fetch 24h trading volume
+        try {
+          const volumeResult = await executeDuneQuery(duneVolumeQueryId, duneParams);
+          if (volumeResult && volumeResult.length > 0) {
+            // Assuming the Dune query returns a row with a 'volume' or 'volume_24h' column
+            volume24h = volumeResult[0].volume || volumeResult[0].volume_24h || 0;
+            console.log(`📊 24h volume for ${tokenId}: $${volume24h}`);
+          }
+        } catch (error) {
+          console.warn(`⚠️ Failed to fetch volume data for ${tokenId}:`, error);
+        }
+      } else {
+        console.warn(`⚠️ Skipping Dune data fetch for ${tokenId}: Missing contract address or Dune query IDs`);
+      }
+
       // Prepare the update for token_info with new columns
       const tokenInfoData: ProjectUpdate = {
         id: tokenId,
@@ -253,7 +379,9 @@ async function updateDatabase(projects: LegionProject[]): Promise<void> {
         launchDate: formatTGE(project.tge),
         seedPrice: formatPrice(project.target),
         description: project.description || "",
-        vestingEnd: vestingEnd
+        vestingEnd: vestingEnd,
+        holdersCount: holdersCount,
+        volume24h: volume24h
       };
 
       // Prepare links object (empty for now, can be populated later)
@@ -320,7 +448,8 @@ async function updateDatabase(projects: LegionProject[]): Promise<void> {
         projects_count: projects.length,
         updates: updates,
         success: updates.filter(u => u.updated).length,
-        errors: updates.filter(u => !u.updated).length
+        errors: updates.filter(u => !u.updated).length,
+        dune_enabled: !!(duneApiKey && duneHoldersQueryId && duneVolumeQueryId)
       });
     
     if (logError) {

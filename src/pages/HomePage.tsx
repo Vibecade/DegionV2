@@ -110,10 +110,10 @@ const HomePage = () => {
       const statusPriority = {
         'Live (Vested)': 1,
         'Live': 1,
-        'Launching Soon': 3,
-        'Pending TGE': 4,
-        'ICO Soon': 5,
-        'Cancelled': 6
+        'Launching Soon': 2,
+        'Pending TGE': 3,
+        'ICO Soon': 4,
+        'Cancelled': 5
       };
       
       const aPriority = statusPriority[a.status as keyof typeof statusPriority] ?? 999;

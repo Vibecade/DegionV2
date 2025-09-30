@@ -225,9 +225,9 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
                   <div key={token.id} className="relative w-full">
                     {token.id === 'yieldbasis' ? (
                       /* Special responsive layout for YieldBasis with hype metrics */
-                      <div className="flex flex-col xl:flex-row gap-6 items-start">
+                      <div className="flex flex-col lg:flex-row gap-4 items-start">
                         {/* YieldBasis Token Card */}
-                        <div className="flex-shrink-0 w-full xl:w-80">
+                        <div className="flex-shrink-0 w-full lg:w-72">
                           <div className="relative">
                             <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/50 to-pink-500/50 rounded-lg blur opacity-75 animate-pulse"></div>
                             <div className="relative">
@@ -239,51 +239,51 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
                           </div>
                         </div>
                         
-                        {/* Hype Metrics Panel - Now fully responsive */}
-                        <div className="flex-1 w-full bg-gradient-to-r from-red-900/30 via-orange-900/30 to-yellow-900/30 rounded-xl border border-orange-500/40 p-6 sm:p-8 lg:p-10">
+                        {/* Compact Hype Metrics Panel */}
+                        <div className="flex-1 w-full bg-gradient-to-r from-red-900/30 via-orange-900/30 to-yellow-900/30 rounded-xl border border-orange-500/40 p-4">
                           <div className="flex items-center justify-center mb-6">
-                            <div className="animate-bounce text-2xl mr-2">🔥</div>
-                            <h3 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent font-orbitron text-center">
+                            <div className="animate-bounce text-lg mr-2">🔥</div>
+                            <h3 className="text-sm font-bold bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent font-orbitron text-center">
                               YIELDBASIS METRICS
                             </h3>
-                            <div className="animate-bounce text-2xl ml-2">🔥</div>
+                            <div className="animate-bounce text-lg ml-2">🔥</div>
                           </div>
                           
-                          {/* Responsive metrics grid */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-                            <div className="bg-black/40 rounded-lg px-6 sm:px-8 lg:px-10 py-6 sm:py-8 border border-red-500/30 flex flex-col justify-center items-center text-center">
-                              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-red-400 animate-pulse mb-2">61,040</div>
-                              <div className="text-sm sm:text-base lg:text-lg text-gray-300 break-words whitespace-normal leading-tight">
+                          {/* Compact metrics grid */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-black/40 rounded-lg px-3 py-3 border border-red-500/30 flex flex-col justify-center items-center text-center">
+                              <div className="text-lg font-bold text-red-400 animate-pulse mb-1">61,040</div>
+                              <div className="text-xs text-gray-300 break-words whitespace-normal leading-tight">
                                 Total Addresses
                               </div>
                             </div>
                             
-                            <div className="bg-black/40 rounded-lg px-6 sm:px-8 lg:px-10 py-6 sm:py-8 border border-orange-500/30 flex flex-col justify-center items-center text-center">
-                              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-orange-400 animate-pulse mb-2">$196M+</div>
-                              <div className="text-sm sm:text-base lg:text-lg text-gray-300 break-words whitespace-normal leading-tight">
+                            <div className="bg-black/40 rounded-lg px-3 py-3 border border-orange-500/30 flex flex-col justify-center items-center text-center">
+                              <div className="text-lg font-bold text-orange-400 animate-pulse mb-1">$196M+</div>
+                              <div className="text-xs text-gray-300 break-words whitespace-normal leading-tight">
                                 Total Committed
                               </div>
                             </div>
                             
-                            <div className="bg-black/40 rounded-lg px-6 sm:px-8 lg:px-10 py-6 sm:py-8 border border-yellow-500/30 flex flex-col justify-center items-center text-center">
-                              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-yellow-400 animate-pulse mb-2">79x</div>
-                              <div className="text-sm sm:text-base lg:text-lg text-gray-300 break-words whitespace-normal leading-tight">
+                            <div className="bg-black/40 rounded-lg px-3 py-3 border border-yellow-500/30 flex flex-col justify-center items-center text-center">
+                              <div className="text-lg font-bold text-yellow-400 animate-pulse mb-1">79x</div>
+                              <div className="text-xs text-gray-300 break-words whitespace-normal leading-tight">
                                 Overallocated
                               </div>
                             </div>
                             
-                            <div className="bg-black/40 rounded-lg px-6 sm:px-8 lg:px-10 py-6 sm:py-8 border border-green-500/30 flex flex-col justify-center items-center text-center">
-                              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-400 animate-pulse mb-2">$2.5M</div>
-                              <div className="text-sm sm:text-base lg:text-lg text-gray-300 break-words whitespace-normal leading-tight">
+                            <div className="bg-black/40 rounded-lg px-3 py-3 border border-green-500/30 flex flex-col justify-center items-center text-center">
+                              <div className="text-lg font-bold text-green-400 animate-pulse mb-1">$2.5M</div>
+                              <div className="text-xs text-gray-300 break-words whitespace-normal leading-tight">
                                 Hard Cap
                               </div>
                             </div>
                           </div>
                           
-                          <div className="mt-6 sm:mt-8 text-center">
-                            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-base font-bold animate-pulse">
+                          <div className="mt-4 text-center">
+                            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-2 rounded-full text-xs font-bold animate-pulse">
                               <span className="animate-bounce">⚡</span>
-                              <span className="break-words whitespace-normal">MASSIVE COMMUNITY INTEREST</span>
+                              <span className="break-words whitespace-normal">MASSIVE HYPE</span>
                               <span className="animate-bounce">⚡</span>
                             </div>
                           </div>

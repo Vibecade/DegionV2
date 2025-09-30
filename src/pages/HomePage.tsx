@@ -36,24 +36,9 @@ const HomePage = () => {
         const fetchedTokens = await fetchTokensFromDatabase();
         setTokens(fetchedTokens);
         
-        // Calculate totals from sales data
-        let totalFunds = 0;
-        let totalParticipants = 0;
-        
-        for (const token of fetchedTokens) {
-          try {
-            const salesData = await fetchTokenSalesDetails(token.id);
-            if (salesData) {
-              totalFunds += salesData.fundsRaisedUSDC || 0;
-              totalParticipants += salesData.participants || 0;
-            }
-          } catch (salesError) {
-            console.warn(`Failed to fetch sales data for ${token.id}:`, salesError);
-          }
-        }
-        
-        setTotalInvestment(totalFunds);
-        setTotalInvestors(totalParticipants);
+        // Use the Legion totals from the screenshot
+        setTotalInvestment(24006047); // $24,006,047 Total Funds Collected
+        setTotalInvestors(8666); // 8,666 Unique Investors
         
         console.log(`✅ Loaded ${fetchedTokens.length} tokens`);
       } catch (error) {

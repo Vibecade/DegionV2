@@ -222,75 +222,84 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
                   : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
               }`}>
                 {launchingSoonTokens.map((token) => (
-                  <div key={token.id} className="relative">
-                    {/* Special glow for launching soon tokens */}
-                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/50 to-pink-500/50 rounded-lg blur opacity-75 animate-pulse"></div>
-                    <div className="relative">
-                      <TokenCard 
-                        token={token} 
-                        viewMode={viewMode}
-                      />
-                      
-                      {/* Special hype metrics for YieldBasis */}
-                      {token.id === 'yieldbasis' && (
-                        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 z-10">
-                          <div className="bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 text-white px-4 py-2 rounded-full text-xs font-bold animate-pulse shadow-lg">
-                            🔥 79x OVERALLOCATED! $196M+ COMMITTED! 🔥
+                  <div key={token.id} className="relative w-full">
+                    {token.id === 'yieldbasis' ? (
+                      /* Special linear layout for YieldBasis with hype metrics */
+                      <div className="flex flex-col lg:flex-row gap-6 items-start">
+                        {/* YieldBasis Token Card */}
+                        <div className="flex-shrink-0 lg:w-80">
+                          <div className="relative">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/50 to-pink-500/50 rounded-lg blur opacity-75 animate-pulse"></div>
+                            <div className="relative">
+                              <TokenCard 
+                                token={token} 
+                                viewMode={viewMode}
+                              />
+                            </div>
                           </div>
                         </div>
-                      )}
+                        
+                        {/* Hype Metrics Panel */}
+                        <div className="flex-1 bg-gradient-to-r from-red-900/30 via-orange-900/30 to-yellow-900/30 rounded-xl border border-orange-500/40 p-6">
+                          <div className="flex items-center mb-4">
+                            <div className="animate-bounce text-2xl mr-2">🔥</div>
+                            <h3 className="text-xl font-bold bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent font-orbitron">
+                              YIELDBASIS METRICS
+                            </h3>
+                            <div className="animate-bounce text-2xl ml-2">🔥</div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-black/40 rounded-lg p-4 border border-red-500/30">
+                              <div className="text-2xl font-bold text-red-400 animate-pulse">61,040</div>
+                              <div className="text-sm text-gray-300">Total Addresses</div>
+                            </div>
+                            
+                            <div className="bg-black/40 rounded-lg p-4 border border-orange-500/30">
+                              <div className="text-2xl font-bold text-orange-400 animate-pulse">$196M+</div>
+                              <div className="text-sm text-gray-300">Total Committed</div>
+                            </div>
+                            
+                            <div className="bg-black/40 rounded-lg p-4 border border-yellow-500/30">
+                              <div className="text-2xl font-bold text-yellow-400 animate-pulse">79x</div>
+                              <div className="text-sm text-gray-300">Overallocated</div>
+                            </div>
+                            
+                            <div className="bg-black/40 rounded-lg p-4 border border-green-500/30">
+                              <div className="text-2xl font-bold text-green-400 animate-pulse">$2.5M</div>
+                              <div className="text-sm text-gray-300">Hard Cap</div>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-4 text-center">
+                            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-2 rounded-full text-sm font-bold animate-pulse">
+                              <span className="animate-bounce">⚡</span>
+                              MASSIVE COMMUNITY INTEREST
+                              <span className="animate-bounce">⚡</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Regular layout for other launching soon tokens */
+                      <div className="relative">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/50 to-pink-500/50 rounded-lg blur opacity-75 animate-pulse"></div>
+                        <div className="relative">
+                          <TokenCard 
+                            token={token} 
+                            viewMode={viewMode}
+                          />
+                        </div>
+                      </div>
+                    )}
                     </div>
-                  </div>
                 ))}
               </div>
               
               <div className="text-center mt-6">
                 <p className="text-purple-200 text-sm font-medium">
-                  🚀 These tokens are launching soon - don't miss out!
+                  🚀 These tokens are launching soon
                 </p>
-                
-                {/* Special YieldBasis hype section */}
-                {launchingSoonTokens.some(token => token.id === 'yieldbasis') && (
-                  <div className="mt-4 p-4 bg-gradient-to-r from-red-900/30 via-orange-900/30 to-yellow-900/30 rounded-xl border border-orange-500/40">
-                    <div className="flex items-center justify-center mb-3">
-                      <div className="animate-bounce text-2xl mr-2">🔥</div>
-                      <h3 className="text-lg font-bold bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent font-orbitron">
-                        YIELDBASIS HYPE METRICS
-                      </h3>
-                      <div className="animate-bounce text-2xl ml-2">🔥</div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                      <div className="bg-black/40 rounded-lg p-3 border border-red-500/30">
-                        <div className="text-2xl font-bold text-red-400 animate-pulse">61,040</div>
-                        <div className="text-xs text-gray-300">Total Addresses</div>
-                      </div>
-                      
-                      <div className="bg-black/40 rounded-lg p-3 border border-orange-500/30">
-                        <div className="text-2xl font-bold text-orange-400 animate-pulse">$196M+</div>
-                        <div className="text-xs text-gray-300">Total Committed</div>
-                      </div>
-                      
-                      <div className="bg-black/40 rounded-lg p-3 border border-yellow-500/30">
-                        <div className="text-2xl font-bold text-yellow-400 animate-pulse">79x</div>
-                        <div className="text-xs text-gray-300">Overallocated</div>
-                      </div>
-                      
-                      <div className="bg-black/40 rounded-lg p-3 border border-green-500/30">
-                        <div className="text-2xl font-bold text-green-400 animate-pulse">$2.5M</div>
-                        <div className="text-xs text-gray-300">Hard Cap</div>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-4 text-center">
-                      <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-orange-600 text-white px-6 py-2 rounded-full text-sm font-bold animate-pulse">
-                        <span className="animate-bounce">⚡</span>
-                        MASSIVE DEMAND - DON'T MISS OUT!
-                        <span className="animate-bounce">⚡</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>

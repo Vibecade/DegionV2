@@ -251,23 +251,23 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
                           
                           <div className="grid grid-cols-2 gap-4">
                             <div className="bg-black/40 rounded-lg p-4 border border-red-500/30">
-                              <div className="text-2xl font-bold text-red-400 animate-pulse">61,040</div>
-                              <div className="text-sm text-gray-300">Total Addresses</div>
+                              <div className="text-xl font-bold text-red-400 animate-pulse break-words">61,040</div>
+                              <div className="text-xs text-gray-300 mt-1">Total Addresses</div>
                             </div>
                             
                             <div className="bg-black/40 rounded-lg p-4 border border-orange-500/30">
-                              <div className="text-2xl font-bold text-orange-400 animate-pulse">$196M+</div>
-                              <div className="text-sm text-gray-300">Total Committed</div>
+                              <div className="text-xl font-bold text-orange-400 animate-pulse break-words">$196M+</div>
+                              <div className="text-xs text-gray-300 mt-1">Total Committed</div>
                             </div>
                             
                             <div className="bg-black/40 rounded-lg p-4 border border-yellow-500/30">
-                              <div className="text-2xl font-bold text-yellow-400 animate-pulse">79x</div>
-                              <div className="text-sm text-gray-300">Overallocated</div>
+                              <div className="text-xl font-bold text-yellow-400 animate-pulse break-words">79x</div>
+                              <div className="text-xs text-gray-300 mt-1">Overallocated</div>
                             </div>
                             
                             <div className="bg-black/40 rounded-lg p-4 border border-green-500/30">
-                              <div className="text-2xl font-bold text-green-400 animate-pulse">$2.5M</div>
-                              <div className="text-sm text-gray-300">Hard Cap</div>
+                              <div className="text-xl font-bold text-green-400 animate-pulse break-words">$2.5M</div>
+                              <div className="text-xs text-gray-300 mt-1">Hard Cap</div>
                             </div>
                           </div>
                           

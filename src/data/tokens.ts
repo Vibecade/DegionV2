@@ -322,7 +322,7 @@ export const tokens: Token[] = [
     name: 'YieldBasis',
     status: 'Launching Soon',
     launchDate: 'October 2025',
-    seedPrice: 'TBD',
+    seedPrice: '$0.20',
     currentPrice: '--',
     roi: '--',
     investment: '--',

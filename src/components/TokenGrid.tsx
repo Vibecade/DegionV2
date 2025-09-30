@@ -240,7 +240,7 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
                         </div>
                         
                         {/* Hype Metrics Panel */}
-                        <div className="flex-1 bg-gradient-to-r from-red-900/30 via-orange-900/30 to-yellow-900/30 rounded-xl border border-orange-500/40 p-8">
+                        <div className="flex-1 bg-gradient-to-r from-red-900/30 via-orange-900/30 to-yellow-900/30 rounded-xl border border-orange-500/40 p-10">
                           <div className="flex items-center mb-4">
                             <div className="animate-bounce text-2xl mr-2">🔥</div>
                             <h3 className="text-xl font-bold bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent font-orbitron">
@@ -249,30 +249,30 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
                             <div className="animate-bounce text-2xl ml-2">🔥</div>
                           </div>
                           
-                          <div className="grid grid-cols-2 gap-6">
-                            <div className="bg-black/40 rounded-lg p-6 border border-red-500/30 min-h-[100px] flex flex-col justify-center">
-                              <div className="text-2xl font-bold text-red-400 animate-pulse text-center">61,040</div>
-                              <div className="text-sm text-gray-300 mt-2 text-center">Total Addresses</div>
+                          <div className="grid grid-cols-2 gap-8">
+                            <div className="bg-black/40 rounded-lg px-8 py-6 border border-red-500/30 min-h-[120px] flex flex-col justify-center">
+                              <div className="text-3xl font-bold text-red-400 animate-pulse text-center">61,040</div>
+                              <div className="text-base text-gray-300 mt-3 text-center">Total Addresses</div>
                             </div>
                             
-                            <div className="bg-black/40 rounded-lg p-6 border border-orange-500/30 min-h-[100px] flex flex-col justify-center">
-                              <div className="text-2xl font-bold text-orange-400 animate-pulse text-center">$196M+</div>
-                              <div className="text-sm text-gray-300 mt-2 text-center">Total Committed</div>
+                            <div className="bg-black/40 rounded-lg px-8 py-6 border border-orange-500/30 min-h-[120px] flex flex-col justify-center">
+                              <div className="text-3xl font-bold text-orange-400 animate-pulse text-center">$196M+</div>
+                              <div className="text-base text-gray-300 mt-3 text-center">Total Committed</div>
                             </div>
                             
-                            <div className="bg-black/40 rounded-lg p-6 border border-yellow-500/30 min-h-[100px] flex flex-col justify-center">
-                              <div className="text-2xl font-bold text-yellow-400 animate-pulse text-center">79x</div>
-                              <div className="text-sm text-gray-300 mt-2 text-center">Overallocated</div>
+                            <div className="bg-black/40 rounded-lg px-8 py-6 border border-yellow-500/30 min-h-[120px] flex flex-col justify-center">
+                              <div className="text-3xl font-bold text-yellow-400 animate-pulse text-center">79x</div>
+                              <div className="text-base text-gray-300 mt-3 text-center">Overallocated</div>
                             </div>
                             
-                            <div className="bg-black/40 rounded-lg p-6 border border-green-500/30 min-h-[100px] flex flex-col justify-center">
-                              <div className="text-2xl font-bold text-green-400 animate-pulse text-center">$2.5M</div>
-                              <div className="text-sm text-gray-300 mt-2 text-center">Hard Cap</div>
+                            <div className="bg-black/40 rounded-lg px-8 py-6 border border-green-500/30 min-h-[120px] flex flex-col justify-center">
+                              <div className="text-3xl font-bold text-green-400 animate-pulse text-center">$2.5M</div>
+                              <div className="text-base text-gray-300 mt-3 text-center">Hard Cap</div>
                             </div>
                           </div>
                           
-                          <div className="mt-6 text-center">
-                            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-2 rounded-full text-sm font-bold animate-pulse">
+                          <div className="mt-8 text-center">
+                            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-orange-600 text-white px-6 py-3 rounded-full text-base font-bold animate-pulse">
                               <span className="animate-bounce">⚡</span>
                               MASSIVE COMMUNITY INTEREST
                               <span className="animate-bounce">⚡</span>

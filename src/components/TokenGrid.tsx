@@ -250,24 +250,25 @@ export const TokenGrid: React.FC<TokenGridProps> = ({
                           </div>
                           
                           <div className="grid grid-cols-2 gap-8">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
                             <div className="bg-black/40 rounded-lg px-8 py-6 border border-red-500/30 min-h-[120px] flex flex-col justify-center">
                               <div className="text-3xl font-bold text-red-400 animate-pulse text-center">61,040</div>
-                              <div className="text-base text-gray-300 mt-3 text-center">Total Addresses</div>
+                              <div className="text-base text-gray-300 mt-3 text-center break-words whitespace-normal">Total Addresses</div>
                             </div>
                             
                             <div className="bg-black/40 rounded-lg px-8 py-6 border border-orange-500/30 min-h-[120px] flex flex-col justify-center">
                               <div className="text-3xl font-bold text-orange-400 animate-pulse text-center">$196M+</div>
-                              <div className="text-base text-gray-300 mt-3 text-center">Total Committed</div>
+                              <div className="text-base text-gray-300 mt-3 text-center break-words whitespace-normal">Total Committed</div>
                             </div>
                             
                             <div className="bg-black/40 rounded-lg px-8 py-6 border border-yellow-500/30 min-h-[120px] flex flex-col justify-center">
                               <div className="text-3xl font-bold text-yellow-400 animate-pulse text-center">79x</div>
-                              <div className="text-base text-gray-300 mt-3 text-center">Overallocated</div>
+                              <div className="text-base text-gray-300 mt-3 text-center break-words whitespace-normal">Overallocated</div>
                             </div>
                             
                             <div className="bg-black/40 rounded-lg px-8 py-6 border border-green-500/30 min-h-[120px] flex flex-col justify-center">
                               <div className="text-3xl font-bold text-green-400 animate-pulse text-center">$2.5M</div>
-                              <div className="text-base text-gray-300 mt-3 text-center">Hard Cap</div>
+                              <div className="text-base text-gray-300 mt-3 text-center break-words whitespace-normal">Hard Cap</div>
                             </div>
                           </div>
                           
